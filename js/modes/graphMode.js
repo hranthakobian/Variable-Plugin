@@ -1528,13 +1528,13 @@ class GraphMode {
         const winBtn = document.getElementById('btn-window-menu');
 
         if (!card) {
-            this.toggleSectionVisibility(cardId, false);
+            this.toggleSectionVisibility(cardId, false, false);
             return;
         }
 
         // If "Փեղկեր" button is not visible or in DOM, fall back to direct hide
         if (!winBtn || winBtn.offsetParent === null) {
-            this.toggleSectionVisibility(cardId, false);
+            this.toggleSectionVisibility(cardId, false, false);
             return;
         }
 
@@ -1604,7 +1604,7 @@ class GraphMode {
             card.style.overflow = '';
             card.style.pointerEvents = '';
 
-            this.toggleSectionVisibility(cardId, false);
+            this.toggleSectionVisibility(cardId, false, false);
 
             winBtn.classList.remove('shutter-btn-pulse');
             void winBtn.offsetWidth;
@@ -1820,28 +1820,98 @@ class GraphMode {
         this.applySectionsLayout();
     }
 
-    toggleSectionVisibility(cardId, isVisible) {
+    toggleSectionVisibility(cardId, isVisible, animated = true) {
+        const panel = this.container.querySelector('.graph-mode-panel');
+        const card = panel ? panel.querySelector(`.graph-modular-card[data-card-id="${cardId}"]`) : null;
         const layout = this.getSectionsLayout();
+
         layout.visibility[cardId] = Boolean(isVisible);
         this.saveSectionsLayout(layout);
-        this.applySectionsLayout();
 
-        if (isVisible) {
-            const panel = this.container.querySelector('.graph-mode-panel');
-            const card = panel ? panel.querySelector(`.graph-modular-card[data-card-id="${cardId}"]`) : null;
-            if (card) {
-                card.classList.remove('shutter-revealing');
-                void card.offsetWidth;
-                card.classList.add('shutter-revealing');
-                setTimeout(() => card.classList.remove('shutter-revealing'), 380);
+        if (!card || !animated) {
+            this.applySectionsLayout();
+            if (cardId === 'canvas' && isVisible) {
+                setTimeout(() => {
+                    this.setupCanvas();
+                    this.redraw();
+                }, 60);
             }
+            return;
         }
 
-        if (cardId === 'canvas' && layout.visibility[cardId]) {
+        const duration = 340;
+        const cubicEasing = 'cubic-bezier(0.22, 1, 0.36, 1)';
+
+        if (!isVisible) {
+            // Smoothly collapse out of layout without any button animation
+            const startHeight = card.offsetHeight;
+            card.style.maxHeight = `${startHeight}px`;
+            card.style.overflow = 'hidden';
+            card.style.pointerEvents = 'none';
+            void card.offsetHeight; // reflow
+
+            card.style.transition = `max-height ${duration}ms ${cubicEasing}, opacity ${Math.round(duration * 0.75)}ms ${cubicEasing}, margin-top ${duration}ms ${cubicEasing}, margin-bottom ${duration}ms ${cubicEasing}, padding-top ${duration}ms ${cubicEasing}, padding-bottom ${duration}ms ${cubicEasing}, border-width ${duration}ms ${cubicEasing}, transform ${duration}ms ${cubicEasing}`;
+
+            requestAnimationFrame(() => {
+                card.style.maxHeight = '0px';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.97)';
+                card.style.marginTop = '0px';
+                card.style.marginBottom = '0px';
+                card.style.paddingTop = '0px';
+                card.style.paddingBottom = '0px';
+                card.style.borderWidth = '0px';
+            });
+
             setTimeout(() => {
-                this.setupCanvas();
-                this.redraw();
-            }, 60);
+                card.style.display = 'none';
+                card.style.transition = '';
+                card.style.maxHeight = '';
+                card.style.opacity = '';
+                card.style.transform = '';
+                card.style.marginTop = '';
+                card.style.marginBottom = '';
+                card.style.paddingTop = '';
+                card.style.paddingBottom = '';
+                card.style.borderWidth = '';
+                card.style.overflow = '';
+                card.style.pointerEvents = '';
+                this.applySectionsLayout();
+            }, duration + 20);
+        } else {
+            // Smoothly reveal and expand back into layout
+            card.style.display = 'flex';
+            card.style.maxHeight = 'none';
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.97)';
+            card.style.pointerEvents = 'none';
+            const targetHeight = card.offsetHeight || card.scrollHeight;
+
+            card.style.maxHeight = '0px';
+            card.style.overflow = 'hidden';
+            void card.offsetHeight; // reflow
+
+            card.style.transition = `max-height ${duration}ms ${cubicEasing}, opacity ${duration}ms ${cubicEasing}, transform ${duration}ms ${cubicEasing}`;
+
+            requestAnimationFrame(() => {
+                card.style.maxHeight = `${targetHeight}px`;
+                card.style.opacity = '1';
+                card.style.transform = 'scale(1)';
+            });
+
+            setTimeout(() => {
+                card.style.transition = '';
+                card.style.maxHeight = '';
+                card.style.opacity = '';
+                card.style.transform = '';
+                card.style.overflow = '';
+                card.style.pointerEvents = '';
+                this.applySectionsLayout();
+                if (cardId === 'canvas') {
+                    this.setupCanvas();
+                    this.redraw();
+                }
+            }, duration + 20);
         }
     }
 

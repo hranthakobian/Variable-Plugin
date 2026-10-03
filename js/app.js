@@ -189,7 +189,7 @@ class AppController {
 
             chk.addEventListener('change', () => {
                 if (this.graphMode && typeof this.graphMode.toggleSectionVisibility === 'function') {
-                    this.graphMode.toggleSectionVisibility(panel.id, chk.checked);
+                    this.graphMode.toggleSectionVisibility(panel.id, chk.checked, true);
                 }
             });
 
