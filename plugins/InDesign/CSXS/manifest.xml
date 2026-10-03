@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ExtensionManifest Version="7.0" ExtensionBundleId="com.indesign.variables.panel" ExtensionBundleVersion="1.0.0"
+    ExtensionBundleName="Variable Fonts &amp; Design Space Controller (InDesign)"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <ExtensionList>
+        <Extension Id="com.indesign.variables.panel" Version="1.0.0" />
+    </ExtensionList>
+    <ExecutionEnvironment>
+        <HostList>
+            <!-- Target Adobe InDesign CC 2018 through CC 2026+ -->
+            <Host Name="IDSN" Version="[9.0,99.9]" />
+        </HostList>
+        <LocaleList>
+            <Locale Code="All" />
+        </LocaleList>
+        <RequiredRuntimeList>
+            <RequiredRuntime Name="CSXS" Version="6.0" />
+        </RequiredRuntimeList>
+    </ExecutionEnvironment>
+    <DispatchInfoList>
+        <Extension Id="com.indesign.variables.panel">
+            <DispatchInfo>
+                <Resources>
+                    <MainPath>./index.html</MainPath>
+                    <ScriptPath>./host/indesign/index.jsx</ScriptPath>
+                    <CEPEngineRefs>
+                        <CEPEngineRef Id="JSEngine" />
+                    </CEPEngineRefs>
+                </Resources>
+                <Lifecycle>
+                    <AutoVisible>true</AutoVisible>
+                </Lifecycle>
+                <UI>
+                    <Type>Panel</Type>
+                    <Menu>Variable Controller (InDesign)</Menu>
+                    <Geometry>
+                        <Size>
+                            <Width>340</Width>
+                            <Height>600</Height>
+                        </Size>
+                        <MinSize>
+                            <Width>280</Width>
+                            <Height>450</Height>
+                        </MinSize>
+                        <MaxSize>
+                            <Width>800</Width>
+                            <Height>1200</Height>
+                        </MaxSize>
+                    </Geometry>
+                </UI>
+            </DispatchInfo>
+        </Extension>
+    </DispatchInfoList>
+</ExtensionManifest>

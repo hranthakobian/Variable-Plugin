@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Variable Font &amp; Design Space Controller</title>
+    <!-- HD Icons Stylesheet -->
+    <link rel="stylesheet" href="https://api.hakobian.am/libs/v1/icons/style.css">
+    <!-- Components Design System Stylesheet (https://api.hakobian.am/libs/v1/components/style.css) -->
+    <link rel="stylesheet" href="https://api.hakobian.am/libs/v1/components/style.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/figma-theme.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Panel Header & Active Selection Strip -->
+        <header class="panel-header">
+            <div class="header-top-row">
+                <div class="panel-title">
+                    <span id="header-app-title">Variable Controller</span>
+                    <span class="title-badge">VF 2.0</span>
+                </div>
+                <div class="header-actions">
+                    <button type="button" id="btn-window-menu" class="btn-window-menu" title="Կառավարել պանելների տեսանելիությունը / Manage Panels">
+                        <span id="window-menu-text">Պատուհան</span>
+                    </button>
+                    <!-- Window Panels Dropdown -->
+                    <div id="window-menu-dropdown" class="window-menu-dropdown" style="display:none;">
+                        <div class="window-menu-header">
+                            <span id="window-menu-heading">Պանելներ (Panels)</span>
+                        </div>
+                        <div class="window-menu-items" id="window-menu-items"></div>
+                        <div class="window-menu-footer">
+                            <button type="button" id="btn-restart-tour" class="btn-restart-tour"><i class="hd-icon hd-icon-info"></i> Ուսուցում</button>
+                            <button type="button" id="btn-reset-layout" class="btn-reset-layout"><i class="hd-icon hd-icon-undo-arrow"></i> Վերականգնել Դիրքերը</button>
+                        </div>
+                    </div>
+                    <button type="button" id="btn-theme-toggle" class="btn-theme-toggle" title="Փոխել ոճը (Սև/Սպիտակ/Auto) / Switch Theme">
+                        <span class="theme-opt-icon"><i class="hd-icon hd-icon-eye"></i></span>
+                    </button>
+                    <button type="button" id="btn-header-update" class="btn-icon" title="Check for Updates (GitHub)">
+                        <i class="hd-icon hd-icon-download"></i>
+                        <span id="update-nav-badge" class="update-nav-badge" style="display:none;"></span>
+                    </button>
+                    <button type="button" id="btn-lang-toggle" class="btn-lang-toggle" title="Փոխել լեզուն / Switch Language">
+                        <span class="lang-opt" id="lang-opt-hy">ՀԱՅ</span>
+                        <span class="lang-sep">/</span>
+                        <span class="lang-opt" id="lang-opt-en">EN</span>
+                    </button>
+                    <button type="button" id="btn-sync-selection" class="btn-icon" title="Refresh Selection from Illustrator">
+                        <i class="hd-icon hd-icon-redo-arrow"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="selection-status-strip">
+                <div class="status-left">
+                    <span id="status-indicator" class="status-dot"></span>
+                    <span id="selection-name" class="selection-name">Acumin Variable Concept</span>
+                </div>
+                <span id="selection-meta" class="selection-meta">1 Text Frame (16 Chars)</span>
+            </div>
+        </header>
+
+        <!-- Mode Navigation Tabs -->
+        <nav class="mode-tabs">
+            <button type="button" class="tab-btn active" data-mode="slider" id="tab-btn-slider">Սահիչներ եւ Կորեր</button>
+            <button type="button" class="tab-btn" data-mode="graph" id="tab-btn-graph">Արվեստանոց</button>
+            <button type="button" class="tab-btn" data-mode="designSpace" id="tab-btn-designSpace">2չափ</button>
+        </nav>
+
+        <!-- Modes Viewport -->
+        <main class="modes-viewport">
+            <!-- Mode 1: Sliders Pane with Inline Individual Curves -->
+            <section id="pane-slider" class="mode-pane active">
+                <div id="slider-controls-container"></div>
+            </section>
+
+            <!-- Mode 2: Dedicated Graph Studio Pane -->
+            <section id="pane-graph" class="mode-pane">
+                <div id="graph-controls-container"></div>
+            </section>
+
+            <!-- Mode 3: 2D Design Space Pane -->
+            <section id="pane-design-space" class="mode-pane">
+                <div id="design-space-container"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Reusable Confirmation Dialog Modal -->
+    <div id="app-modal-overlay" class="app-modal-overlay" style="display:none;">
+        <div class="app-modal-dialog">
+            <div class="app-modal-header">
+                <span id="app-modal-title" class="app-modal-title">Confirm</span>
+                <button type="button" id="app-modal-close" class="app-modal-close-btn"><i class="hd-icon hd-icon-close"></i></button>
+            </div>
+            <div class="app-modal-body">
+                <p id="app-modal-message" class="app-modal-message"></p>
+            </div>
+            <div class="app-modal-footer">
+                <button type="button" id="app-modal-cancel" class="btn-modal-cancel">Cancel</button>
+                <button type="button" id="app-modal-confirm" class="btn-modal-confirm">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GitHub Update Modal Dialog -->
+    <div id="update-modal-overlay" class="app-modal-overlay" style="display:none;">
+        <div class="app-modal-dialog update-modal-dialog">
+            <div class="app-modal-header">
+                <div class="modal-title-wrap">
+                    <i class="hd-icon hd-icon-download"></i>
+                    <span id="update-modal-title" class="app-modal-title">Plugin Updates &amp; GitHub</span>
+                </div>
+                <button type="button" id="btn-update-modal-close" class="app-modal-close-btn"><i class="hd-icon hd-icon-close"></i></button>
+            </div>
+            <div class="app-modal-body">
+                <div class="update-version-row">
+                    <div class="version-block">
+                        <span class="version-label">Current:</span>
+                        <span class="version-badge current-ver">v2.1.0</span>
+                    </div>
+                    <div class="version-block">
+                        <span class="version-label">GitHub Latest:</span>
+                        <span class="version-badge latest-ver" id="update-latest-version-badge">Checking...</span>
+                    </div>
+                </div>
+
+                <div class="update-repo-settings">
+                    <label for="update-repo-input" class="update-field-label">GitHub Repository (Owner/Repo):</label>
+                    <div class="update-repo-field-group">
+                        <input type="text" id="update-repo-input" class="update-repo-input" value="hakobian-am/Variables-Plugin" spellcheck="false" />
+                        <button type="button" id="btn-save-repo" class="btn-save-repo">Save</button>
+                    </div>
+                </div>
+
+                <div id="update-status-msg" class="update-status-msg">
+                    <span>Press "Check Now" to query GitHub for the latest releases.</span>
+                </div>
+
+                <div id="update-release-notes" class="update-release-notes" style="display:none;"></div>
+            </div>
+            <div class="app-modal-footer">
+                <button type="button" id="btn-check-updates-now" class="btn-modal-cancel">
+                    <i class="hd-icon hd-icon-redo-arrow"></i> Check Now
+                </button>
+                <div id="update-actions-container" class="update-actions-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Studio First-Time Welcome Modal -->
+    <div id="studio-welcome-overlay" class="studio-welcome-overlay" style="display:none;">
+        <div class="studio-welcome-card">
+            <button type="button" id="btn-welcome-close" class="welcome-close-btn" title="Փակել"><i class="hd-icon hd-icon-close"></i></button>
+            <div class="welcome-badge-icon"><i class="hd-icon hd-icon-star"></i></div>
+            <h2 id="studio-welcome-title" class="welcome-title">Բարի գալուստ Արվեստանոց</h2>
+            <p id="studio-welcome-desc" class="welcome-description">
+                Այստեղ կարող եք ստեղծել և կառավարել տառատեսակի բազմառանցքային կորեր, բաշխել փոփոխականությունը տառերի կամ առարկաների վրա, ստեղծել preset-ներ և պանակներ։
+            </p>
+            <div class="welcome-actions">
+                <button type="button" id="btn-welcome-start-tour" class="btn-welcome-primary"><i class="hd-icon hd-icon-check"></i> <span id="welcome-start-tour-text">Սկսել ուսուցումը</span></button>
+                <button type="button" id="btn-welcome-start-without-tour" class="btn-welcome-secondary">Սկսել առանց ուսուցման</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Tour Guide Overlay & Bubble -->
+    <div id="studio-tour-overlay" class="studio-tour-overlay" style="display:none;"></div>
+    <div id="studio-tour-bubble" class="studio-tour-bubble" style="display:none;">
+        <div class="tour-bubble-header">
+            <span id="tour-step-counter" class="tour-step-counter">Քայլ 1 / 7</span>
+            <button type="button" id="tour-btn-close" class="tour-bubble-close" title="Փակել"><i class="hd-icon hd-icon-close"></i></button>
+        </div>
+        <div class="tour-bubble-content">
+            <h3 id="tour-step-title" class="tour-step-title">1. Կորերի Շերտեր</h3>
+            <p id="tour-step-desc" class="tour-step-desc"></p>
+        </div>
+        <div class="tour-bubble-footer">
+            <button type="button" id="tour-btn-skip" class="btn-tour-skip">Բաց թողնել</button>
+            <div class="tour-nav-group">
+                <button type="button" id="tour-btn-prev" class="btn-tour-nav" disabled><i class="hd-icon hd-icon-arrow-left"></i> <span id="tour-prev-text">Հետ</span></button>
+                <button type="button" id="tour-btn-next" class="btn-tour-nav btn-tour-next"><span id="tour-next-text">Հաջորդ</span> <i class="hd-icon hd-icon-arrow-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/lib/CSInterface.js"></script>
+    <!-- Components Scripts (https://api.hakobian.am/libs/v1/components/script.js) -->
+    <script src="https://api.hakobian.am/libs/v1/components/script.js"></script>
+    <script src="js/lib/components.js"></script>
+    <script src="js/bridge.js"></script>
+    <script src="js/themeManager.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/updateManager.js"></script>
+    <script src="js/modes/sliderMode.js"></script>
+    <script src="js/modes/graphMode.js"></script>
+    <script src="js/modes/designSpaceMode.js"></script>
+    <script src="js/tourGuide.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ExtensionManifest Version="7.0" ExtensionBundleId="com.photoshop.variables.panel" ExtensionBundleVersion="1.0.0"
+    ExtensionBundleName="Variable Fonts &amp; Design Space Controller (Photoshop)"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <ExtensionList>
+        <Extension Id="com.photoshop.variables.panel" Version="1.0.0" />
+    </ExtensionList>
+    <ExecutionEnvironment>
+        <HostList>
+            <!-- Target Adobe Photoshop CC 2018 through CC 2026+ -->
+            <Host Name="PHXS" Version="[15.0,99.9]" />
+            <Host Name="PHSP" Version="[15.0,99.9]" />
+        </HostList>
+        <LocaleList>
+            <Locale Code="All" />
+        </LocaleList>
+        <RequiredRuntimeList>
+            <RequiredRuntime Name="CSXS" Version="6.0" />
+        </RequiredRuntimeList>
+    </ExecutionEnvironment>
+    <DispatchInfoList>
+        <Extension Id="com.photoshop.variables.panel">
+            <DispatchInfo>
+                <Resources>
+                    <MainPath>./index.html</MainPath>
+                    <ScriptPath>./host/photoshop/index.jsx</ScriptPath>
+                    <CEPEngineRefs>
+                        <CEPEngineRef Id="JSEngine" />
+                    </CEPEngineRefs>
+                </Resources>
+                <Lifecycle>
+                    <AutoVisible>true</AutoVisible>
+                </Lifecycle>
+                <UI>
+                    <Type>Panel</Type>
+                    <Menu>Variable Controller (Photoshop)</Menu>
+                    <Geometry>
+                        <Size>
+                            <Width>340</Width>
+                            <Height>600</Height>
+                        </Size>
+                        <MinSize>
+                            <Width>280</Width>
+                            <Height>450</Height>
+                        </MinSize>
+                        <MaxSize>
+                            <Width>800</Width>
+                            <Height>1200</Height>
+                        </MaxSize>
+                    </Geometry>
+                </UI>
+            </DispatchInfo>
+        </Extension>
+    </DispatchInfoList>
+</ExtensionManifest>

@@ -1,0 +1,1348 @@
+*, ::before, ::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --hue: 182;
+
+  /* Saturation & Lightness configurations */
+  --primary-sat: 40%;
+  --primary-lit: 36%;
+  --text-sat: 20%;
+  --text-lit: 35%;
+  --inactive-sat: 30%;
+  --inactive-lit: 64%;
+
+  /* Theme & Border style variables */
+  --primary-color: hsl(var(--hue), var(--primary-sat), var(--primary-lit)); 
+  --text-color: hsl(var(--hue), var(--text-sat), var(--text-lit));    
+  --inactive-color: hsl(var(--hue), var(--inactive-sat), var(--inactive-lit));
+  --check-color: hsl(var(--hue), var(--text-sat), var(--text-lit));
+  --line-thickness: 3px;   
+  --border-radius: calc(120px * 0.13);     
+  --scrollbar-size: 16px;
+
+  /* Typography variables */
+  --font-size: 8pt;         
+  --font-weight: 600;
+  --letter-spacing: 0;
+  --line-height: 1.4;       /* default line-height */
+  --input-padding-y: 4px;   /* padding to prevent letter clipping */
+  
+  /* Layout variables */
+  --wrapper-padding: 12px;
+  --wrapper-width: 710px;
+  --wrapper-height: 60px;
+  
+  /* Border Gaps offsets */
+  --border-top-right-gap: calc(var(--wrapper-height, 60px) * 0.2);
+  --border-top-right-gap-1: calc(var(--wrapper-height, 60px) * 0.1);
+  --border-left-bottom-gap: calc(var(--wrapper-height, 60px) * 0.1);
+
+  /* Cursor default offsets (when unfocused) */
+  --left-cursor-left: var(--line-thickness);
+  --left-cursor-top-unfocused: calc(var(--wrapper-height, 60px) * -0.20);
+  --left-cursor-bottom-unfocused: auto;
+  --left-cursor-height-unfocused: calc(100% * 0.9);
+
+  --right-cursor-right: var(--line-thickness);
+  --right-cursor-top-unfocused: auto;
+  --right-cursor-bottom-unfocused: calc(var(--wrapper-height, 60px) * -0.20);
+  --right-cursor-height-unfocused: calc(100% * 0.9);
+
+  --active-cursor-left: calc(var(--line-thickness) + 2px);
+
+  /* Cursor style configurations when focused */
+  --focused-cursor-width: calc(var(--line-thickness) * 0.6);
+  --font-size-cursor: 8pt;
+  --focused-cursor-height: var(--font-size-cursor);
+  --focused-cursor-textarea-height: var(--font-size-cursor);
+  --focused-cursor-top-focused: calc(10% * 0.8);
+  --focused-cursor-bottom-focused: 20%; /* only for input */
+  --cursor-padding: 6px;                /* space between text and cursor in input */
+
+  /* Slider specific variables */
+  --slider-bg-color: #ffffff;           /* default background color to mask the track behind the handle */
+  --line-thickness-inactive: calc(var(--line-thickness) * 0.5);
+  --handle-width: var(--line-thickness);
+  --handle-height: calc(var(--wrapper-height, 60px) * 0.66);
+  --handle-gap: 4px;
+  --handle-offset: 4px; /* vertical offset */
+
+  /* Resize limits variables (only for textarea) */
+  --resize-min-width: 300px;
+  --resize-max-width: 1200px;
+  --resize-min-height: 150px;
+  --resize-max-height: 800px;
+
+  /* Animation speeds */
+  --transition-duration-left: 0.4s;
+  --transition-duration-top-bottom: 0.4s;
+}
+
+/* Base styles for custom components to prevent size collapse before JS/CSS initializes */
+hd-input,
+hd-textarea,
+hd-button,
+hd-slider,
+hd-checkbox,
+hd-radio,
+hd-switch,
+hd-scrollbar,
+hd-select,
+hd-color-panel,
+hd-color-picker {
+  display: inline-block;
+  min-width: 0;
+  min-height: 0;
+}
+
+body {
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;    /* Դասավորում ենք էլեմենտները սյունակով */
+  justify-content: center;   /* Ուղղահայաց կենտրոնացում (քանի որ flex-direction-ը column է) */
+  align-items: center;       /* Հորիզոնական կենտրոնացում */
+  min-height: 100vh;
+  box-sizing: border-box;
+  margin: 0;
+  font-family: Calibri, sans-serif;
+  gap: 30px;                 /* Էլեմենտների միջև հեռավորությունը */
+}
+
+/* Հիմնական Wrapper-ը */
+hd-input.custom-input-wrapper,
+hd-textarea.custom-input-wrapper,
+.custom-input-wrapper {
+  position: relative;
+  display: inline-flex !important;
+  align-items: center; /* Ուղղահայաց կենտրոնացում երեխաների համար */
+  padding: var(--wrapper-padding); 
+  background: transparent;
+  z-index: 1;
+  border: var(--line-thickness) solid transparent;
+  width: var(--wrapper-width, 100%) !important;
+  max-width: 100%;
+  height: var(--wrapper-height);
+  box-sizing: border-box;
+  font-size: var(--font-size);
+  font-weight: var(--font-weight);
+  letter-spacing: var(--letter-spacing);
+  line-height: var(--line-height);
+}
+
+/* Կլորացված եզրագծերի սեգմենտներ */
+.border-segment {
+  position: absolute;
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.border-left-bottom {
+  top: calc(var(--line-thickness) * -0.5);
+  left: calc(var(--line-thickness) * -1);
+  bottom: calc(var(--line-thickness) * -0.5);
+  right: var(--border-left-bottom-gap);
+  border-left: var(--line-thickness) solid var(--primary-color);
+  border-bottom: var(--line-thickness) solid var(--primary-color);
+  border-bottom-left-radius: var(--border-radius);
+}
+
+/* Կլոր ծայրեր ձախ/ներքևի եզրագծի համար */
+.border-left-bottom::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: calc(var(--line-thickness) * -1);
+  transform: translateY(-50%);
+  width: var(--line-thickness);
+  height: var(--line-thickness);
+  background-color: var(--primary-color);
+  border-radius: 50%;
+}
+
+.border-left-bottom::after {
+  content: "";
+  position: absolute;
+  bottom: calc(var(--line-thickness) * -1);
+  right: 0;
+  transform: translateX(50%);
+  width: var(--line-thickness);
+  height: var(--line-thickness);
+  background-color: var(--primary-color);
+  border-radius: 50%;
+}
+
+.border-top-right {
+  top: calc(var(--line-thickness) * -1);
+  left: var(--border-top-right-gap);
+  bottom: 0;
+  right: calc(var(--line-thickness) * -1);
+  border-top: var(--line-thickness) solid var(--primary-color);
+  border-right: var(--line-thickness) solid var(--primary-color);
+  border-top-right-radius: var(--border-radius);
+}
+
+/* Կլոր ծայրեր վերևի/աջ եզրագծի համար */
+.border-top-right::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--line-thickness) * -1);
+  left: 0;
+  transform: translateX(-50%);
+  width: var(--line-thickness);
+  height: var(--line-thickness);
+  background-color: var(--primary-color);
+  border-radius: 50%;
+}
+
+.border-top-right::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  right: calc(var(--line-thickness) * -1);
+  transform: translateY(50%);
+  width: var(--line-thickness);
+  height: var(--line-thickness);
+  background-color: var(--primary-color);
+  border-radius: 50%;
+}
+
+.input-style-base {
+  font-size: inherit;         
+  font-weight: inherit;
+  letter-spacing: inherit;
+  font-family: inherit; 
+  line-height: inherit;
+}
+
+/* Բուն Input դաշտը */
+.custom-input-wrapper input {
+  position: relative;
+  z-index: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-color);
+  padding: 0;
+  margin: 0;
+  caret-color: transparent; 
+  width: 100%; 
+  height: auto;
+  line-height: normal;
+  box-sizing: border-box;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Բուն Textarea դաշտը */
+.custom-input-wrapper textarea {
+  position: relative;
+  z-index: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-color);
+  padding: var(--input-padding-y) 0;
+  margin: 0;
+  caret-color: transparent; 
+  width: 100%; 
+  height: 100%;
+  line-height: var(--line-height);
+  box-sizing: border-box;
+  resize: none;
+  overflow: auto;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.custom-input-wrapper input::placeholder,
+.custom-input-wrapper textarea::placeholder {
+  color: var(--text-color);
+  opacity: 1;
+}
+
+/* Չափիչ տարրեր */
+.text-measurer {
+  position: absolute;
+  visibility: hidden;
+  white-space: pre;
+  left: var(--wrapper-padding); 
+  padding: 0;
+  margin: 0;
+  pointer-events: none;
+}
+
+.textarea-mirror {
+  position: absolute;
+  visibility: hidden;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  left: var(--wrapper-padding); 
+  top: var(--wrapper-padding);
+  padding: var(--input-padding-y) 0;
+  margin: 0;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+/* Աջ կողմի անշարժ ուղղահայաց գիծը */
+.fake-vertical-cur {
+  position: absolute;
+  right: var(--right-cursor-right);
+  bottom: var(--right-cursor-bottom-unfocused);
+  width: var(--line-thickness);
+  height: var(--right-cursor-height-unfocused);
+  max-height: 45px;
+  background-color: var(--primary-color);
+  border-radius: var(--border-radius);
+  z-index: 2;
+  pointer-events: none;
+  /* Սահուն անիմացիա բռնակի դիրքի և բարձրության համար */
+  transition: bottom 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67),
+              height 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67),
+              opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+}
+
+/* Resize հնարավորություն աջ կուրսորի համար */
+.custom-input-wrapper.resizable-wrapper .fake-vertical-cur {
+  cursor: se-resize;
+  pointer-events: auto;
+  user-select: none;
+  touch-action: none;
+}
+
+/* Շարժվող ձախ անկախ գիծը (որը դառնում է կուրսոր) */
+.fake-cursor {
+  position: absolute;
+  left: var(--left-cursor-left); 
+  top: var(--left-cursor-top-unfocused); 
+  bottom: var(--left-cursor-bottom-unfocused); 
+  width: var(--line-thickness);
+  height: var(--left-cursor-height-unfocused);
+  max-height: 45px;
+  background-color: var(--primary-color);
+  border-radius: var(--border-radius);
+  z-index: 3;
+  pointer-events: none;
+  transform: translateY(0);
+
+  /* Սահուն անիմացիա */
+  transition: left 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), 
+              top 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), 
+              bottom 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67),
+              height 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67),
+              transform 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67),
+              opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+}
+
+/* Գրելու ընթացքում անջատում ենք կուրսորի անիմացիաները/transition-ը */
+.custom-input-wrapper.is-typing .fake-cursor {
+  transition: none !important;
+}
+
+/* Կուրսորի թարթելը և չափերը ֆոկուսի ժամանակ (Input) */
+.custom-input-wrapper input:focus ~ .fake-cursor {
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%);
+  height: var(--font-size-cursor);
+  width: var(--focused-cursor-width);
+  max-height: none;
+  animation: blink 0.8s infinite steps(2, start);
+}
+
+/* Կուրսորի թարթելը և չափերը ֆոկուսի ժամանակ (Textarea) */
+.custom-input-wrapper textarea:focus ~ .fake-cursor {
+  height: var(--font-size-cursor);
+  width: var(--focused-cursor-width);
+  max-height: none;
+  animation: blink 0.8s infinite steps(2, start);
+}
+
+@keyframes blink {
+  to { visibility: hidden; }
+}
+
+/* Գեղեցիկ scrollbar textarea-ի համար */
+.custom-input-wrapper textarea::-webkit-scrollbar {
+  width: 8px;
+}
+.custom-input-wrapper textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-input-wrapper textarea::-webkit-scrollbar-thumb {
+  background-color: var(--text-color);
+  border-radius: 4px;
+  border: 2px solid transparent;
+}
+
+/* ==========================================
+   ՍԱՀՆԱԿԻ (SLIDER) ՈՃԵՐԸ
+   ========================================== */
+hd-slider.custom-slider-wrapper,
+.custom-slider-wrapper {
+  --line-thickness: 3px;
+  --line-thickness-inactive: 3px;
+  --handle-width: 2.5px;
+  --handle-height: 20px;
+  --wrapper-width: 100%;
+  --slider-percentage: 50%;
+  --gap-offset: calc(var(--handle-width, 5px) + var(--handle-gap, 4px) / 2 + 2px);
+
+  position: relative;
+  display: inline-flex !important;
+  align-items: center;
+  width: var(--wrapper-width, 100%) !important;
+  max-width: 100%;
+  height: var(--wrapper-height, 60px); /* Բավարար բարձրություն կուրսոր-բռնակների համար */
+  box-sizing: border-box;
+}
+
+.custom-slider-wrapper .real-slider {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 10;
+  margin: 0;
+}
+
+.custom-slider-wrapper .slider-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 0;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.custom-slider-wrapper .track-active {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: calc(var(--line-thickness, 3px) * 3);
+  background-color: var(--primary-color, #254d4e);
+  transform: translateY(-50%);
+  border-radius: 9999px 0 0 9999px;
+  width: calc(var(--slider-percentage, 50%) - var(--gap-offset));
+}
+
+.custom-slider-wrapper .track-inactive {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: var(--line-thickness-inactive, 4px);
+  background-color: var(--inactive-color, #7b9191);
+  transform: translateY(-50%);
+  border-radius: 0 9999px 9999px 0;
+  left: calc(var(--slider-percentage, 50%) + var(--gap-offset));
+}
+
+.custom-slider-wrapper .slider-handle {
+  position: absolute;
+  top: 50%;
+  width: calc(var(--handle-width, 5px) * 1.5 + var(--handle-gap, 4px));
+  height: var(--handle-height, 40px);
+  background-color: transparent;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 2;
+  left: var(--slider-percentage, 50%);
+}
+
+/* Սահուն անցում սլայդերի վրա կտտացնելու ժամանակ */
+.custom-slider-wrapper.smooth-transition .track-active {
+  transition: width 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+}
+.custom-slider-wrapper.smooth-transition .track-inactive {
+  transition: left 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+}
+.custom-slider-wrapper.smooth-transition .slider-handle {
+  transition: left 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+}
+
+.custom-slider-wrapper .handle-line {
+  position: absolute;
+  width: var(--handle-width, 5px);
+  height: var(--handle-height, 40px);
+  background-color: var(--primary-color, #254d4e);
+  border-radius: calc(var(--handle-width, 5px) / 2);
+  transform: translateY(-50%);
+  /* Սահուն անցում գծերի դիրքափոխության համար */
+  transition: top 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+}
+
+.custom-slider-wrapper .handle-left {
+  left: 0;
+  top: calc(50% + var(--handle-offset, 4px));
+}
+
+.custom-slider-wrapper .handle-right {
+  right: 0;
+  top: calc(50% - var(--handle-offset, 4px));
+}
+
+/* Բռնվելու (active) ժամանակ ձախ և աջ գծերը սահուն տեղերով փոխվում են (ձախը բարձրանում է, աջը՝ իջնում) */
+.custom-slider-wrapper .real-slider:active ~ .slider-handle .handle-left {
+  top: calc(50% - var(--handle-offset, 4px));
+}
+
+.custom-slider-wrapper .real-slider:active ~ .slider-handle .handle-right {
+  top: calc(50% + var(--handle-offset, 4px));
+}
+
+/* ==========================================
+   ԿՈՃԱԿԻ (BUTTON) ՈՃԵՐԸ
+   ========================================== */
+hd-button.custom-button-wrapper,
+.custom-button-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--wrapper-padding, 12px 30px); 
+  background-color: var(--primary-color, #254d4e);
+  border-top-right-radius: calc(var(--border-radius) - var(--line-thickness, 5px));
+  border-bottom-left-radius: calc(var(--border-radius) - var(--line-thickness, 5px));
+  z-index: 1;
+  border: var(--line-thickness, 5px) solid transparent;
+  width: var(--wrapper-width, auto);
+  max-width: 100%;
+  height: var(--wrapper-height, 60px);
+  box-sizing: border-box;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  /* Typography */
+  font-size: var(--font-size);         
+  font-weight: var(--font-weight, 700);
+  letter-spacing: var(--letter-spacing, 4px);
+  font-family: inherit;
+  color: var(--primary-contrast-color, #ffffff);
+  text-transform: uppercase;
+  transition: color 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), background-color 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+}
+
+/* Կոճակի սեգմենտների կլորակների (after և before) հեռացում */
+.custom-button-wrapper .border-left-bottom::before,
+.custom-button-wrapper .border-left-bottom::after,
+.custom-button-wrapper .border-top-right::before,
+.custom-button-wrapper .border-top-right::after {
+  display: none;
+}
+
+/* Կոճակի տեքստի գույնի փոփոխություն hover-ի ժամանակ */
+.custom-button-wrapper:hover {
+  color: var(--primary-contrast-color, #ffffff);
+  opacity: 0.9;
+}
+
+/* Ձախ և աջ կուրսորների ոճերը կոճակի համար (սպիտակ ֆոն, 3px եզրագիծ նույն ֆոնի գույնով) */
+.custom-button-wrapper .fake-cursor,
+.custom-button-wrapper .fake-vertical-cur {
+  background-color: #ffffff;
+  border: 3px solid var(--primary-color, #254d4e);
+  box-sizing: border-box;
+  width: calc(var(--line-thickness) + 6px);
+  transition: all 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+}
+
+.custom-button-wrapper .fake-cursor {
+  left: calc(var(--left-cursor-left) - 3px);
+}
+
+.custom-button-wrapper .fake-vertical-cur {
+  right: calc(var(--right-cursor-right) - 3px);
+}
+
+/* Hover անիմացիա բռնակների համար (տեղերով սահուն փոխվում են) */
+.custom-button-wrapper:hover .fake-cursor {
+  top: calc(50% - (var(--left-cursor-height-unfocused, 54px) / 2) + calc(var(--wrapper-height, 60px) * 0.25)); /* իջնում է ներքև */
+}
+
+.custom-button-wrapper:hover .fake-vertical-cur {
+  bottom: calc(50% - (var(--right-cursor-height-unfocused, 54px) / 2) + calc(var(--wrapper-height, 60px) * 0.25)); /* բարձրանում է վերև */
+}
+
+/* Click (active) անիմացիա - կուրսորները սեղմվում են (կրճատվում են սահուն) */
+.custom-button-wrapper:active .fake-cursor {
+  height: calc(var(--wrapper-height, 60px) * 0.36);
+  top: calc(50% - calc(var(--wrapper-height, 60px) * 0.18));
+}
+
+.custom-button-wrapper:active .fake-vertical-cur {
+  height: calc(var(--wrapper-height, 60px) * 0.36);
+  bottom: calc(50% - calc(var(--wrapper-height, 60px) * 0.18));
+}
+
+/* ==========================================
+   CHECKBOX & RADIO ՈՃԵՐԸ
+   ========================================== */
+hd-checkbox.custom-checkbox-wrapper,
+.custom-checkbox-wrapper,
+hd-radio.custom-radio-wrapper,
+.custom-radio-wrapper {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  font-family: inherit;
+  font-size: var(--font-size);
+  font-weight: var(--font-weight, 500);
+  color: var(--text-color, #647c7c);
+  gap: 12px;
+  border: none;
+  box-sizing: border-box;
+}
+
+/* Թաքնվում են բուն inputs-ը */
+.custom-checkbox-wrapper .real-checkbox,
+.custom-radio-wrapper .real-radio {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* ------------------------------------------
+   CHECKBOX
+   ------------------------------------------ */
+.custom-checkbox-wrapper .checkbox-box {
+  position: relative;
+  display: inline-block;
+  width: var(--checkbox-size, 36px);
+  height: var(--checkbox-size, 36px);
+  border: var(--line-thickness, 5px) solid var(--primary-color, #254d4e);
+  border-radius: calc(var(--checkbox-size, 36px) * 0.22);
+  box-sizing: border-box;
+  background: transparent;
+  transition: border-color 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+}
+
+.custom-checkbox-wrapper .checkmark-line {
+  position: absolute;
+  width: var(--line-thickness, 5px);
+  background-color: var(--check-color, #647c7c);
+  border-radius: calc(var(--line-thickness, 5px) / 2);
+  /* opacity: 0; */
+  transform-origin: top center;
+}
+
+/* Ձախ թեք գիծը */
+.custom-checkbox-wrapper .check-left {
+  left: calc(var(--checkbox-size, 36px) * 0.1 - var(--line-thickness, 5px) / 2);
+  top: calc(var(--checkbox-size, 36px) * 0.2);
+  height: calc(var(--checkbox-size, 36px) * 0.35);
+  transform: rotate(-45deg) scaleY(0);
+  transition: transform 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+  transition-delay: 0.2s; /* Wait for right line to shrink (0.2s) when unchecking */
+}
+
+/* Աջ թեք գիծը */
+.custom-checkbox-wrapper .check-right {
+  left: calc(var(--checkbox-size, 36px) * 0.36 - var(--line-thickness, 5px) / 2);
+  top: calc(var(--checkbox-size, 36px) * 0.61);
+  height: calc(var(--checkbox-size, 36px) * 1.05);
+  transform: rotate(-135deg) scaleY(0);
+  transition: transform 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+  transition-delay: 0s; /* Shrink immediately when unchecking */
+}
+
+/* Checked վիճակում ակտիվացնում ենք նշանը */
+.custom-checkbox-wrapper .real-checkbox:checked ~ .checkbox-box .checkmark-line {
+  opacity: 1;
+}
+
+.custom-checkbox-wrapper .real-checkbox:checked ~ .checkbox-box .check-left {
+  transform: rotate(-45deg) scaleY(1);
+  transition-delay: 0s; /* Draw immediately when checking */
+}
+
+.custom-checkbox-wrapper .real-checkbox:checked ~ .checkbox-box .check-right {
+  transform: rotate(-135deg) scaleY(1);
+  transition-delay: 0.12s; /* Wait for left line to draw (0.12s) when checking */
+}
+
+/* ------------------------------------------
+   RADIO BUTTON
+   ------------------------------------------ */
+.custom-radio-wrapper .radio-circle {
+  position: relative;
+  display: inline-block;
+  width: var(--radio-size, 36px);
+  height: var(--radio-size, 36px);
+  border: var(--line-thickness, 5px) solid var(--primary-color, #254d4e);
+  border-radius: 50%;
+  box-sizing: border-box;
+  background: transparent;
+  transition: border-color 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+}
+
+.custom-radio-wrapper .radio-inner-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--radio-size, 36px) * 0.5);
+  height: calc(var(--radio-size, 36px) * 0.5);
+  background-color: var(--check-color, #647c7c);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  transition: opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), 
+              transform 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+}
+
+/* Checked վիճակում ակտիվացնում ենք կետը */
+.custom-radio-wrapper .real-radio:checked ~ .radio-circle .radio-inner-dot {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* ==========================================
+   SCROLLBAR ՈՃԵՐԸ (GLOBAL CUSTOM SCROLLBAR)
+   ========================================== */
+/* Սքրոլվող կաղապարի համար */
+hd-scrollbar.custom-scrollbar-wrapper,
+.custom-scrollbar-wrapper {
+  overflow: auto;
+  border: none;
+  box-sizing: border-box;
+}
+
+/* Firefox-ի համար գլոբալ */
+* {
+  scrollbar-color: var(--primary-color, #254d4e) transparent;
+  scrollbar-width: thin;
+}
+
+/* Chrome, Edge, Safari (Webkit) համար գլոբալ */
+::-webkit-scrollbar {
+  width: var(--scrollbar-size, 16px);
+  height: var(--scrollbar-size, 16px);
+  display: block; /* Երբեք չթաքցնել սքրոլբարը */
+}
+
+::-webkit-scrollbar-track {
+  background: linear-gradient(
+    to right,
+    transparent calc(50% - var(--line-thickness, 4px) / 2),
+    var(--inactive-color, #7b9191) calc(50% - var(--line-thickness, 4px) / 2),
+    var(--inactive-color, #7b9191) calc(50% + var(--line-thickness, 4px) / 2),
+    transparent calc(50% + var(--line-thickness, 4px) / 2)
+  );
+  border-radius: var(--border-radius, 8px);
+}
+
+::-webkit-scrollbar-track:horizontal {
+  background: linear-gradient(
+    to bottom,
+    transparent calc(50% - var(--line-thickness, 4px) / 2),
+    var(--inactive-color, #7b9191) calc(50% - var(--line-thickness, 4px) / 2),
+    var(--inactive-color, #7b9191) calc(50% + var(--line-thickness, 4px) / 2),
+    transparent calc(50% + var(--line-thickness, 4px) / 2)
+  );
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--primary-color, #254d4e);
+  border-radius: var(--border-radius, 8px);
+  /* Շարժիչի (thumb) լայնությունը սահմանում ենք ճիշտ այնքան, որքան slider-ի բռնակի լայնությունն է (var(--handle-width, 5px)) */
+  border: calc((var(--scrollbar-size, 16px) - var(--handle-width, 5px)) / 2) solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-color, #647c7c);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: var(--primary-color, #254d4e);
+  /* Սեղմելիս thumb-ը դառնում է ավելի հաստ (border-ը փոքրանում է՝ դարձնելով շարժիչը 8px) */
+  border-width: calc((var(--scrollbar-size, 16px) - (var(--handle-width, 5px) + 3px)) / 2);
+}
+
+/* ==========================================
+   SWITCH / TOGGLE ՈՃԵՐԸ
+   ========================================== */
+hd-switch.custom-switch-wrapper,
+.custom-switch-wrapper {
+  --switch-width: 80px;
+  --switch-height: 40px;
+  --border-color: var(--inactive-color, #7b9191);
+  --border-top-right-gap: calc(var(--handle-gap, 4px) + var(--line-thickness, 5px) - 3px);
+  --border-left-bottom-gap: calc(var(--handle-gap, 4px) + var(--line-thickness, 5px) - 1px);
+  --border-radius: calc(120px * 0.13);
+  --handle-gap-top: calc(var(--handle-gap, 4px) - 1px);
+
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  font-family: inherit;
+  font-size: var(--font-size);
+  font-weight: var(--font-weight, 500);
+  color: var(--text-color, #647c7c);
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+  border: none;
+  box-sizing: border-box;
+}
+
+.custom-switch-wrapper .real-switch {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+hd-switch.custom-switch-wrapper .switch-box,
+.custom-switch-wrapper .switch-box {
+  position: relative;
+  display: inline-block;
+  width: var(--switch-width);
+  height: var(--switch-height);
+  border: var(--line-thickness, 5px) solid transparent;
+  box-sizing: border-box;
+  background: transparent;
+  z-index: 1;
+}
+
+/* Գունային վիճակի փոփոխություններ L-ձև եզրագծերի համար */
+.custom-switch-wrapper .real-switch:checked ~ .switch-box {
+  --border-color: var(--primary-color, #254d4e);
+}
+
+.custom-switch-wrapper .border-left-bottom {
+  top: calc(var(--line-thickness, 5px) * -0.5);
+  border-left-color: var(--border-color);
+  border-bottom-color: var(--border-color);
+  transition: border-color 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+}
+.custom-switch-wrapper .border-left-bottom::before,
+.custom-switch-wrapper .border-left-bottom::after {
+  background-color: var(--border-color);
+  transition: background-color 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.custom-switch-wrapper .border-top-right {
+  bottom: calc(var(--line-thickness, 5px) * -0.1);
+  border-top-color: var(--border-color);
+  border-right-color: var(--border-color);
+  transition: border-color 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+}
+.custom-switch-wrapper .border-top-right::before,
+.custom-switch-wrapper .border-top-right::after {
+  background-color: var(--border-color);
+  transition: background-color 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Շարժվող բռնակը (Switch Handle) */
+.custom-switch-wrapper .switch-handle {
+  position: absolute;
+  top: var(--handle-gap-top, calc(var(--handle-gap, 4px) - 1px));
+  left: var(--handle-gap, 4px);
+  width: calc(var(--switch-height) - var(--line-thickness, 5px) * 2 - var(--handle-gap, 4px) * 2);
+  height: calc(var(--switch-height) - var(--line-thickness, 5px) * 2 - var(--handle-gap, 4px) * 2);
+  background-color: var(--border-color);
+  border-radius: calc(var(--border-radius) - var(--line-thickness, 5px) - var(--handle-gap, 4px));
+  transform: translateX(0);
+  z-index: 2;
+  transition: transform 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), 
+              background-color 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67),
+              opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+}
+
+.custom-switch-wrapper .real-switch:checked ~ .switch-box .switch-handle {
+  transform: translateX(calc(var(--switch-width) - var(--switch-height)));
+}
+
+/* Switch-ի ներսի տեքստային պիտակները */
+.custom-switch-wrapper .switch-text-on,
+.custom-switch-wrapper .switch-text-off {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: calc(var(--switch-height) * 0.28);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67),
+              color 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+  line-height: 1;
+}
+
+.custom-switch-wrapper .switch-text-on {
+  left: 0;
+  width: 50%;
+  text-align: center;
+  padding-left: calc(var(--line-thickness, 5px) + 2px);
+  padding-right: 2px;
+  box-sizing: border-box;
+  color: var(--primary-color, #254d4e);
+  opacity: 0;
+}
+
+.custom-switch-wrapper .switch-text-off {
+  right: 0;
+  width: 50%;
+  text-align: center;
+  padding-right: calc(var(--line-thickness, 5px) + 2px);
+  padding-left: 2px;
+  box-sizing: border-box;
+  color: var(--inactive-color, #7b9191);
+  opacity: 1;
+}
+
+.custom-switch-wrapper .real-switch:checked ~ .switch-box .switch-text-on {
+  opacity: 1;
+}
+
+.custom-switch-wrapper .real-switch:checked ~ .switch-box .switch-text-off {
+  opacity: 0;
+}
+
+/* ----------------------------------------------------
+   ՏԵՔՍՏՈՎ ԿՈՃԱԿԻ (HANDLE TEXT) ՈՃԵՐԸ (data-text-mode="handle")
+   ---------------------------------------------------- */
+
+/* 1. Pill-ձև բռնակի լայնությունը և դիրքը */
+.custom-switch-wrapper[data-text-mode="handle"] .switch-handle {
+  width: calc(((var(--switch-width) - var(--line-thickness, 5px) * 2) / 2) - var(--handle-gap, 4px) * 1.5);
+}
+
+.custom-switch-wrapper[data-text-mode="handle"] .real-switch:checked ~ .switch-box .switch-handle {
+  transform: translateX(calc(((var(--switch-width) - var(--line-thickness, 5px) * 2) / 2) - var(--handle-gap, 4px) * 0.5));
+}
+
+/* 2. Բռնակի ներսի տեքստերի ձևավորումը */
+.custom-switch-wrapper[data-text-mode="handle"] .switch-handle .switch-handle-text-on,
+.custom-switch-wrapper[data-text-mode="handle"] .switch-handle .switch-handle-text-off {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: calc(var(--switch-height) * 0.28);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #ffffff; /* White text inside the active handle */
+  pointer-events: none;
+  white-space: nowrap;
+  transition: opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+  line-height: 1;
+}
+
+.custom-switch-wrapper[data-text-mode="handle"] .switch-handle .switch-handle-text-on {
+  opacity: 0;
+}
+
+.custom-switch-wrapper[data-text-mode="handle"] .switch-handle .switch-handle-text-off {
+  opacity: 1;
+}
+
+.custom-switch-wrapper[data-text-mode="handle"] .real-switch:checked ~ .switch-box .switch-handle .switch-handle-text-on {
+  opacity: 1;
+}
+
+.custom-switch-wrapper[data-text-mode="handle"] .real-switch:checked ~ .switch-box .switch-handle .switch-handle-text-off {
+  opacity: 0;
+}
+
+/* 3. Տակից երևացող (track) տեքստերի ձևավորումը, որոնք միշտ տեսանելի են */
+.custom-switch-wrapper[data-text-mode="handle"] .switch-text-on,
+.custom-switch-wrapper[data-text-mode="handle"] .switch-text-off {
+  color: var(--text-color, #647c7c) !important;
+}
+
+.custom-switch-wrapper[data-text-mode="handle"] .real-switch:checked ~ .switch-box .switch-text-on,
+.custom-switch-wrapper[data-text-mode="handle"] .real-switch:checked ~ .switch-box .switch-text-off,
+.custom-switch-wrapper[data-text-mode="handle"] .switch-text-on,
+.custom-switch-wrapper[data-text-mode="handle"] .switch-text-off {
+  opacity: 0.6 !important;
+}
+
+/* ==========================================
+   SEGMENT SELECTOR (TAB SELECT) ՈՃԵՐԸ
+   ========================================== */
+hd-segment.custom-segment-wrapper,
+.custom-segment-wrapper {
+  --segment-width: 240px;
+  --segment-height: 40px;
+  --border-color: var(--inactive-color, #7b9191);
+  --border-top-right-gap: calc(var(--handle-gap, 4px) + var(--line-thickness, 5px) - 3px);
+  --border-left-bottom-gap: calc(var(--handle-gap, 4px) + var(--line-thickness, 5px) - 1px);
+  --border-radius: calc(120px * 0.13);
+  --handle-gap-bottom: calc(var(--handle-gap, 4px) + 1px);
+
+  display: inline-flex;
+  position: relative;
+  width: var(--segment-width);
+  height: var(--segment-height);
+  box-sizing: border-box;
+  cursor: pointer;
+  user-select: none;
+  font-family: inherit;
+  z-index: 1;
+}
+
+.custom-segment-wrapper .segment-box {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  border: var(--line-thickness, 5px) solid transparent;
+  box-sizing: border-box;
+  background: transparent;
+  z-index: 1;
+}
+
+.custom-segment-wrapper .segment-options {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+.custom-segment-wrapper .segment-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--segment-height) * 0.28);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--inactive-color, #7b9191);
+  opacity: 0.7;
+  transform: translateY(-1px);
+  transition: color 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67),
+              opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+  box-sizing: border-box;
+}
+
+.custom-segment-wrapper .segment-option.active {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Sliding segment handle container (transparent, equal to one option's width) */
+.custom-segment-wrapper .segment-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: calc(100% / var(--options-count, 2));
+  transform: translateX(calc(var(--selected-index, 0) * 100%));
+  transition: transform 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67),
+              background-color 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67),
+              opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* The actual colored slider pill inside the handle container */
+.custom-segment-wrapper .segment-handle::after {
+  content: "";
+  position: absolute;
+  top: var(--handle-gap, 4px);
+  bottom: var(--handle-gap-bottom, calc(var(--handle-gap, 4px) + 1px));
+  left: var(--handle-gap, 4px);
+  right: var(--handle-gap, 4px);
+  background-color: var(--primary-color, #254d4e);
+  border-radius: calc(var(--border-radius) - var(--line-thickness, 5px) - var(--handle-gap, 4px));
+  transition: background-color 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+}
+
+/* Չափափոխման կուրսորի փոփոխություն, երբ հորիզոնական resize-ը անջատված է */
+.custom-input-wrapper[data-disable-horizontal-resize="true"] .fake-vertical-cur {
+  cursor: ns-resize;
+}
+
+/* Textarea-ի ներսում գտնվող toggle-ի ոճերը */
+.custom-input-wrapper .textarea-toggle {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  z-index: 10;
+  margin: 0;
+  padding: 0;
+}
+
+.custom-input-wrapper:has(.textarea-toggle) textarea {
+  padding-right: 54px;
+}
+
+.custom-input-wrapper:has(.textarea-toggle) .textarea-mirror {
+  padding-right: 54px;
+}
+
+/* ==========================================
+   DROPDOWN MENU (SELECT) ՈՃԵՐԸ
+   ========================================== */
+hd-select.custom-select-wrapper,
+.custom-select-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--wrapper-padding); 
+  background: transparent;
+  z-index: 5; /* Higher z-index to overlap other components when options are open */
+  border: var(--line-thickness) solid transparent;
+  width: var(--wrapper-width, 250px);
+  max-width: 100%;
+  height: var(--wrapper-height, 60px);
+  box-sizing: border-box;
+  cursor: pointer;
+  user-select: none;
+}
+
+.custom-select-wrapper .select-trigger {
+  color: var(--text-color);
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 24px;
+}
+
+.custom-select-wrapper .select-options-panel {
+  position: absolute;
+  top: calc(100% + var(--line-thickness));
+  left: calc(var(--line-thickness) * -1);
+  right: calc(var(--line-thickness) * -1);
+  background: #ffffff;
+  border: var(--line-thickness) solid var(--primary-color);
+  border-radius: var(--border-radius);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  
+  /* Smooth transition properties */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition: opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67),
+              transform 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67),
+              visibility 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+}
+
+.custom-select-wrapper.open {
+  z-index: 1000;
+}
+
+.custom-select-wrapper.open .select-options-panel {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.custom-select-wrapper.open-top .select-options-panel {
+  transform: translateY(8px);
+}
+
+.custom-select-wrapper.open-top.open .select-options-panel {
+  transform: translateY(0);
+}
+
+.custom-select-wrapper .select-option {
+  padding: 10px 16px;
+  color: var(--text-color);
+  font-size: calc(var(--font-size) * 0.9);
+  font-weight: 500;
+  transition: background 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), color 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+}
+
+.custom-select-wrapper .select-option:hover {
+  background: var(--primary-color);
+  color: var(--primary-contrast-color, #ffffff);
+}
+
+.custom-select-wrapper .select-option.selected {
+  background: hsl(var(--hue), var(--primary-sat), calc(var(--primary-lit) + (100% - var(--primary-lit)) * 0.6));
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+/* Dropdown arrow rotation */
+.custom-select-wrapper .fake-vertical-cur.select-arrow {
+  right: var(--right-cursor-right);
+  transition: transform 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), height 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), bottom 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+}
+
+.custom-select-wrapper.open .fake-vertical-cur.select-arrow {
+  transform: rotate(180deg);
+}
+
+/* ==========================================
+   COLOR PICKER & PANEL ՈՃԵՐԸ
+   ========================================== */
+hd-color-picker.custom-color-picker-wrapper,
+.custom-color-picker-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--wrapper-padding);
+  background: transparent;
+  z-index: 4;
+  border: var(--line-thickness) solid transparent;
+  width: var(--wrapper-width, 250px);
+  max-width: 100%;
+  height: var(--wrapper-height, 60px);
+  box-sizing: border-box;
+  cursor: pointer;
+  user-select: none;
+}
+
+.custom-color-picker-wrapper .color-preview-swatch {
+  width: calc(var(--wrapper-height) - var(--wrapper-padding) * 2 - var(--line-thickness) * 2);
+  height: calc(var(--wrapper-height) - var(--wrapper-padding) * 2 - var(--line-thickness) * 2);
+  border-radius: calc(var(--border-radius) * 0.5);
+  border: 1px solid rgba(0,0,0,0.15);
+  margin-right: 12px;
+  box-sizing: border-box;
+}
+
+.custom-color-picker-wrapper .color-value-text {
+  color: var(--text-color);
+  font-family: monospace;
+}
+
+/* Popover Panel */
+.custom-color-picker-wrapper .color-picker-panel {
+  position: absolute;
+  top: calc(100% + var(--line-thickness));
+  left: calc(var(--line-thickness) * -1);
+  background: #ffffff;
+  z-index: 100;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  box-sizing: border-box;
+  cursor: default;
+  width: 320px;
+  max-width: calc(100vw - 20px);
+
+  /* Smooth transition properties */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition: opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67),
+              transform 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67),
+              visibility 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+}
+
+@media (max-width: 480px) {
+  .custom-color-picker-wrapper .color-picker-panel {
+    left: auto;
+    right: calc(var(--line-thickness) * -1);
+  }
+}
+
+.custom-color-picker-wrapper.open {
+  z-index: 1000;
+}
+
+.custom-color-picker-wrapper.open .color-picker-panel {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Standalone Color Panel Element */
+hd-color-panel.custom-color-panel-wrapper,
+.custom-color-panel-wrapper {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: #ffffff;
+  z-index: 1;
+  border: var(--line-thickness) solid transparent;
+  width: var(--wrapper-width, 320px);
+  max-width: 100%;
+  box-sizing: border-box;
+  border-radius: var(--border-radius);
+}
+
+/* Slider Track Rainbow Gradients */
+.custom-slider-wrapper[data-slider-type="hue"] .slider-track,
+.custom-slider-wrapper[data-slider-type="sat"] .slider-track,
+.custom-slider-wrapper[data-slider-type="lit"] .slider-track {
+  height: var(--line-thickness, 8px) !important;
+  border-radius: 9999px !important;
+  left: 0 !important;
+  right: 0 !important;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.15) !important;
+}
+
+.custom-slider-wrapper[data-slider-type] .track-active,
+.custom-slider-wrapper[data-slider-type] .track-inactive {
+  display: none !important;
+}
+
+/* Background Gradients */
+.custom-slider-wrapper[data-slider-type="hue"] .slider-track {
+  background: linear-gradient(
+    to right,
+    hsl(0, 100%, 50%),
+    hsl(60, 100%, 50%),
+    hsl(120, 100%, 50%),
+    hsl(180, 100%, 50%),
+    hsl(240, 100%, 50%),
+    hsl(300, 100%, 50%),
+    hsl(360, 100%, 50%)
+  ) !important;
+}
+
+/* Style the slider handle lines of HSL sliders to be white with a black border and shadow, ensuring high visibility over any color background */
+.custom-slider-wrapper[data-slider-type] .handle-line {
+  background-color: #ffffff !important;
+  border: 1px solid #000000 !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4) !important;
+  width: 6px !important;
+  border-radius: 3px !important;
+}
+
+/* Advanced Options Toggle Button */
+.advanced-toggle-btn {
+  height: 36px;
+  padding: 0 10px;
+  border: 2px solid var(--primary-color, #254d4e);
+  background: transparent;
+  color: var(--primary-color, #254d4e);
+  border-radius: var(--border-radius, 6px);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67), opacity 0.4s cubic-bezier(0.99, -0.67, 0.04, 1.67);
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.advanced-toggle-btn:hover {
+  background-color: var(--primary-color, #254d4e);
+  color: var(--primary-contrast-color, #ffffff);
+}
+
+.advanced-toggle-btn.active {
+  background-color: var(--primary-color, #254d4e);
+  color: var(--primary-contrast-color, #ffffff);
+}
