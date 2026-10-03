@@ -105,8 +105,8 @@ const TRANSLATIONS = {
         deleteFolderTitle: 'Ջնջել այս պանակը',
 
         // Window & Panels Menu
-        windowMenuBtn: 'Պատուհան',
-        windowMenuTitle: 'Կառավարել պանելների տեսանելիությունը',
+        windowMenuBtn: 'Փեղկեր',
+        windowMenuTitle: 'Կառավարել փեղկերը',
         panelCurves: 'Կորերի Շերտեր',
         panelToolbar: 'Առանցքի Կարգավորումներ',
         panelCanvas: 'Սպլայն Կտավ',
@@ -116,7 +116,7 @@ const TRANSLATIONS = {
         resetLayoutBtn: 'Վերականգնել Դիրքերը',
         moveUpTitle: 'Տեղափոխել վերև',
         moveDownTitle: 'Տեղափոխել ներքև',
-        closePanelTitle: 'Փակել պանելը',
+        closePanelTitle: 'Փակել փեղկը',
         collapsePanelTitle: 'Կոծկել փեղկը',
         expandPanelTitle: 'Բացել փեղկը',
         collapseFolderTitle: 'Կոծկել պանակը',
@@ -244,8 +244,8 @@ const TRANSLATIONS = {
         tourStep4Desc: 'Արագ անցեք կետերի միջև P0, P1 չիպերով, մուտքագրեք ճշգրիտ X/Y կոորդինատներ, ավելացրեք կամ հեռացրեք կետեր։ Հետարկեք կամ վերարկեք փոփոխությունները (Ctrl+Z / Ctrl+Y)։',
         tourStep5Title: '5. Նախադրվածքներ և Պանակներ',
         tourStep5Desc: 'Ընտրեք պատրաստի կորեր (S-Կոր, Ալիք, Ցատկ և այլն) կամ ստեղծեք ձերը («Ստեղծել Preset»)։ Խմբավորեք պանակներում և արտածեք/ներածեք JSON ֆայլերով։',
-        tourStep6Title: '6. Փեղկերի Կառավարում և Պատուհան',
-        tourStep6Desc: 'Սեղմեք ցանկացած փեղկի վերնագրին՝ այն կոծկելու համար։ Քաշեք բռնակից՝ վերադասավորելու համար։ Կարող եք փակել, իսկ վերևի «Պատուհան» ցանկից՝ նորից միացնել փակված փեղկերը։',
+        tourStep6Title: '6. Փեղկերի Կառավարում',
+        tourStep6Desc: 'Սեղմեք ցանկացած փեղկի վերնագրին՝ այն կոծկելու համար։ Քաշեք բռնակից՝ վերադասավորելու համար։ Կարող եք փակել, իսկ վերևի «Փեղկեր» ցանկից՝ նորից միացնել փակված փեղկերը։',
 
         // GitHub Updates
         updateModalTitle: 'Խրվակի Թարմացումներ',
@@ -358,8 +358,8 @@ const TRANSLATIONS = {
         deleteFolderTitle: 'Delete this folder',
 
         // Window & Panels Menu
-        windowMenuBtn: 'Window',
-        windowMenuTitle: 'Manage panel visibility and layout',
+        windowMenuBtn: 'Shutters',
+        windowMenuTitle: 'Manage Shutters',
         panelCurves: 'Curve Layers',
         panelToolbar: 'Axis Settings',
         panelCanvas: 'Spline Canvas',
@@ -369,9 +369,9 @@ const TRANSLATIONS = {
         resetLayoutBtn: 'Reset Layout',
         moveUpTitle: 'Move up',
         moveDownTitle: 'Move down',
-        closePanelTitle: 'Close panel',
-        collapsePanelTitle: 'Collapse panel',
-        expandPanelTitle: 'Expand panel',
+        closePanelTitle: 'Close shutter',
+        collapsePanelTitle: 'Collapse shutter',
+        expandPanelTitle: 'Expand shutter',
         collapseFolderTitle: 'Collapse folder',
         expandFolderTitle: 'Expand folder',
 
@@ -497,8 +497,8 @@ const TRANSLATIONS = {
         tourStep4Desc: 'Quickly switch between points using P0, P1 chips, enter precise X/Y values, add or remove points, and Undo/Redo changes (Ctrl+Z / Ctrl+Y).',
         tourStep5Title: '5. Presets & Folders',
         tourStep5Desc: 'Choose from rich built-in presets (S-Curve, Wave, Bounce, etc.) or save your own ("Create Preset"). Group them into custom folders and export/import as JSON files.',
-        tourStep6Title: '6. Modular Panels & Window Menu',
-        tourStep6Desc: 'Click any panel header to collapse/expand. Drag the handle to reorder panels. Use Close to close panels, and restore closed panels from the top "Window" menu.',
+        tourStep6Title: '6. Shutters Management',
+        tourStep6Desc: 'Click any shutter header to collapse/expand. Drag the handle to reorder shutters. Use Close to hide shutters, and restore them anytime from the top "Shutters" menu.',
 
         // GitHub Updates
         updateModalTitle: 'Plugin Updates',

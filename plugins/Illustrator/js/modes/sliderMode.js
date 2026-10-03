@@ -110,7 +110,7 @@ class SliderMode {
                 </div>
                 <div class="slider-track-wrap">
                     <span class="range-bound min-bound">${min}</span>
-                    <hd-slider class="custom-slider-wrapper" id="hd-${axisId}" style="--slider-percentage: ${percent}%;">
+                    <div class="custom-slider-wrapper" id="hd-${axisId}" style="--slider-percentage: ${percent}%;">
                         <input type="range" class="real-slider" 
                                id="range-${axisId}" 
                                min="${min}" max="${max}" step="${step}" 
@@ -123,7 +123,7 @@ class SliderMode {
                             <div class="handle-line handle-left"></div>
                             <div class="handle-line handle-right"></div>
                         </div>
-                    </hd-slider>
+                    </div>
                     <span class="range-bound max-bound">${max}</span>
                 </div>
                 ${axisPresets.length > 0 ? `

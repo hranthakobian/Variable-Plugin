@@ -59,8 +59,8 @@ class AppController {
         // Initial selection load
         await this.refreshSelection(true);
 
-        // Position animated sliding tab indicator
-        this.updateTabIndicator(this.activeMode);
+        // Position animated sliding tab indicator and initialize active mode state
+        this.switchMode(this.activeMode);
         window.addEventListener('resize', () => {
             this.updateTabIndicator(this.activeMode);
         });
@@ -338,6 +338,20 @@ class AppController {
         document.getElementById('pane-graph').classList.toggle('active', modeName === 'graph');
         document.getElementById('pane-design-space').classList.toggle('active', modeName === 'designSpace');
 
+        // Only show "Փեղկեր" button when in "Արվեստանոց" (graph) mode
+        const winBtn = document.getElementById('btn-window-menu');
+        const winDropdown = document.getElementById('window-menu-dropdown');
+        if (winBtn) {
+            if (modeName === 'graph') {
+                winBtn.style.display = 'inline-flex';
+            } else {
+                winBtn.style.display = 'none';
+                if (winDropdown) {
+                    winDropdown.style.display = 'none';
+                }
+            }
+        }
+
         const hasNoSel = !this.currentSelectionInfo || !this.currentSelectionInfo.hasSelection;
         if (hasNoSel) {
             this.updateNoSelectionView(true, this.currentSelectionInfo ? this.currentSelectionInfo.documentTextFrames : []);
@@ -486,7 +500,7 @@ class AppController {
 
         const winHeading = document.getElementById('window-menu-heading');
         if (winHeading) {
-            winHeading.textContent = window.i18n.t('windowMenuTitle');
+            winHeading.textContent = window.i18n.t('windowMenuBtn');
         }
 
         const btnReset = document.getElementById('btn-reset-layout');

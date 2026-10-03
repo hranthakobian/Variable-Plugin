@@ -1465,7 +1465,9 @@ class GraphMode {
                 const body = card.querySelector('.graph-modular-card-body');
                 const btnCollapse = card.querySelector('.btn-card-collapse');
                 if (btnCollapse) {
-                    btnCollapse.innerHTML = isCollapsed ? '<i class="hd-icon hd-icon-chevrolt-arrow-right"></i>' : '<i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i>';
+                    if (!btnCollapse.querySelector('.hd-icon')) {
+                        btnCollapse.innerHTML = '<i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i>';
+                    }
                     btnCollapse.title = isCollapsed
                         ? (window.i18n ? window.i18n.t('expandPanelTitle') : 'Expand panel')
                         : (window.i18n ? window.i18n.t('collapsePanelTitle') : 'Collapse panel');
@@ -1520,17 +1522,182 @@ class GraphMode {
         }, 40);
     }
 
+    closeSectionWithFlightAnimation(cardId) {
+        const panel = this.container.querySelector('.graph-mode-panel');
+        const card = panel ? panel.querySelector(`.graph-modular-card[data-card-id="${cardId}"]`) : null;
+        const winBtn = document.getElementById('btn-window-menu');
+
+        if (!card) {
+            this.toggleSectionVisibility(cardId, false);
+            return;
+        }
+
+        // If "Փեղկեր" button is not visible or in DOM, fall back to direct hide
+        if (!winBtn || winBtn.offsetParent === null) {
+            this.toggleSectionVisibility(cardId, false);
+            return;
+        }
+
+        const cardRect = card.getBoundingClientRect();
+        const btnRect = winBtn.getBoundingClientRect();
+
+        const cardCenterX = cardRect.left + cardRect.width / 2;
+        const cardCenterY = cardRect.top + cardRect.height / 2;
+        const targetCenterX = btnRect.left + btnRect.width / 2;
+        const targetCenterY = btnRect.top + btnRect.height / 2;
+
+        const deltaX = targetCenterX - cardCenterX;
+        const deltaY = targetCenterY - cardCenterY;
+
+        // Create flying clone ghost
+        const ghost = document.createElement('div');
+        ghost.className = 'shutter-flying-particle';
+        ghost.style.left = `${cardRect.left}px`;
+        ghost.style.top = `${cardRect.top}px`;
+        ghost.style.width = `${cardRect.width}px`;
+        ghost.style.height = `${cardRect.height}px`;
+
+        ghost.innerHTML = card.innerHTML;
+        document.body.appendChild(ghost);
+
+        const flightDuration = 440;
+        const cubicEasing = 'cubic-bezier(0.22, 1, 0.36, 1)';
+
+        // Animate card out of layout smoothly with the same cubic curve
+        card.style.transition = `max-height ${flightDuration}ms ${cubicEasing}, margin ${flightDuration}ms ${cubicEasing}, opacity 260ms ${cubicEasing}, padding ${flightDuration}ms ${cubicEasing}`;
+        card.style.maxHeight = `${cardRect.height}px`;
+        card.style.overflow = 'hidden';
+        card.style.pointerEvents = 'none';
+
+        // Force reflow
+        void ghost.offsetWidth;
+        void card.offsetHeight;
+
+        requestAnimationFrame(() => {
+            ghost.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(0.025)`;
+            ghost.style.borderRadius = '50%';
+            ghost.style.opacity = '0.15';
+            ghost.style.background = 'var(--accent-blue, #0d99ff)';
+            ghost.style.borderColor = '#00d2ff';
+            ghost.style.boxShadow = '0 0 16px 4px rgba(13, 153, 255, 0.9), 0 0 6px #00d2ff';
+
+            card.style.maxHeight = '0px';
+            card.style.opacity = '0';
+            card.style.marginTop = '0px';
+            card.style.marginBottom = '0px';
+            card.style.paddingTop = '0px';
+            card.style.paddingBottom = '0px';
+            card.style.borderWidth = '0px';
+        });
+
+        setTimeout(() => {
+            ghost.remove();
+
+            card.style.transition = '';
+            card.style.maxHeight = '';
+            card.style.opacity = '';
+            card.style.marginTop = '';
+            card.style.marginBottom = '';
+            card.style.paddingTop = '';
+            card.style.paddingBottom = '';
+            card.style.borderWidth = '';
+            card.style.overflow = '';
+            card.style.pointerEvents = '';
+
+            this.toggleSectionVisibility(cardId, false);
+
+            winBtn.classList.remove('shutter-btn-pulse');
+            void winBtn.offsetWidth;
+            winBtn.classList.add('shutter-btn-pulse');
+            setTimeout(() => {
+                winBtn.classList.remove('shutter-btn-pulse');
+            }, 650);
+        }, flightDuration);
+    }
+
     toggleSectionCollapse(cardId) {
+        const panel = this.container.querySelector('.graph-mode-panel');
+        const card = panel ? panel.querySelector(`.graph-modular-card[data-card-id="${cardId}"]`) : null;
+        if (!card) {
+            return;
+        }
+
+        const body = card.querySelector('.graph-modular-card-body');
         const layout = this.getSectionsLayout();
         layout.collapsed = layout.collapsed || {};
-        layout.collapsed[cardId] = !layout.collapsed[cardId];
+        const willCollapse = !layout.collapsed[cardId];
+        layout.collapsed[cardId] = willCollapse;
         this.saveSectionsLayout(layout);
-        this.applySectionsLayout();
-        if (cardId === 'canvas' && !layout.collapsed[cardId]) {
+
+        const btnCollapse = card.querySelector('.btn-card-collapse');
+        if (btnCollapse) {
+            btnCollapse.title = willCollapse
+                ? (window.i18n ? window.i18n.t('expandPanelTitle') : 'Expand panel')
+                : (window.i18n ? window.i18n.t('collapsePanelTitle') : 'Collapse panel');
+        }
+
+        if (!body) {
+            this.applySectionsLayout();
+            return;
+        }
+
+        const cubicEasing = 'cubic-bezier(0.22, 1, 0.36, 1)';
+        const duration = 340; // ms: identical duration and cubic bezier for both collapse and expand
+
+        if (willCollapse) {
+            // Collapsing with cubic easing
+            const startHeight = body.scrollHeight;
+            body.style.maxHeight = `${startHeight}px`;
+            body.style.overflow = 'hidden';
+            void body.offsetHeight; // force reflow
+
+            body.style.transition = `max-height ${duration}ms ${cubicEasing}, opacity ${duration}ms ${cubicEasing}, padding-top ${duration}ms ${cubicEasing}, padding-bottom ${duration}ms ${cubicEasing}`;
+            body.style.maxHeight = '0px';
+            body.style.opacity = '0';
+            body.style.paddingTop = '0px';
+            body.style.paddingBottom = '0px';
+
+            card.classList.add('is-collapsed');
+
             setTimeout(() => {
-                this.setupCanvas();
-                this.redraw();
-            }, 60);
+                body.style.transition = '';
+                body.style.maxHeight = '';
+                body.style.opacity = '';
+                body.style.paddingTop = '';
+                body.style.paddingBottom = '';
+            }, duration + 20);
+        } else {
+            // Expanding with exact same cubic easing
+            card.classList.remove('is-collapsed');
+            body.style.display = 'block';
+            body.style.maxHeight = 'none';
+            body.style.opacity = '0';
+            body.style.paddingTop = '';
+            body.style.paddingBottom = '';
+            const targetHeight = body.scrollHeight;
+
+            body.style.maxHeight = '0px';
+            body.style.overflow = 'hidden';
+            void body.offsetHeight; // force reflow
+
+            body.style.transition = `max-height ${duration}ms ${cubicEasing}, opacity ${duration}ms ${cubicEasing}, padding-top ${duration}ms ${cubicEasing}, padding-bottom ${duration}ms ${cubicEasing}`;
+            body.style.maxHeight = `${targetHeight}px`;
+            body.style.opacity = '1';
+
+            setTimeout(() => {
+                body.style.transition = '';
+                body.style.maxHeight = '';
+                body.style.opacity = '';
+                body.style.overflow = '';
+                if (cardId === 'canvas') {
+                    this.setupCanvas();
+                    this.redraw();
+                }
+            }, duration + 20);
+        }
+
+        if (window.app && typeof window.app.updateWindowMenuItems === 'function') {
+            window.app.updateWindowMenuItems();
         }
     }
 
@@ -1658,6 +1825,18 @@ class GraphMode {
         layout.visibility[cardId] = Boolean(isVisible);
         this.saveSectionsLayout(layout);
         this.applySectionsLayout();
+
+        if (isVisible) {
+            const panel = this.container.querySelector('.graph-mode-panel');
+            const card = panel ? panel.querySelector(`.graph-modular-card[data-card-id="${cardId}"]`) : null;
+            if (card) {
+                card.classList.remove('shutter-revealing');
+                void card.offsetWidth;
+                card.classList.add('shutter-revealing');
+                setTimeout(() => card.classList.remove('shutter-revealing'), 380);
+            }
+        }
+
         if (cardId === 'canvas' && layout.visibility[cardId]) {
             setTimeout(() => {
                 this.setupCanvas();
@@ -2426,7 +2605,7 @@ class GraphMode {
                 } else if (action === 'down') {
                     this.moveSection(cardId, 1);
                 } else if (action === 'close') {
-                    this.toggleSectionVisibility(cardId, false);
+                    this.closeSectionWithFlightAnimation(cardId);
                 } else if (action === 'collapse') {
                     this.toggleSectionCollapse(cardId);
                 }

@@ -1048,6 +1048,15 @@ class HdSlider extends HTMLElement {
     if (this.dataset.initialized) return;
     this.dataset.initialized = 'true';
 
+    const existingInput = this.querySelector('.real-slider');
+    if (existingInput) {
+      this.classList.add('custom-slider-wrapper');
+      applySliderAttributes(this);
+      initCustomSlider(this);
+      initAttributeObserver(this, applySliderAttributes);
+      return;
+    }
+
     const min = this.getAttribute('min') || '0';
     const max = this.getAttribute('max') || '100';
     const step = this.getAttribute('step') || '1';
