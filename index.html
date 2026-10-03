@@ -119,7 +119,7 @@
                 <div class="update-version-row">
                     <div class="version-block">
                         <span class="version-label">Current:</span>
-                        <span class="version-badge current-ver">v2.1.0</span>
+                        <span class="version-badge current-ver" id="update-current-version-badge">v2.1.0</span>
                     </div>
                     <div class="version-block">
                         <span class="version-label">GitHub Latest:</span>
@@ -128,15 +128,12 @@
                 </div>
 
                 <div id="update-status-msg" class="update-status-msg">
-                    <span>Press "Check Now" to query GitHub for the latest releases.</span>
+                    <span>Press "Check Again" to query GitHub for the latest releases.</span>
                 </div>
 
                 <div id="update-release-notes" class="update-release-notes" style="display:none;"></div>
             </div>
             <div class="app-modal-footer">
-                <button type="button" id="btn-check-updates-now" class="btn-modal-cancel">
-                    <i class="hd-icon hd-icon-redo-arrow"></i> Check Now
-                </button>
                 <div id="update-actions-container" class="update-actions-container"></div>
             </div>
         </div>
