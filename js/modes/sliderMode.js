@@ -609,7 +609,17 @@ class SliderMode {
             },
 
             updateMiniBars: () => {
-                const count = Math.max(4, Math.min(32, this.itemCount));
+                if (this.itemCount > 128) {
+                    const notice = window.i18n ? window.i18n.t('maxLimitNotice', { max: 128 }) : 'Max 128';
+                    const tip = window.i18n ? window.i18n.t('distLimitExceeded', { count: this.itemCount }) : 'Max 128 characters';
+                    distContainer.innerHTML = `
+                        <div class="inline-dist-limit-warning" title="${tip}">
+                            <span>${notice}</span>
+                        </div>
+                    `;
+                    return;
+                }
+                const count = Math.max(4, Math.min(128, this.itemCount));
                 let html = '';
                 for (let i = 0; i < count; i++) {
                     const xNorm = count > 1 ? i / (count - 1) : 0;
@@ -625,7 +635,10 @@ class SliderMode {
             },
 
             emitCurve: () => {
-                const count = Math.max(2, Math.min(64, this.itemCount));
+                if (this.itemCount > 128) {
+                    return;
+                }
+                const count = Math.max(2, Math.min(128, this.itemCount));
                 const values = [];
                 for (let i = 0; i < count; i++) {
                     const x = count > 1 ? i / (count - 1) : 0;

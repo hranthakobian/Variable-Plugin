@@ -198,6 +198,8 @@ const TRANSLATIONS = {
         clickToSelectInDoc: 'Կտտացրեք փաստաթղթում ընտրելու համար',
         dragToReorder: 'Քաշեք տեղափոխելու համար',
         distBarLetterTip: 'Տառ {char} (#{idx})՝ {axis} = {val}',
+        distLimitExceeded: 'Բաշխիչ գծերը չեն կարող աշխատել, քանի որ տառերի քանակը շատ է (առավելագույնը 128 տառ, ընտրված է {count})։',
+        maxLimitNotice: 'Առավելագույնը 128',
         variableFontTag: 'Փոփոխական',
         staticFontTag: 'Ստատիկ',
 
@@ -436,6 +438,8 @@ const TRANSLATIONS = {
         clickToSelectInDoc: 'Click to select in document',
         dragToReorder: 'Drag to reorder',
         distBarLetterTip: 'Letter {char} (#{idx}): {axis} = {val}',
+        distLimitExceeded: 'Distribution bars cannot work because character count exceeds the limit (maximum 128 characters, selected: {count}).',
+        maxLimitNotice: 'Max 128',
         variableFontTag: 'Variable Font',
         staticFontTag: 'Static Font',
 

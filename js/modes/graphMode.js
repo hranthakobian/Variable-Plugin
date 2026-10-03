@@ -3752,8 +3752,8 @@ class GraphMode {
             });
 
             // 5. Draw Distribution Hover Projection Lines & Floating Value Badge
-            if (this.hoveredDistIndex !== null) {
-                const count = Math.max(2, Math.min(32, this.itemCount));
+            if (this.hoveredDistIndex !== null && this.itemCount <= 128) {
+                const count = Math.max(2, Math.min(128, this.itemCount));
                 if (this.hoveredDistIndex >= 0 && this.hoveredDistIndex < count) {
                     const i = this.hoveredDistIndex;
                     const xNorm = count > 1 ? i / (count - 1) : 0;
@@ -3947,7 +3947,48 @@ class GraphMode {
             axisLabel.textContent = headingText;
         }
 
-        const count = Math.max(2, Math.min(32, this.itemCount));
+        if (this.itemCount > 128) {
+            barContainer.classList.add('has-limit-warning');
+            barContainer.classList.remove('is-thin', 'dist-bars-dense', 'dist-bars-ultra');
+            const warnText = window.i18n
+                ? window.i18n.t('distLimitExceeded', { count: this.itemCount })
+                : `Բաշխիչ գծերը չեն կարող աշխատել, քանի որ տառերի քանակը շատ է (առավելագույնը 128 տառ, ընտրված է ${this.itemCount})։`;
+            barContainer.innerHTML = `
+                <div class="dist-limit-warning">
+                    <i class="hd-icon hd-icon-alert-triangle"></i>
+                    <div class="dist-limit-text">${warnText}</div>
+                </div>
+            `;
+            if (countLabel) {
+                const countStr = this.distributionTarget === 'characters'
+                    ? (window.i18n ? window.i18n.t('charactersCount', { count: this.itemCount }) : `${this.itemCount} characters`)
+                    : (window.i18n ? window.i18n.t('itemsCount', { count: this.itemCount }) : `${this.itemCount} items`);
+                const maxNotice = window.i18n ? window.i18n.t('maxLimitNotice', { max: 128 }) : 'Max 128';
+                countLabel.textContent = `${countStr} (${maxNotice})`;
+            }
+            if (footerEl) {
+                footerEl.innerHTML = `
+                    <div class="dist-footer-axis-wrap">
+                        <span class="dist-footer-dot" style="background: ${cur.color}"></span>
+                        <span class="dist-footer-axis-name">${axisName}</span>
+                        <span class="dist-footer-axis-tag">${cur.axisId}</span>
+                    </div>
+                    <div class="dist-footer-range">${range.min} &rarr; ${range.max}</div>
+                `;
+            }
+            const hoverReadout = this.container.querySelector('#preview-hover-readout');
+            if (hoverReadout) {
+                hoverReadout.textContent = '';
+            }
+            return;
+        }
+
+        barContainer.classList.remove('has-limit-warning');
+        const count = Math.max(2, Math.min(128, this.itemCount));
+        barContainer.classList.toggle('is-thin', count > 20);
+        barContainer.classList.toggle('dist-bars-dense', count > 48);
+        barContainer.classList.toggle('dist-bars-ultra', count > 80);
+
         if (countLabel) {
             const countStr = this.distributionTarget === 'characters'
                 ? (window.i18n ? window.i18n.t('charactersCount', { count }) : `${count} characters`)
@@ -4066,7 +4107,10 @@ class GraphMode {
     }
 
     emitDistribution() {
-        const count = Math.max(2, Math.min(64, this.itemCount));
+        if (this.itemCount > 128) {
+            return;
+        }
+        const count = Math.max(2, Math.min(128, this.itemCount));
         const activeCur = this.getActiveCurve();
 
         // Multi-curve payload: evaluates each enabled curve along its own axis

@@ -31,7 +31,7 @@ class IllustratorBridge {
             fontFamily: 'Acumin Pro',
             textSnippet: 'The quick brown fox jumps over the lazy dog',
             isVariableFont: true,
-            charCount: 16,
+            charCount: 43,
             axes: [
                 { id: 'wght', name: 'Weight', min: 100, max: 900, step: 1, defaultVal: 400 },
                 { id: 'wdth', name: 'Width', min: 50, max: 200, step: 1, defaultVal: 100 },

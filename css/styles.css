@@ -1559,15 +1559,76 @@ hd-slider.custom-slider-wrapper,
 .distribution-bars {
     display: flex;
     align-items: flex-end;
-    gap: 3px;
+    gap: 2px;
     height: 68px;
     padding-top: 14px;
     border-bottom: 1px solid var(--border-subtle);
     position: relative;
+    box-sizing: border-box;
+    width: 100%;
+    overflow: hidden;
+}
+
+.distribution-bars.dist-bars-dense {
+    gap: 1px;
+}
+
+.distribution-bars.dist-bars-ultra {
+    gap: 0.5px;
+}
+
+.distribution-bars.is-thin .dist-bar-inner-content {
+    display: none !important;
+}
+
+.distribution-bars.has-limit-warning {
+    align-items: center;
+    justify-content: center;
+    padding-top: 0;
+}
+
+.dist-limit-warning {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    box-sizing: border-box;
+    background: rgba(245, 158, 11, 0.08);
+    border-radius: 9999px;
+    color: #f59e0b;
+    font-size: 11px;
+    line-height: 1.3;
+    text-align: center;
+}
+
+.dist-limit-warning .hd-icon {
+    font-size: 14px;
+    font-weight: 900 !important;
+    flex-shrink: 0;
+}
+
+.dist-limit-text {
+    font-weight: 500;
+}
+
+.inline-dist-limit-warning {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 10px;
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.08);
+    border-radius: 9999px;
+    padding: 2px 6px;
+    box-sizing: border-box;
 }
 
 .dist-bar-item {
-    flex: 1;
+    flex: 1 1 0px;
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -1584,19 +1645,20 @@ hd-slider.custom-slider-wrapper,
     display: flex;
     align-items: flex-end;
     background: rgba(255, 255, 255, 0.04);
-    border-radius: 3px 3px 0 0;
+    border-radius: 2px 2px 0 0;
     overflow: hidden;
 }
 
 .dist-bar-fill {
     width: 100%;
+    min-width: 1px;
     position: relative;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
     align-items: center;
     background: var(--accent-blue);
-    border-radius: 2px 2px 0 0;
+    border-radius: 1px 1px 0 0;
     transition: height 0.05s ease, filter 0.15s ease;
     overflow: hidden;
 }

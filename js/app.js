@@ -329,7 +329,7 @@ class AppController {
             // Dismiss no-selection empty state and show tools when valid selection exists
             this.updateNoSelectionView(false);
 
-            const isNonVar = info.type === 'text' && (!info.isVariableFont || !info.axes || info.axes.length === 0);
+            const isNonVar = info.type === 'text' && (!info.axes || info.axes.length === 0);
             this.updateNonVariableWarning(isNonVar, info.fontName || info.fontFamily);
 
             if (isNonVar) {
@@ -440,10 +440,12 @@ class AppController {
                 this.updateNoSelectionView(true, this.currentSelectionInfo.documentTextFrames || []);
                 this.updateHeaderUI(this.currentSelectionInfo, false);
             } else {
-                const isNonVar = this.currentSelectionInfo.isVariableFont === false;
+                const isNonVar = this.currentSelectionInfo.type === 'text' && (!this.currentSelectionInfo.axes || this.currentSelectionInfo.axes.length === 0);
                 this.updateHeaderUI(this.currentSelectionInfo, isNonVar);
                 if (isNonVar) {
                     this.updateNonVariableWarning(true, this.currentSelectionInfo.fontName || this.currentSelectionInfo.fontFamily);
+                } else {
+                    this.updateNonVariableWarning(false);
                 }
             }
         }
