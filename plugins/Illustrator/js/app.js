@@ -59,6 +59,12 @@ class AppController {
         // Initial selection load
         await this.refreshSelection(true);
 
+        // Position animated sliding tab indicator
+        this.updateTabIndicator(this.activeMode);
+        window.addEventListener('resize', () => {
+            this.updateTabIndicator(this.activeMode);
+        });
+
         // Start polling for selection changes in Illustrator
         this.startSelectionPolling();
     }
@@ -276,12 +282,38 @@ class AppController {
         }, 200);
     }
 
+    updateTabIndicator(modeName = this.activeMode) {
+        const nav = document.getElementById('mode-tabs');
+        const pill = document.getElementById('tab-indicator-pill');
+        const activeBtn = document.querySelector(`.tab-btn[data-mode="${modeName}"]`);
+        if (!nav || !pill || !activeBtn) {
+            return;
+        }
+
+        const navRect = nav.getBoundingClientRect();
+        const btnRect = activeBtn.getBoundingClientRect();
+
+        const left = btnRect.left - navRect.left;
+        const top = btnRect.top - navRect.top;
+        const width = btnRect.width;
+        const height = btnRect.height;
+
+        pill.style.left = `${left}px`;
+        pill.style.top = `${top}px`;
+        pill.style.width = `${width}px`;
+        pill.style.height = `${height}px`;
+
+        pill.className = `tab-indicator-pill mode-${modeName}`;
+    }
+
     switchMode(modeName) {
         this.activeMode = modeName;
 
         document.querySelectorAll('.tab-btn').forEach((btn) => {
             btn.classList.toggle('active', btn.dataset.mode === modeName);
         });
+
+        this.updateTabIndicator(modeName);
 
         document.getElementById('pane-slider').classList.toggle('active', modeName === 'slider');
         document.getElementById('pane-graph').classList.toggle('active', modeName === 'graph');
@@ -405,6 +437,8 @@ class AppController {
         if (tabDs) {
             tabDs.textContent = window.i18n.t('tabDesignSpace');
         }
+
+        this.updateTabIndicator(this.activeMode);
 
         const btnSync = document.getElementById('btn-sync-selection');
         if (btnSync) {

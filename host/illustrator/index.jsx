@@ -113,15 +113,31 @@ var VariableFontPlugin = {
     _nearestFontCache: {},
 
     /**
+     * Extract root family name without hyphenated style suffixes
+     */
+    extractBaseFamily: function(famOrName) {
+        if (!famOrName) return '';
+        var s = String(famOrName);
+        var dashIdx = s.indexOf('-');
+        if (dashIdx !== -1) {
+            s = s.substring(0, dashIdx);
+        }
+        return s.toLowerCase().replace(/[\s\-_]+/g, '');
+    },
+
+    /**
      * Cache family fonts to prevent scanning app.textFonts thousands of times
      */
-    getFamilyFonts: function(family) {
-        if (!family) {
+    getFamilyFonts: function(family, fontName) {
+        if (!family && !fontName) {
             return [];
         }
-        var famKey = family.toLowerCase();
-        if (this._familyFontsCache[famKey]) {
-            return this._familyFontsCache[famKey];
+        var baseFam = VariableFontPlugin.extractBaseFamily(family) || VariableFontPlugin.extractBaseFamily(fontName);
+        var famKey = (family || '').toLowerCase().replace(/[\s\-_]+/g, '');
+        var nameKey = (fontName || '').toLowerCase().replace(/[\s\-_]+/g, '');
+        var cacheKey = baseFam + '||' + famKey + '||' + nameKey;
+        if (this._familyFontsCache[cacheKey]) {
+            return this._familyFontsCache[cacheKey];
         }
 
         var familyFonts = [];
@@ -130,13 +146,19 @@ var VariableFontPlugin = {
             for (var i = 0; i < allFonts.length; i++) {
                 try {
                     var f = allFonts[i];
-                    if (f && f.family && f.family.toLowerCase() === famKey) {
+                    if (!f) continue;
+                    var fFam = (f.family || '').toLowerCase().replace(/[\s\-_]+/g, '');
+                    var fName = (f.name || '').toLowerCase().replace(/[\s\-_]+/g, '');
+                    var fBase = VariableFontPlugin.extractBaseFamily(f.family) || VariableFontPlugin.extractBaseFamily(f.name);
+
+                    if (fFam === famKey || (baseFam && fBase === baseFam) ||
+                        (baseFam && (fFam.indexOf(baseFam) === 0 || fName.indexOf(baseFam) === 0))) {
                         familyFonts.push(f);
                     }
                 } catch (eFont) {}
             }
         } catch (eAll) {}
-        this._familyFontsCache[famKey] = familyFonts;
+        this._familyFontsCache[cacheKey] = familyFonts;
         return familyFonts;
     },
 
@@ -522,9 +544,6 @@ var VariableFontPlugin = {
                     }
                 }
             }
-            if (vals.tracking === undefined) {
-                vals.tracking = Math.round(trk);
-            }
         } else if (itemType === 'PathItem' || itemType === 'CompoundPathItem') {
             try {
                 if (vals.strokeWidth === undefined) {
@@ -842,8 +861,8 @@ var VariableFontPlugin = {
         }
     },
 
-    findNearestFontInstance: function(family, params) {
-        if (!family) {
+    findNearestFontInstance: function(family, params, fontName) {
+        if (!family && !fontName) {
             return null;
         }
 
@@ -852,14 +871,14 @@ var VariableFontPlugin = {
         var targetSlnt = params.slnt !== undefined ? Math.round(Number(params.slnt) * 10) / 10 : null;
         var targetOpsz = params.opsz !== undefined ? Math.round(Number(params.opsz) * 10) / 10 : null;
 
-        var famLower = family.toLowerCase();
-        var cacheKey = famLower + '|' + targetWght + '|' + targetWdth + '|' + targetSlnt + '|' + targetOpsz;
+        var famLower = (family || fontName || '').toLowerCase();
+        var cacheKey = famLower + '|' + (fontName || '') + '|' + targetWght + '|' + targetWdth + '|' + targetSlnt + '|' + targetOpsz;
         if (VariableFontPlugin._nearestFontCache[cacheKey]) {
             return VariableFontPlugin._nearestFontCache[cacheKey];
         }
 
         var map = VariableFontPlugin.getFamilyAxisMapping(family);
-        var candidates = VariableFontPlugin.getFamilyFonts(family);
+        var candidates = VariableFontPlugin.getFamilyFonts(family, fontName);
 
         if (candidates.length === 0) {
             return null;
@@ -902,22 +921,36 @@ var VariableFontPlugin = {
                     }
                 }
             } else {
-                var s = (cand.style || '').toLowerCase();
+                var s = ((cand.style || '') + ' ' + (cand.name || '')).toLowerCase();
                 var sWght = 400;
-                if (s.indexOf('thin') !== -1 || s.indexOf('hairline') !== -1) sWght = 100;
-                else if (s.indexOf('extra light') !== -1 || s.indexOf('ultralight') !== -1) sWght = 200;
-                else if (s.indexOf('light') !== -1) sWght = 300;
-                else if (s.indexOf('book') !== -1) sWght = 350;
-                else if (s.indexOf('medium') !== -1) sWght = 500;
-                else if (s.indexOf('semibold') !== -1 || s.indexOf('demi') !== -1) sWght = 600;
-                else if (s.indexOf('extrabold') !== -1 || s.indexOf('ultrabold') !== -1) sWght = 800;
-                else if (s.indexOf('bold') !== -1) sWght = 700;
+                if (s.indexOf('extrablack') !== -1 || s.indexOf('extra black') !== -1 || s.indexOf('ultrablack') !== -1) sWght = 950;
                 else if (s.indexOf('black') !== -1 || s.indexOf('heavy') !== -1) sWght = 900;
+                else if (s.indexOf('extrabold') !== -1 || s.indexOf('extra bold') !== -1 || s.indexOf('ultrabold') !== -1) sWght = 800;
+                else if (s.indexOf('semibold') !== -1 || s.indexOf('semi bold') !== -1 || s.indexOf('demi') !== -1) sWght = 600;
+                else if (s.indexOf('bold') !== -1) sWght = 700;
+                else if (s.indexOf('medium') !== -1) sWght = 500;
+                else if (s.indexOf('book') !== -1) sWght = 350;
+                else if (s.indexOf('extralight') !== -1 || s.indexOf('extra light') !== -1 || s.indexOf('ultralight') !== -1) sWght = 200;
+                else if (s.indexOf('light') !== -1) sWght = 300;
+                else if (s.indexOf('thin') !== -1 || s.indexOf('hairline') !== -1) sWght = 100;
 
-                var isCond = s.indexOf('cond') !== -1;
-                var targetCond = targetWdth !== null && targetWdth < 90;
-                var condDiff = (isCond === targetCond) ? 0 : 500;
-                dist = Math.abs(sWght - (targetWght !== null ? targetWght : 400)) + condDiff;
+                var sWdth = 100;
+                if (s.indexOf('ultracondensed') !== -1 || s.indexOf('ultra condensed') !== -1) sWdth = 50;
+                else if (s.indexOf('extracondensed') !== -1 || s.indexOf('extra condensed') !== -1) sWdth = 62;
+                else if (s.indexOf('semicondensed') !== -1 || s.indexOf('semi condensed') !== -1) sWdth = 87;
+                else if (s.indexOf('condensed') !== -1 || s.indexOf('cond') !== -1) sWdth = 75;
+                else if (s.indexOf('ultraexpanded') !== -1 || s.indexOf('ultra expanded') !== -1) sWdth = 200;
+                else if (s.indexOf('extraexpanded') !== -1 || s.indexOf('extra expanded') !== -1) sWdth = 150;
+                else if (s.indexOf('semiexpanded') !== -1 || s.indexOf('semi expanded') !== -1) sWdth = 112;
+                else if (s.indexOf('expanded') !== -1 || s.indexOf('extended') !== -1 || s.indexOf('wide') !== -1) sWdth = 125;
+
+                var isItalic = s.indexOf('italic') !== -1 || s.indexOf('oblique') !== -1;
+                var targetItalic = targetSlnt !== null && targetSlnt < -2;
+                var italicDiff = (isItalic === targetItalic) ? 0 : 300;
+
+                var wDiff = targetWght !== null ? Math.abs(sWght - targetWght) : 0;
+                var wdDiff = targetWdth !== null ? Math.abs(sWdth - targetWdth) * 4 : 0;
+                dist = wDiff + wdDiff + italicDiff;
             }
 
             if (dist < minD) {
@@ -962,7 +995,7 @@ var VariableFontPlugin = {
                 }
 
                 if (curFont && (params.wght !== undefined || params.wdth !== undefined || params.slnt !== undefined || params.opsz !== undefined)) {
-                    var targetF = VariableFontPlugin.findNearestFontInstance(curFont.family, params);
+                    var targetF = VariableFontPlugin.findNearestFontInstance(curFont.family, params, curFont.name);
                     if (targetF) {
                         try {
                             selectedTextRange.characterAttributes.textFont = targetF;
@@ -1011,7 +1044,7 @@ var VariableFontPlugin = {
                     }
 
                     if (curFont && (params.wght !== undefined || params.wdth !== undefined || params.slnt !== undefined || params.opsz !== undefined)) {
-                        var targetF = VariableFontPlugin.findNearestFontInstance(curFont.family, params);
+                        var targetF = VariableFontPlugin.findNearestFontInstance(curFont.family, params, curFont.name);
                         if (targetF) {
                             try {
                                 item.textRange.characterAttributes.textFont = targetF;
@@ -1122,7 +1155,7 @@ var VariableFontPlugin = {
                         var charFont = null;
                         try { charFont = charAttr.textFont; } catch(eCf) {}
                         if (charFont) {
-                            var targetF = VariableFontPlugin.findNearestFontInstance(charFont.family, p);
+                            var targetF = VariableFontPlugin.findNearestFontInstance(charFont.family, p, charFont.name);
                             if (targetF) {
                                 try { charAttr.textFont = targetF; } catch(eSetTf) {}
                             }
@@ -1172,7 +1205,7 @@ var VariableFontPlugin = {
                         var charFont = null;
                         try { charFont = charAttr.textFont; } catch(eCfTf) {}
                         if (charFont) {
-                            var targetF = VariableFontPlugin.findNearestFontInstance(charFont.family, p);
+                            var targetF = VariableFontPlugin.findNearestFontInstance(charFont.family, p, charFont.name);
                             if (targetF) {
                                 try { charAttr.textFont = targetF; } catch(eSetTf2) {}
                             }
@@ -1221,7 +1254,7 @@ var VariableFontPlugin = {
                                 try { curF = tr.characters[0].characterAttributes.textFont; } catch(eChIt) {}
                             }
                             if (curF) {
-                                var targetF = VariableFontPlugin.findNearestFontInstance(curF.family, p);
+                                var targetF = VariableFontPlugin.findNearestFontInstance(curF.family, p, curF.name);
                                 if (targetF && ca) {
                                     try { ca.textFont = targetF; } catch(eSetTf3) {}
                                     try {
@@ -1246,7 +1279,7 @@ var VariableFontPlugin = {
                         } else if (it.typename === 'PathItem' || it.typename === 'CompoundPathItem') {
                             if (p.strokeWidth !== undefined) {
                                 it.stroked = true;
-                                pItem.strokeWidth = Number(p.strokeWidth);
+                                it.strokeWidth = Number(p.strokeWidth);
                             }
                             if (p.opacity !== undefined) {
                                 it.opacity = Math.max(0, Math.min(100, Number(p.opacity)));
