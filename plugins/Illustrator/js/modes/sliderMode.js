@@ -681,6 +681,7 @@ class SliderMode {
                 ctx.strokeStyle = '#0d99ff';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
+                const steps = 60;
                 for (let s = 0; s <= steps; s++) {
                     const nx = s / steps;
                     const ny = this.evaluateY(nx);
@@ -992,16 +993,18 @@ class SliderMode {
             const hd = this.container.querySelector(`#hd-${axisId}`);
             const row = this.container.querySelector(`#row-${axisId}`);
             if (range && num) {
-                // Do not clobber number input if user is actively typing in it
+                // Do not clobber inputs if user is actively interacting with them
                 if (document.activeElement !== num) {
                     num.value = val;
                 }
-                range.value = val;
-                if (hd) {
-                    const min = parseFloat(range.min) || 0;
-                    const max = parseFloat(range.max) || 100;
-                    const percentage = Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100));
-                    hd.style.setProperty('--slider-percentage', percentage + '%');
+                if (document.activeElement !== range) {
+                    range.value = val;
+                    if (hd) {
+                        const min = parseFloat(range.min) || 0;
+                        const max = parseFloat(range.max) || 100;
+                        const percentage = Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100));
+                        hd.style.setProperty('--slider-percentage', percentage + '%');
+                    }
                 }
             }
             if (row) {

@@ -206,11 +206,14 @@ class AppController {
     bindInteractionGuards() {
         let guardTimer = null;
         const resetInteraction = () => {
-            this.isUserInteracting = false;
             if (guardTimer) {
                 clearTimeout(guardTimer);
                 guardTimer = null;
             }
+            guardTimer = setTimeout(() => {
+                this.isUserInteracting = false;
+                guardTimer = null;
+            }, 300);
         };
 
         const triggerInteraction = (duration = 600) => {
@@ -218,17 +221,33 @@ class AppController {
             if (guardTimer) {
                 clearTimeout(guardTimer);
             }
-            guardTimer = setTimeout(resetInteraction, duration);
+            guardTimer = setTimeout(() => {
+                this.isUserInteracting = false;
+                guardTimer = null;
+            }, duration);
         };
 
         window.addEventListener('mouseup', resetInteraction);
+        window.addEventListener('pointerup', resetInteraction);
         window.addEventListener('touchend', resetInteraction);
         window.addEventListener('mouseleave', resetInteraction);
         window.addEventListener('blur', resetInteraction);
         window.addEventListener('focus', resetInteraction);
 
-        window.addEventListener('input', () => triggerInteraction(500), { passive: true });
-        window.addEventListener('touchmove', () => triggerInteraction(500), { passive: true });
+        window.addEventListener('input', () => triggerInteraction(600), { passive: true });
+        window.addEventListener('touchmove', () => triggerInteraction(600), { passive: true });
+        window.addEventListener('pointerdown', () => triggerInteraction(600), { passive: true });
+        window.addEventListener('pointermove', (e) => {
+            if (e.buttons > 0) {
+                triggerInteraction(600);
+            }
+        }, { passive: true });
+        window.addEventListener('mousedown', () => triggerInteraction(600), { passive: true });
+        window.addEventListener('mousemove', (e) => {
+            if (e.buttons > 0) {
+                triggerInteraction(600);
+            }
+        }, { passive: true });
     }
 
     initModes() {
@@ -790,11 +809,13 @@ class AppController {
      * High-performance real-time update dispatcher with trailing throttle
      */
     scheduleParameterUpdate(params) {
+        this.isUserInteracting = true;
         this.pendingParameterUpdate = Object.assign(this.pendingParameterUpdate || {}, params);
         this.requestFlush();
     }
 
     scheduleCurveUpdate(distConfig) {
+        this.isUserInteracting = true;
         this.pendingCurveUpdate = distConfig;
         this.requestFlush();
     }
