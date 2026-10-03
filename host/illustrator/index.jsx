@@ -262,6 +262,22 @@ var VariableFontPlugin = {
         return false;
     },
 
+    getFontWeightNumber: function(font) {
+        if (!font) return 400;
+        var s = ((font.style || '') + ' ' + (font.name || '')).toLowerCase();
+        if (s.indexOf('extrablack') !== -1 || s.indexOf('extra black') !== -1 || s.indexOf('ultrablack') !== -1) return 950;
+        if (s.indexOf('black') !== -1 || s.indexOf('heavy') !== -1) return 900;
+        if (s.indexOf('extrabold') !== -1 || s.indexOf('extra bold') !== -1 || s.indexOf('ultrabold') !== -1) return 800;
+        if (s.indexOf('semibold') !== -1 || s.indexOf('semi bold') !== -1 || s.indexOf('demi') !== -1) return 600;
+        if (s.indexOf('bold') !== -1) return 700;
+        if (s.indexOf('medium') !== -1) return 500;
+        if (s.indexOf('book') !== -1) return 350;
+        if (s.indexOf('extralight') !== -1 || s.indexOf('extra light') !== -1 || s.indexOf('ultralight') !== -1) return 200;
+        if (s.indexOf('light') !== -1) return 300;
+        if (s.indexOf('thin') !== -1 || s.indexOf('hairline') !== -1) return 100;
+        return 400;
+    },
+
     detectFontAxes: function(font) {
         var axes = [];
 
@@ -276,51 +292,40 @@ var VariableFontPlugin = {
 
         var isVar = VariableFontPlugin.isVariableFont(font);
         var fam = font ? (font.family || '').toLowerCase() : '';
+        var fName = font ? (font.name || '').toLowerCase() : '';
 
-        if (isVar) {
-            if (fam.indexOf('acumin') !== -1) {
-                addAxis('wght', 'Weight', 100, 900, 1, 400);
-                addAxis('wdth', 'Width', 45, 115, 1, 100);
-                addAxis('slnt', 'Slant', -12, 0, 0.5, 0);
-            } else if (fam.indexOf('minion') !== -1) {
-                addAxis('wght', 'Weight', 300, 900, 1, 400);
-                addAxis('opsz', 'Optical Size', 6, 72, 0.5, 11);
-            } else if (fam.indexOf('myriad') !== -1) {
-                addAxis('wght', 'Weight', 100, 900, 1, 400);
-                addAxis('wdth', 'Width', 50, 150, 1, 100);
-            } else if (fam.indexOf('bahnschrift') !== -1) {
-                addAxis('wght', 'Weight', 300, 900, 1, 400);
-                addAxis('wdth', 'Width', 75, 100, 1, 100);
-            } else if (fam.indexOf('roboto flex') !== -1) {
-                addAxis('wght', 'Weight', 100, 1000, 1, 400);
-                addAxis('wdth', 'Width', 25, 151, 1, 100);
-                addAxis('slnt', 'Slant', -10, 0, 0.5, 0);
-                addAxis('opsz', 'Optical Size', 8, 144, 0.5, 14);
-            } else {
-                var famFonts = font ? VariableFontPlugin.getFamilyFonts(font.family) : [];
-                var hasWdth = false;
-                var hasSlnt = false;
-                var hasOpsz = false;
-                for (var f = 0; f < famFonts.length; f++) {
-                    var st = (famFonts[f].style || '').toLowerCase();
-                    if (st.indexOf('cond') !== -1 || st.indexOf('wide') !== -1 || st.indexOf('ext') !== -1) hasWdth = true;
-                    if (st.indexOf('italic') !== -1 || st.indexOf('oblique') !== -1 || st.indexOf('slant') !== -1) hasSlnt = true;
-                    if (st.indexOf('optical') !== -1 || st.indexOf('caption') !== -1 || st.indexOf('subhead') !== -1) hasOpsz = true;
-                }
-                addAxis('wght', 'Weight', 100, 900, 1, 400);
-                if (hasWdth) addAxis('wdth', 'Width', 50, 200, 1, 100);
-                if (hasSlnt) addAxis('slnt', 'Slant', -15, 0, 0.5, 0);
-                if (hasOpsz) addAxis('opsz', 'Optical Size', 6, 72, 0.5, 12);
-            }
-            return axes;
-        }
-
-        // STATIC FONT:
-        var familyFonts = font ? VariableFontPlugin.getFamilyFonts(font.family) : [];
-        if (familyFonts.length > 1) {
+        if (fam.indexOf('acumin') !== -1 || fName.indexOf('acumin') !== -1) {
             addAxis('wght', 'Weight', 100, 900, 1, 400);
+            addAxis('wdth', 'Width', 45, 115, 1, 100);
+            addAxis('slnt', 'Slant', -12, 0, 0.5, 0);
+        } else if (fam.indexOf('minion') !== -1 || fName.indexOf('minion') !== -1) {
+            addAxis('wght', 'Weight', 300, 900, 1, 400);
+            addAxis('opsz', 'Optical Size', 6, 72, 0.5, 11);
+        } else if (fam.indexOf('myriad') !== -1 || fName.indexOf('myriad') !== -1) {
+            addAxis('wght', 'Weight', 100, 900, 1, 400);
+            addAxis('wdth', 'Width', 50, 150, 1, 100);
+        } else if (fam.indexOf('bahnschrift') !== -1 || fName.indexOf('bahnschrift') !== -1) {
+            addAxis('wght', 'Weight', 300, 900, 1, 400);
+            addAxis('wdth', 'Width', 75, 100, 1, 100);
+        } else if (fam.indexOf('roboto flex') !== -1 || fName.indexOf('roboto flex') !== -1) {
+            addAxis('wght', 'Weight', 100, 1000, 1, 400);
+            addAxis('wdth', 'Width', 25, 151, 1, 100);
+            addAxis('slnt', 'Slant', -10, 0, 0.5, 0);
+            addAxis('opsz', 'Optical Size', 8, 144, 0.5, 14);
+        } else {
+            var famFonts = font ? VariableFontPlugin.getFamilyFonts(font.family, font.name) : [];
+            var hasSlnt = false;
+            var hasOpsz = false;
+            for (var f = 0; f < famFonts.length; f++) {
+                var st = ((famFonts[f].style || '') + ' ' + (famFonts[f].name || '')).toLowerCase();
+                if (st.indexOf('italic') !== -1 || st.indexOf('oblique') !== -1 || st.indexOf('slant') !== -1) hasSlnt = true;
+                if (st.indexOf('optical') !== -1 || st.indexOf('caption') !== -1 || st.indexOf('subhead') !== -1) hasOpsz = true;
+            }
+            addAxis('wght', 'Weight', 100, 900, 1, 400);
+            addAxis('wdth', 'Width', 50, 200, 1, 100);
+            if (hasSlnt) addAxis('slnt', 'Slant', -15, 0, 0.5, 0);
+            if (hasOpsz) addAxis('opsz', 'Optical Size', 6, 72, 0.5, 12);
         }
-        addAxis('wdth', 'Width', 50, 200, 1, 100);
 
         return axes;
     },
@@ -985,97 +990,58 @@ var VariableFontPlugin = {
                 return JSON.stringify({ success: false, message: 'No selection' });
             }
 
+            function applyToAttributes(ca, currentFont, defaultSize) {
+                if (!ca) return;
+                var curF = currentFont || ca.textFont;
+                var targetF = null;
+                if (curF && (params.wght !== undefined || params.wdth !== undefined || params.slnt !== undefined || params.opsz !== undefined)) {
+                    targetF = VariableFontPlugin.findNearestFontInstance(curF.family, params, curF.name);
+                    if (targetF) {
+                        try { ca.textFont = targetF; } catch(eTf) {}
+                    }
+                }
+
+                if (params.wdth !== undefined) {
+                    var hs = Math.max(25, Math.min(250, Number(params.wdth)));
+                    try { ca.horizontalScale = hs; } catch(eHs) {}
+                }
+
+                if (params.wght !== undefined) {
+                    var baseW = VariableFontPlugin.getFontWeightNumber(targetF || curF);
+                    var fontSize = (ca.size !== undefined && ca.size > 0) ? ca.size : (defaultSize || 12);
+                    if (params.wght > baseW) {
+                        var extraRatio = (params.wght - baseW) / 500;
+                        var strokeVal = extraRatio * (fontSize * 0.035);
+                        try {
+                            ca.strokeWeight = strokeVal;
+                            if (ca.fillColor && ca.fillColor.typename !== 'NoColor') {
+                                ca.strokeColor = ca.fillColor;
+                            }
+                        } catch(eSw) {}
+                    } else {
+                        try {
+                            ca.strokeWeight = 0;
+                            ca.strokeColor = new NoColor();
+                        } catch(eNoSw) {}
+                    }
+                }
+            }
+
             if (selectedTextRange) {
                 var curFont = null;
-                try {
-                    curFont = selectedTextRange.characterAttributes.textFont;
-                } catch(eCf1) {}
-                if (!curFont && selectedTextRange.characters && selectedTextRange.characters.length > 0) {
-                    try { curFont = selectedTextRange.characters[0].characterAttributes.textFont; } catch(eCf2) {}
-                }
-
-                if (curFont && (params.wght !== undefined || params.wdth !== undefined || params.slnt !== undefined || params.opsz !== undefined)) {
-                    var targetF = VariableFontPlugin.findNearestFontInstance(curFont.family, params, curFont.name);
-                    if (targetF) {
-                        try {
-                            selectedTextRange.characterAttributes.textFont = targetF;
-                        } catch(eSetF) {}
-                        try {
-                            var chs = selectedTextRange.characters;
-                            for (var ci = 0; ci < chs.length; ci++) {
-                                try { chs[ci].characterAttributes.textFont = targetF; } catch(eChF) {}
-                            }
-                        } catch(eLoopCh) {}
-                    }
-                }
-
-                if (curFont) {
-                    var map = VariableFontPlugin.getFamilyAxisMapping(curFont.family);
-                    if (!map.wdth && params.wdth !== undefined) {
-                        var hs = Math.max(25, Math.min(250, Number(params.wdth)));
-                        try {
-                            selectedTextRange.characterAttributes.horizontalScale = hs;
-                        } catch(eHs) {}
-                        try {
-                            var chs = selectedTextRange.characters;
-                            for (var ci = 0; ci < chs.length; ci++) {
-                                try { chs[ci].characterAttributes.horizontalScale = hs; } catch(eChHs) {}
-                            }
-                        } catch(eLoopHs) {}
-                    } else if (map.wdth) {
-                        try { selectedTextRange.characterAttributes.horizontalScale = 100; } catch(eHs100) {}
-                    }
-                }
-
+                try { curFont = selectedTextRange.characterAttributes.textFont; } catch(eCf1) {}
+                applyToAttributes(selectedTextRange.characterAttributes, curFont);
                 try {
                     if (selectedTextRange.parent && selectedTextRange.parent.typename === 'TextFrame') {
                         VariableFontPlugin.saveItemMetadata(selectedTextRange.parent, params, null);
                     }
-                } catch (e) {}
+                } catch(eSave1) {}
             } else if (textFrames.length > 0) {
                 for (var i = 0; i < textFrames.length; i++) {
                     var item = textFrames[i];
                     var curFont = null;
-                    try {
-                        curFont = item.textRange.characterAttributes.textFont;
-                    } catch(eCf3) {}
-                    if (!curFont && item.textRange.characters && item.textRange.characters.length > 0) {
-                        try { curFont = item.textRange.characters[0].characterAttributes.textFont; } catch(eCf4) {}
-                    }
-
-                    if (curFont && (params.wght !== undefined || params.wdth !== undefined || params.slnt !== undefined || params.opsz !== undefined)) {
-                        var targetF = VariableFontPlugin.findNearestFontInstance(curFont.family, params, curFont.name);
-                        if (targetF) {
-                            try {
-                                item.textRange.characterAttributes.textFont = targetF;
-                            } catch(eSetF2) {}
-                            try {
-                                var chs = item.textRange.characters;
-                                for (var ci = 0; ci < chs.length; ci++) {
-                                    try { chs[ci].characterAttributes.textFont = targetF; } catch(eChF2) {}
-                                }
-                            } catch(eLoopCh2) {}
-                        }
-                    }
-
-                    if (curFont) {
-                        var map = VariableFontPlugin.getFamilyAxisMapping(curFont.family);
-                        if (!map.wdth && params.wdth !== undefined) {
-                            var hs = Math.max(25, Math.min(250, Number(params.wdth)));
-                            try {
-                                item.textRange.characterAttributes.horizontalScale = hs;
-                            } catch(eHs2) {}
-                            try {
-                                var chs = item.textRange.characters;
-                                for (var ci = 0; ci < chs.length; ci++) {
-                                    try { chs[ci].characterAttributes.horizontalScale = hs; } catch(eChHs2) {}
-                                }
-                            } catch(eLoopHs2) {}
-                        } else if (map.wdth) {
-                            try { item.textRange.characterAttributes.horizontalScale = 100; } catch(eHs1002) {}
-                        }
-                    }
-
+                    try { curFont = item.textRange.characterAttributes.textFont; } catch(eCf3) {}
+                    applyToAttributes(item.textRange.characterAttributes, curFont);
                     VariableFontPlugin.saveItemMetadata(item, params, null);
                 }
             } else if (pathItems.length > 0) {
@@ -1126,101 +1092,86 @@ var VariableFontPlugin = {
 
             var mode = config.distributionTarget || 'characters';
 
-            if (selectedTextRange) {
-                var chars = selectedTextRange.characters;
+            function distributeOverCharacters(chars, parentTf) {
                 var count = chars.length;
-                if (count > 128) {
-                    return JSON.stringify({ success: false, message: 'Character count exceeds limit (max 128)' });
-                }
-                if (count > 0 && curveList.length > 0) {
-                    for (var c = 0; c < count; c++) {
-                        var normIndex = count > 1 ? c / (count - 1) : 0;
-                        var charAttr = null;
-                        try { charAttr = chars[c].characterAttributes; } catch(eCa) {}
-                        if (!charAttr) continue;
+                if (count <= 0 || curveList.length === 0) return;
 
-                        var p = {};
-                        for (var k = 0; k < curveList.length; k++) {
-                            var cur = curveList[k];
-                            var vals = cur.distributedValues || [];
-                            if (vals.length > 0) {
-                                var vIdx = Math.min(Math.floor(normIndex * vals.length), vals.length - 1);
-                                var cy = vals[vIdx];
-                                var minV = Number(cur.minVal !== undefined ? cur.minVal : 0);
-                                var maxV = Number(cur.maxVal !== undefined ? cur.maxVal : 100);
-                                p[cur.targetAxis] = minV + cy * (maxV - minV);
-                            }
+                var sampleFont = null;
+                try { sampleFont = chars[0].characterAttributes.textFont; } catch(eSf) {}
+                var famKey = sampleFont ? sampleFont.family : '';
+                var fontNameKey = sampleFont ? sampleFont.name : '';
+
+                for (var c = 0; c < count; c++) {
+                    var normIndex = count > 1 ? c / (count - 1) : 0;
+                    var charAttr = null;
+                    try { charAttr = chars[c].characterAttributes; } catch(eCa) {}
+                    if (!charAttr) continue;
+
+                    var p = {};
+                    for (var k = 0; k < curveList.length; k++) {
+                        var cur = curveList[k];
+                        var vals = cur.distributedValues || [];
+                        if (vals.length > 0) {
+                            var vIdx = Math.min(Math.floor(normIndex * vals.length), vals.length - 1);
+                            var cy = vals[vIdx];
+                            var minV = Number(cur.minVal !== undefined ? cur.minVal : 0);
+                            var maxV = Number(cur.maxVal !== undefined ? cur.maxVal : 100);
+                            p[cur.targetAxis] = minV + cy * (maxV - minV);
                         }
+                    }
 
-                        var charFont = null;
-                        try { charFont = charAttr.textFont; } catch(eCf) {}
-                        if (charFont) {
-                            var targetF = VariableFontPlugin.findNearestFontInstance(charFont.family, p, charFont.name);
-                            if (targetF) {
-                                try { charAttr.textFont = targetF; } catch(eSetTf) {}
-                            }
-                            var map = VariableFontPlugin.getFamilyAxisMapping(charFont.family);
-                            if (p.wdth !== undefined) {
-                                if (map.wdth) {
-                                    try { charAttr.horizontalScale = 100; } catch(eHs) {}
-                                } else {
-                                    try { charAttr.horizontalScale = Math.max(25, Math.min(250, Number(p.wdth))); } catch(eHs2) {}
+                    var charFont = sampleFont;
+                    try { charFont = charAttr.textFont || sampleFont; } catch(eCf) {}
+
+                    var targetF = null;
+                    if (charFont && (p.wght !== undefined || p.wdth !== undefined || p.slnt !== undefined || p.opsz !== undefined)) {
+                        targetF = VariableFontPlugin.findNearestFontInstance(charFont.family || famKey, p, charFont.name || fontNameKey);
+                        if (targetF) {
+                            try { charAttr.textFont = targetF; } catch(eSetTf) {}
+                        }
+                    }
+
+                    if (p.wdth !== undefined) {
+                        var hs = Math.max(25, Math.min(250, Number(p.wdth)));
+                        try { charAttr.horizontalScale = hs; } catch(eHs) {}
+                    }
+
+                    if (p.wght !== undefined) {
+                        var baseW = VariableFontPlugin.getFontWeightNumber(targetF || charFont);
+                        var fontSize = (charAttr.size !== undefined && charAttr.size > 0) ? charAttr.size : 12;
+                        if (p.wght > baseW) {
+                            var extraRatio = (p.wght - baseW) / 500;
+                            var strokeVal = extraRatio * (fontSize * 0.035);
+                            try {
+                                charAttr.strokeWeight = strokeVal;
+                                if (charAttr.fillColor && charAttr.fillColor.typename !== 'NoColor') {
+                                    charAttr.strokeColor = charAttr.fillColor;
                                 }
-                            }
+                            } catch(eSw2) {}
+                        } else {
+                            try {
+                                charAttr.strokeWeight = 0;
+                                charAttr.strokeColor = new NoColor();
+                            } catch(eNoSw2) {}
                         }
                     }
-                }
-                try {
-                    if (selectedTextRange.parent && selectedTextRange.parent.typename === 'TextFrame') {
-                        VariableFontPlugin.saveItemMetadata(selectedTextRange.parent, null, config);
+
+                    if (p.opsz !== undefined) {
+                        try { charAttr.size = Math.max(4, Math.min(288, Number(p.opsz))); } catch(eSz) {}
                     }
-                } catch (e) {}
+                }
+
+                if (parentTf) {
+                    try { VariableFontPlugin.saveItemMetadata(parentTf, null, config); } catch(eMeta) {}
+                }
+            }
+
+            if (selectedTextRange) {
+                var parentTf = (selectedTextRange.parent && selectedTextRange.parent.typename === 'TextFrame') ? selectedTextRange.parent : null;
+                distributeOverCharacters(selectedTextRange.characters, parentTf);
             } else if (mode === 'characters' && textFrames.length > 0) {
                 var tf = textFrames[0];
-                var chars = tf.textRange.characters;
-                var count = chars.length;
-                if (count > 128) {
-                    return JSON.stringify({ success: false, message: 'Character count exceeds limit (max 128)' });
-                }
-                if (count > 0 && curveList.length > 0) {
-                    for (var c = 0; c < count; c++) {
-                        var normIndex = count > 1 ? c / (count - 1) : 0;
-                        var charAttr = null;
-                        try { charAttr = chars[c].characterAttributes; } catch(eCaTf) {}
-                        if (!charAttr) continue;
-
-                        var p = {};
-                        for (var k = 0; k < curveList.length; k++) {
-                            var cur = curveList[k];
-                            var vals = cur.distributedValues || [];
-                            if (vals.length > 0) {
-                                var vIdx = Math.min(Math.floor(normIndex * vals.length), vals.length - 1);
-                                var cy = vals[vIdx];
-                                var minV = Number(cur.minVal !== undefined ? cur.minVal : 0);
-                                var maxV = Number(cur.maxVal !== undefined ? cur.maxVal : 100);
-                                p[cur.targetAxis] = minV + cy * (maxV - minV);
-                            }
-                        }
-
-                        var charFont = null;
-                        try { charFont = charAttr.textFont; } catch(eCfTf) {}
-                        if (charFont) {
-                            var targetF = VariableFontPlugin.findNearestFontInstance(charFont.family, p, charFont.name);
-                            if (targetF) {
-                                try { charAttr.textFont = targetF; } catch(eSetTf2) {}
-                            }
-                            var map = VariableFontPlugin.getFamilyAxisMapping(charFont.family);
-                            if (p.wdth !== undefined) {
-                                if (map.wdth) {
-                                    try { charAttr.horizontalScale = 100; } catch(eHs3) {}
-                                } else {
-                                    try { charAttr.horizontalScale = Math.max(25, Math.min(250, Number(p.wdth))); } catch(eHs4) {}
-                                }
-                            }
-                        }
-                    }
-                }
-                VariableFontPlugin.saveItemMetadata(tf, null, config);
+                distributeOverCharacters(tf.textRange.characters, tf);
             } else {
                 var targetItems = textFrames.length > 0 ? textFrames : pathItems;
                 var itemCount = targetItems.length;
@@ -1250,30 +1201,28 @@ var VariableFontPlugin = {
                                 ca = tr.characterAttributes;
                                 if (ca) curF = ca.textFont;
                             } catch(eCaIt) {}
-                            if (!curF && tr && tr.characters && tr.characters.length > 0) {
-                                try { curF = tr.characters[0].characterAttributes.textFont; } catch(eChIt) {}
-                            }
-                            if (curF) {
+
+                            if (curF && ca) {
                                 var targetF = VariableFontPlugin.findNearestFontInstance(curF.family, p, curF.name);
-                                if (targetF && ca) {
+                                if (targetF) {
                                     try { ca.textFont = targetF; } catch(eSetTf3) {}
-                                    try {
-                                        var chs = tr.characters;
-                                        for (var ci = 0; ci < chs.length; ci++) {
-                                            try { chs[ci].characterAttributes.textFont = targetF; } catch(eChF3) {}
-                                        }
-                                    } catch(eLoopCh3) {}
                                 }
-                                var map = VariableFontPlugin.getFamilyAxisMapping(curF.family);
-                                if (p.wdth !== undefined && ca) {
-                                    var hs = map.wdth ? 100 : Math.max(25, Math.min(250, Number(p.wdth)));
+                                if (p.wdth !== undefined) {
+                                    var hs = Math.max(25, Math.min(250, Number(p.wdth)));
                                     try { ca.horizontalScale = hs; } catch(eHs5) {}
-                                    try {
-                                        var chs = tr.characters;
-                                        for (var ci = 0; ci < chs.length; ci++) {
-                                            try { chs[ci].characterAttributes.horizontalScale = hs; } catch(eChHs5) {}
-                                        }
-                                    } catch(eLoopHs3) {}
+                                }
+                                if (p.wght !== undefined) {
+                                    var baseW = VariableFontPlugin.getFontWeightNumber(targetF || curF);
+                                    var fontSize = (ca.size !== undefined && ca.size > 0) ? ca.size : 12;
+                                    if (p.wght > baseW) {
+                                        var extraRatio = (p.wght - baseW) / 500;
+                                        try {
+                                            ca.strokeWeight = extraRatio * (fontSize * 0.035);
+                                            if (ca.fillColor && ca.fillColor.typename !== 'NoColor') ca.strokeColor = ca.fillColor;
+                                        } catch(eSw3) {}
+                                    } else {
+                                        try { ca.strokeWeight = 0; ca.strokeColor = new NoColor(); } catch(eNoSw3) {}
+                                    }
                                 }
                             }
                         } else if (it.typename === 'PathItem' || it.typename === 'CompoundPathItem') {

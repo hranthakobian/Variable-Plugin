@@ -3756,8 +3756,9 @@ class GraphMode {
             });
 
             // 5. Draw Distribution Hover Projection Lines & Floating Value Badge
-            if (this.hoveredDistIndex !== null && this.itemCount <= 128) {
-                const count = Math.max(2, Math.min(128, this.itemCount));
+            if (this.hoveredDistIndex !== null) {
+                const realCount = Math.max(1, this.itemCount || 16);
+                const count = Math.max(2, Math.min(48, realCount));
                 if (this.hoveredDistIndex >= 0 && this.hoveredDistIndex < count) {
                     const i = this.hoveredDistIndex;
                     const xNorm = count > 1 ? i / (count - 1) : 0;
@@ -3775,8 +3776,9 @@ class GraphMode {
                     const axisName = window.i18n ? window.i18n.getAxisName(activeCur.axisId, rawAxisName) : rawAxisName;
                     const range = this.getAxisRange(activeCur.axisId);
                     const calculatedVal = Math.round(range.min + yNorm * (range.max - range.min));
-                    const rawChar = (this.textSnippet && this.textSnippet[i]) ? this.textSnippet[i] : null;
-                    const letterDisplay = rawChar ? `'${rawChar}'` : `#${i + 1}`;
+                    const sampleIdx = (realCount === count) ? i : Math.min(Math.round(xNorm * (realCount - 1)), realCount - 1);
+                    const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
+                    const letterDisplay = rawChar ? `'${rawChar}'` : `#${sampleIdx + 1}`;
 
                     ctx.save();
 
@@ -3951,52 +3953,17 @@ class GraphMode {
             axisLabel.textContent = headingText;
         }
 
-        if (this.itemCount > 128) {
-            barContainer.classList.add('has-limit-warning');
-            barContainer.classList.remove('is-thin', 'dist-bars-dense', 'dist-bars-ultra');
-            const warnText = window.i18n
-                ? window.i18n.t('distLimitExceeded', { count: this.itemCount })
-                : `Բաշխիչ գծերը չեն կարող աշխատել, քանի որ տառերի քանակը շատ է (առավելագույնը 128 տառ, ընտրված է ${this.itemCount})։`;
-            barContainer.innerHTML = `
-                <div class="dist-limit-warning">
-                    <i class="hd-icon hd-icon-alert-triangle"></i>
-                    <div class="dist-limit-text">${warnText}</div>
-                </div>
-            `;
-            if (countLabel) {
-                const countStr = this.distributionTarget === 'characters'
-                    ? (window.i18n ? window.i18n.t('charactersCount', { count: this.itemCount }) : `${this.itemCount} characters`)
-                    : (window.i18n ? window.i18n.t('itemsCount', { count: this.itemCount }) : `${this.itemCount} items`);
-                const maxNotice = window.i18n ? window.i18n.t('maxLimitNotice', { max: 128 }) : 'Max 128';
-                countLabel.textContent = `${countStr} (${maxNotice})`;
-            }
-            if (footerEl) {
-                footerEl.innerHTML = `
-                    <div class="dist-footer-axis-wrap">
-                        <span class="dist-footer-dot" style="background: ${cur.color}"></span>
-                        <span class="dist-footer-axis-name">${axisName}</span>
-                        <span class="dist-footer-axis-tag">${cur.axisId}</span>
-                    </div>
-                    <div class="dist-footer-range">${range.min} &rarr; ${range.max}</div>
-                `;
-            }
-            const hoverReadout = this.container.querySelector('#preview-hover-readout');
-            if (hoverReadout) {
-                hoverReadout.textContent = '';
-            }
-            return;
-        }
-
         barContainer.classList.remove('has-limit-warning');
-        const count = Math.max(2, Math.min(128, this.itemCount));
+        const realCount = Math.max(1, this.itemCount || 16);
+        const count = Math.max(2, Math.min(48, realCount));
         barContainer.classList.toggle('is-thin', count > 20);
-        barContainer.classList.toggle('dist-bars-dense', count > 48);
-        barContainer.classList.toggle('dist-bars-ultra', count > 80);
+        barContainer.classList.toggle('dist-bars-dense', count > 36);
+        barContainer.classList.toggle('dist-bars-ultra', count > 44);
 
         if (countLabel) {
             const countStr = this.distributionTarget === 'characters'
-                ? (window.i18n ? window.i18n.t('charactersCount', { count }) : `${count} characters`)
-                : (window.i18n ? window.i18n.t('itemsCount', { count }) : `${count} items`);
+                ? (window.i18n ? window.i18n.t('charactersCount', { count: realCount }) : `${realCount} characters`)
+                : (window.i18n ? window.i18n.t('itemsCount', { count: realCount }) : `${realCount} items`);
             countLabel.textContent = countStr;
         }
 
@@ -4022,11 +3989,12 @@ class GraphMode {
                 const heightPercent = Math.max(4, Math.round(yNorm * 100));
                 const calculatedVal = Math.round(range.min + yNorm * (range.max - range.min));
 
-                const rawChar = (this.textSnippet && this.textSnippet[i]) ? this.textSnippet[i] : null;
-                const letterDisplay = rawChar ? `${rawChar}` : `#${i + 1}`;
+                const sampleIdx = (realCount === count) ? i : Math.min(Math.round(xNorm * (realCount - 1)), realCount - 1);
+                const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
+                const letterDisplay = rawChar ? `${rawChar}` : `#${sampleIdx + 1}`;
                 const tipText = window.i18n
-                    ? window.i18n.t('distBarLetterTip', { char: `'${letterDisplay}'`, idx: i + 1, axis: axisName, val: calculatedVal })
-                    : `Letter '${letterDisplay}' (#${i + 1}): ${axisName} = ${calculatedVal}`;
+                    ? window.i18n.t('distBarLetterTip', { char: `'${letterDisplay}'`, idx: sampleIdx + 1, axis: axisName, val: calculatedVal })
+                    : `Letter '${letterDisplay}' (#${sampleIdx + 1}): ${axisName} = ${calculatedVal}`;
 
                 item.dataset.index = i;
                 item.dataset.label = letterDisplay;
@@ -4063,11 +4031,12 @@ class GraphMode {
                 const heightPercent = Math.max(4, Math.round(yNorm * 100));
                 const calculatedVal = Math.round(range.min + yNorm * (range.max - range.min));
 
-                const rawChar = (this.textSnippet && this.textSnippet[i]) ? this.textSnippet[i] : null;
-                const letterDisplay = rawChar ? `${rawChar}` : `#${i + 1}`;
+                const sampleIdx = (realCount === count) ? i : Math.min(Math.round(xNorm * (realCount - 1)), realCount - 1);
+                const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
+                const letterDisplay = rawChar ? `${rawChar}` : `#${sampleIdx + 1}`;
                 const tipText = window.i18n
-                    ? window.i18n.t('distBarLetterTip', { char: `'${letterDisplay}'`, idx: i + 1, axis: axisName, val: calculatedVal })
-                    : `Letter '${letterDisplay}' (#${i + 1}): ${axisName} = ${calculatedVal}`;
+                    ? window.i18n.t('distBarLetterTip', { char: `'${letterDisplay}'`, idx: sampleIdx + 1, axis: axisName, val: calculatedVal })
+                    : `Letter '${letterDisplay}' (#${sampleIdx + 1}): ${axisName} = ${calculatedVal}`;
 
                 const isHoveredClass = (this.hoveredDistIndex === i) ? ' is-hovered' : '';
                 html += `
@@ -4111,10 +4080,7 @@ class GraphMode {
     }
 
     emitDistribution() {
-        if (this.itemCount > 128) {
-            return;
-        }
-        const count = Math.max(2, Math.min(128, this.itemCount));
+        const count = Math.max(2, Math.min(1000, this.itemCount || 16));
         const activeCur = this.getActiveCurve();
 
         // Multi-curve payload: evaluates each enabled curve along its own axis
