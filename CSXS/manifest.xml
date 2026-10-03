@@ -9,11 +9,6 @@
         <HostList>
             <!-- Target Adobe Illustrator CC 2018 through CC 2026+ -->
             <Host Name="ILST" Version="[17.0,99.9]" />
-            <!-- Target Adobe InDesign CC 2018 through CC 2026+ -->
-            <Host Name="IDSN" Version="[9.0,99.9]" />
-            <!-- Target Adobe Photoshop CC 2018 through CC 2026+ -->
-            <Host Name="PHXS" Version="[15.0,99.9]" />
-            <Host Name="PHSP" Version="[15.0,99.9]" />
         </HostList>
         <LocaleList>
             <Locale Code="All" />
