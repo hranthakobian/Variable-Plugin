@@ -1,6 +1,5 @@
 {
-  "version": "2.2.0",
-  "commit": "9d01920",
-  "name": "Selection Fix, 128 Character Limit & Live Updater",
+  "version": "2.2.1",
+  "name": "Text Selection & Variable vs Static Axes Fix",
   "date": "2026-10-03"
 }

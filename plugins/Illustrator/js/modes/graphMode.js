@@ -3563,6 +3563,10 @@ class GraphMode {
             this.ensurePointHandles(activeCur);
             const pts = activeCur.points;
             const n = pts.length;
+            const plotLeft = pad;
+            const plotRight = w - pad;
+            const p0Pix = this.normToPixel(pts[0]);
+            const pnPix = this.normToPixel(pts[n - 1]);
 
             // Main curve line (flat, crisp, no shadow or gradients)
             ctx.save();

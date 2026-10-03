@@ -198,19 +198,31 @@ class AppController {
     }
 
     bindInteractionGuards() {
-        // When user is actively dragging sliders, curves or 2D node, pause polling
-        window.addEventListener('mousedown', () => {
-            this.isUserInteracting = true;
-        });
-        window.addEventListener('mouseup', () => {
+        let guardTimer = null;
+        const resetInteraction = () => {
             this.isUserInteracting = false;
-        });
-        window.addEventListener('touchstart', () => {
+            if (guardTimer) {
+                clearTimeout(guardTimer);
+                guardTimer = null;
+            }
+        };
+
+        const triggerInteraction = (duration = 600) => {
             this.isUserInteracting = true;
-        }, { passive: true });
-        window.addEventListener('touchend', () => {
-            this.isUserInteracting = false;
-        });
+            if (guardTimer) {
+                clearTimeout(guardTimer);
+            }
+            guardTimer = setTimeout(resetInteraction, duration);
+        };
+
+        window.addEventListener('mouseup', resetInteraction);
+        window.addEventListener('touchend', resetInteraction);
+        window.addEventListener('mouseleave', resetInteraction);
+        window.addEventListener('blur', resetInteraction);
+        window.addEventListener('focus', resetInteraction);
+
+        window.addEventListener('input', () => triggerInteraction(500), { passive: true });
+        window.addEventListener('touchmove', () => triggerInteraction(500), { passive: true });
     }
 
     initModes() {
@@ -286,16 +298,21 @@ class AppController {
                 this.tourGuide.checkFirstTimeWelcome();
             }
             if (this.graphMode) {
+                this.graphMode.syncSelection(this.currentSelectionInfo);
                 requestAnimationFrame(() => {
                     this.graphMode.setupCanvas();
                     this.graphMode.redraw();
                 });
             }
         } else if (modeName === 'designSpace' && this.designSpaceMode) {
+            this.designSpaceMode.syncAxes(this.currentSelectionInfo.axes || []);
+            this.designSpaceMode.syncValues(this.currentSelectionInfo.currentValues);
             requestAnimationFrame(() => {
                 this.designSpaceMode.setupCanvas();
                 this.designSpaceMode.redraw();
             });
+        } else if (modeName === 'slider' && this.sliderMode) {
+            this.sliderMode.syncValues(this.currentSelectionInfo.currentValues);
         }
     }
 
@@ -475,44 +492,22 @@ class AppController {
             return;
         }
 
-        if (info.isVariableFont !== false) {
-            if (this.sliderMode) {
-                this.sliderMode.render();
-                this.sliderMode.syncValues(info.currentValues);
-            }
-            if (this.graphMode) {
-                this.graphMode.renderUI();
-                this.graphMode.setupCanvas();
-                this.graphMode.bindEvents();
-                this.graphMode.syncSelection(info);
-            }
-            if (this.designSpaceMode) {
-                this.designSpaceMode.renderUI();
-                this.designSpaceMode.setupCanvas();
-                this.designSpaceMode.bindEvents();
-                this.designSpaceMode.syncAxes(info.axes);
-                this.designSpaceMode.syncValues(info.currentValues);
-            }
-        } else {
-            if (this.sliderMode) {
-                this.sliderMode.render();
-            }
-            if (this.graphMode) {
-                this.graphMode.renderUI();
-                this.graphMode.setupCanvas();
-                this.graphMode.bindEvents();
-                this.graphMode.renderCurvePills();
-                this.graphMode.renderPointChips();
-                this.graphMode.syncPointInspector();
-                this.graphMode.renderCustomPresets();
-                this.graphMode.redraw();
-            }
-            if (this.designSpaceMode) {
-                this.designSpaceMode.renderUI();
-                this.designSpaceMode.setupCanvas();
-                this.designSpaceMode.bindEvents();
-                this.designSpaceMode.redraw();
-            }
+        if (this.sliderMode) {
+            this.sliderMode.render();
+            this.sliderMode.syncValues(info.currentValues);
+        }
+        if (this.graphMode) {
+            this.graphMode.renderUI();
+            this.graphMode.setupCanvas();
+            this.graphMode.bindEvents();
+            this.graphMode.syncSelection(info);
+        }
+        if (this.designSpaceMode) {
+            this.designSpaceMode.renderUI();
+            this.designSpaceMode.setupCanvas();
+            this.designSpaceMode.bindEvents();
+            this.designSpaceMode.syncAxes(info.axes || []);
+            this.designSpaceMode.syncValues(info.currentValues);
         }
     }
 
@@ -719,12 +714,21 @@ class AppController {
             return;
         }
 
-        dot.className = 'status-dot';
         if (info.type === 'text') {
-            nameLabel.textContent = info.fontName || info.fontFamily || (i18n ? i18n.t('varFont') : 'Variable Font');
+            const isStatic = info.isVariableFont === false;
+            if (isStatic) {
+                dot.className = 'status-dot warning';
+                const staticNotice = i18n ? i18n.t('staticFontTag') : 'Static';
+                const fName = info.fontName || info.fontFamily || (i18n ? i18n.t('staticFont') : 'Static Font');
+                nameLabel.textContent = `${fName} (${staticNotice})`;
+            } else {
+                dot.className = 'status-dot';
+                nameLabel.textContent = info.fontName || info.fontFamily || (i18n ? i18n.t('varFont') : 'Variable Font');
+            }
             const count = info.charCount || 1;
             metaLabel.textContent = i18n ? i18n.t('charsSelected', { count }) : `${count} Character(s) Selected`;
         } else {
+            dot.className = 'status-dot';
             nameLabel.textContent = i18n ? i18n.t('vectorObjects') : 'Dynamic Vector Object(s)';
             const count = info.totalSelected || 1;
             metaLabel.textContent = i18n ? i18n.t('itemsSelected', { count }) : `${count} Item(s) Selected`;

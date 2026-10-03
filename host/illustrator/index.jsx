@@ -219,6 +219,27 @@ var VariableFontPlugin = {
         return map;
     },
 
+    isVariableFont: function(font) {
+        if (!font) {
+            return false;
+        }
+        var fam = (font.family || '').toLowerCase();
+        var name = (font.name || '').toLowerCase();
+
+        if (fam.indexOf('variable') !== -1 || name.indexOf('variable') !== -1) return true;
+        if (fam.indexOf('concept') !== -1 || name.indexOf('concept') !== -1) return true;
+        if (fam.indexOf('bahnschrift') !== -1 || name.indexOf('bahnschrift') !== -1) return true;
+        if (fam.indexOf('flex') !== -1 || name.indexOf('flex') !== -1) return true;
+        if (fam.indexOf('vf') !== -1 || name.indexOf('vf') !== -1) return true;
+        if (name.indexOf('-var') !== -1 || fam.indexOf(' var') !== -1) return true;
+
+        try {
+            if (font.axisVector && font.axisVector.length > 0) return true;
+        } catch (eAv) {}
+
+        return false;
+    },
+
     detectFontAxes: function(font) {
         var axes = [];
 
@@ -231,60 +252,56 @@ var VariableFontPlugin = {
             axes.push({ id: id, name: name, min: min, max: max, step: step, defaultVal: def });
         }
 
-        var family = font ? (font.family || '') : '';
-        var map = family ? VariableFontPlugin.getFamilyAxisMapping(family) : {};
+        var isVar = VariableFontPlugin.isVariableFont(font);
+        var fam = font ? (font.family || '').toLowerCase() : '';
 
-        if (font && font.axisVector && font.axisVector.length > 0) {
-            if (map.wght) {
-                var defW = 400;
-                if (defW < map.wght.min) defW = map.wght.min;
-                if (defW > map.wght.max) defW = map.wght.max;
-                var minW = (map.wght.min < map.wght.max) ? map.wght.min : 100;
-                var maxW = (map.wght.min < map.wght.max) ? map.wght.max : 900;
-                addAxis('wght', 'Weight', minW, maxW, 1, defW);
-            } else {
+        if (isVar) {
+            if (fam.indexOf('acumin') !== -1) {
                 addAxis('wght', 'Weight', 100, 900, 1, 400);
-            }
-
-            if (map.wdth) {
-                var defWd = 100;
-                if (defWd < map.wdth.min) defWd = map.wdth.min;
-                if (defWd > map.wdth.max) defWd = map.wdth.max;
-                var minWd = (map.wdth.min < map.wdth.max) ? map.wdth.min : 50;
-                var maxWd = (map.wdth.min < map.wdth.max) ? map.wdth.max : 200;
-                addAxis('wdth', 'Width', minWd, maxWd, 1, defWd);
+                addAxis('wdth', 'Width', 45, 115, 1, 100);
+                addAxis('slnt', 'Slant', -12, 0, 0.5, 0);
+            } else if (fam.indexOf('minion') !== -1) {
+                addAxis('wght', 'Weight', 300, 900, 1, 400);
+                addAxis('opsz', 'Optical Size', 6, 72, 0.5, 11);
+            } else if (fam.indexOf('myriad') !== -1) {
+                addAxis('wght', 'Weight', 100, 900, 1, 400);
+                addAxis('wdth', 'Width', 50, 150, 1, 100);
+            } else if (fam.indexOf('bahnschrift') !== -1) {
+                addAxis('wght', 'Weight', 300, 900, 1, 400);
+                addAxis('wdth', 'Width', 75, 100, 1, 100);
+            } else if (fam.indexOf('roboto flex') !== -1) {
+                addAxis('wght', 'Weight', 100, 1000, 1, 400);
+                addAxis('wdth', 'Width', 25, 151, 1, 100);
+                addAxis('slnt', 'Slant', -10, 0, 0.5, 0);
+                addAxis('opsz', 'Optical Size', 8, 144, 0.5, 14);
             } else {
-                addAxis('wdth', 'Width', 50, 200, 1, 100);
+                var famFonts = font ? VariableFontPlugin.getFamilyFonts(font.family) : [];
+                var hasWdth = false;
+                var hasSlnt = false;
+                var hasOpsz = false;
+                for (var f = 0; f < famFonts.length; f++) {
+                    var st = (famFonts[f].style || '').toLowerCase();
+                    if (st.indexOf('cond') !== -1 || st.indexOf('wide') !== -1 || st.indexOf('ext') !== -1) hasWdth = true;
+                    if (st.indexOf('italic') !== -1 || st.indexOf('oblique') !== -1 || st.indexOf('slant') !== -1) hasSlnt = true;
+                    if (st.indexOf('optical') !== -1 || st.indexOf('caption') !== -1 || st.indexOf('subhead') !== -1) hasOpsz = true;
+                }
+                addAxis('wght', 'Weight', 100, 900, 1, 400);
+                if (hasWdth) addAxis('wdth', 'Width', 50, 200, 1, 100);
+                if (hasSlnt) addAxis('slnt', 'Slant', -15, 0, 0.5, 0);
+                if (hasOpsz) addAxis('opsz', 'Optical Size', 6, 72, 0.5, 12);
             }
-
-            if (map.slnt) {
-                var defSl = 0;
-                if (defSl < map.slnt.min) defSl = map.slnt.min;
-                if (defSl > map.slnt.max) defSl = map.slnt.max;
-                var minSl = (map.slnt.min < map.slnt.max) ? map.slnt.min : -15;
-                var maxSl = (map.slnt.min < map.slnt.max) ? map.slnt.max : 0;
-                addAxis('slnt', 'Slant', minSl, maxSl, 0.5, defSl);
-            }
-
-            if (map.opsz) {
-                var defOp = 14;
-                if (defOp < map.opsz.min) defOp = Math.round((map.opsz.min + map.opsz.max) / 2);
-                if (defOp > map.opsz.max) defOp = map.opsz.max;
-                var minOp = (map.opsz.min < map.opsz.max) ? map.opsz.min : 6;
-                var maxOp = (map.opsz.min < map.opsz.max) ? map.opsz.max : 72;
-                addAxis('opsz', 'Optical Size', minOp, maxOp, 0.5, defOp);
-            }
-
             addAxis('tracking', 'Tracking', -100, 300, 5, 0);
             return axes;
         }
 
-        // Standard / Static fonts & Armenian fonts:
-        // Provide universal typographic axes:
-        addAxis('wght', 'Weight', 100, 900, 1, 400);
+        // STATIC FONT:
+        // Do not add non-existent axes like 'slnt'!
+        var familyFonts = font ? VariableFontPlugin.getFamilyFonts(font.family) : [];
+        if (familyFonts.length > 1) {
+            addAxis('wght', 'Weight', 100, 900, 1, 400);
+        }
         addAxis('wdth', 'Width', 50, 200, 1, 100);
         addAxis('tracking', 'Tracking', -100, 300, 5, 0);
-        addAxis('slnt', 'Slant', -15, 0, 0.5, 0);
 
         return axes;
     },
@@ -304,12 +321,17 @@ var VariableFontPlugin = {
             return res;
         }
 
-        var sel = doc.selection;
+        var sel = null;
+        try {
+            sel = doc.selection;
+        } catch (eSel) {
+            return res;
+        }
         if (!sel) {
             return res;
         }
 
-        // 1. Direct TextRange selection
+        // 1. Direct TextRange selection (Type tool)
         if (sel.typename === 'TextRange') {
             try {
                 if (sel.contents && sel.contents.length > 0) {
@@ -326,68 +348,91 @@ var VariableFontPlugin = {
             return res;
         }
 
-        // 2. Collection of selected items
-        if (sel.length !== undefined) {
-            if (sel.length === 0) {
-                return res;
-            }
-
-            // Check if selection array contains TextRange elements
-            if (sel[0] && sel[0].typename === 'TextRange') {
-                for (var r = 0; r < sel.length; r++) {
-                    if (sel[r] && sel[r].typename === 'TextRange') {
-                        if (!res.selectedTextRange) {
-                            res.selectedTextRange = sel[r];
-                        }
-                        try {
-                            if (sel[r].parent && sel[r].parent.typename === 'TextFrame') {
-                                var pTf = sel[r].parent;
-                                var alreadyIn = false;
-                                for (var k = 0; k < res.textFrames.length; k++) {
-                                    if (res.textFrames[k] === pTf) { alreadyIn = true; break; }
-                                }
-                                if (!alreadyIn) res.textFrames.push(pTf);
-                            }
-                        } catch (ePTf) {}
-                    }
+        // 1b. Direct single TextFrame selection
+        if (sel.typename === 'TextFrame') {
+            res.textFrames.push(sel);
+            try {
+                var ts = sel.textSelection;
+                if (ts && ts.length > 0 && ts[0] && ts[0].contents && ts[0].contents.length > 0) {
+                    res.selectedTextRange = ts[0];
                 }
-                return res;
-            }
+            } catch (eTs) {}
+            return res;
+        }
 
-            function collectItems(items) {
-                for (var i = 0; i < items.length; i++) {
-                    var it = items[i];
-                    if (!it) continue;
-                    if (it.typename === 'TextRange') {
-                        if (!res.selectedTextRange) {
-                            res.selectedTextRange = it;
-                        }
-                    } else if (it.typename === 'TextFrame') {
-                        res.textFrames.push(it);
-                        // Check if text is highlighted inside this frame via Type tool
-                        try {
-                            var ts = it.textSelection;
-                            if (ts && ts.length > 0 && ts[0] && ts[0].contents && ts[0].contents.length > 0) {
-                                if (!res.selectedTextRange) {
-                                    res.selectedTextRange = ts[0];
-                                }
-                            }
-                        } catch (eTs) {}
-                    } else if (it.typename === 'PathItem' || it.typename === 'CompoundPathItem') {
-                        try {
-                            if (it.parent && it.parent.typename === 'TextFrame') {
-                                res.textFrames.push(it.parent);
-                                continue;
-                            }
-                        } catch (ePar) {}
-                        res.pathItems.push(it);
-                    } else if (it.typename === 'GroupItem') {
-                        try {
-                            collectItems(it.pageItems);
-                        } catch (eG) {}
+        // 1c. Direct single PathItem selection
+        if (sel.typename === 'PathItem' || sel.typename === 'CompoundPathItem') {
+            try {
+                if (sel.parent && sel.parent.typename === 'TextFrame') {
+                    res.textFrames.push(sel.parent);
+                    return res;
+                }
+            } catch (ePar) {}
+            res.pathItems.push(sel);
+            return res;
+        }
+
+        // 2. Collection or array of selected items
+        function collectItems(items) {
+            if (!items) return;
+            var len = 0;
+            try {
+                len = (items.length !== undefined) ? items.length : (items.count !== undefined ? items.count : 0);
+            } catch (eLen) {}
+
+            for (var i = 0; i < len; i++) {
+                var it = null;
+                try {
+                    it = items[i];
+                } catch (eItem) {}
+                if (!it) continue;
+
+                var tName = '';
+                try {
+                    tName = it.typename || '';
+                } catch (eTn) {}
+
+                if (tName === 'TextRange') {
+                    if (!res.selectedTextRange) {
+                        res.selectedTextRange = it;
                     }
+                    try {
+                        if (it.parent && it.parent.typename === 'TextFrame') {
+                            var pTf = it.parent;
+                            var alreadyIn = false;
+                            for (var k = 0; k < res.textFrames.length; k++) {
+                                if (res.textFrames[k] === pTf) { alreadyIn = true; break; }
+                            }
+                            if (!alreadyIn) res.textFrames.push(pTf);
+                        }
+                    } catch (ePTf) {}
+                } else if (tName === 'TextFrame') {
+                    res.textFrames.push(it);
+                    try {
+                        var ts = it.textSelection;
+                        if (ts && ts.length > 0 && ts[0] && ts[0].contents && ts[0].contents.length > 0) {
+                            if (!res.selectedTextRange) {
+                                res.selectedTextRange = ts[0];
+                            }
+                        }
+                    } catch (eTs2) {}
+                } else if (tName === 'PathItem' || tName === 'CompoundPathItem') {
+                    try {
+                        if (it.parent && it.parent.typename === 'TextFrame') {
+                            res.textFrames.push(it.parent);
+                            continue;
+                        }
+                    } catch (ePar2) {}
+                    res.pathItems.push(it);
+                } else if (tName === 'GroupItem') {
+                    try {
+                        collectItems(it.pageItems);
+                    } catch (eG) {}
                 }
             }
+        }
+
+        if (sel.length !== undefined || sel.count !== undefined) {
             collectItems(sel);
         }
 
@@ -400,8 +445,8 @@ var VariableFontPlugin = {
         var metaFamily = null;
         var metaFontName = null;
 
-        if (item.note && item.note.length > 0) {
-            try {
+        try {
+            if (item.note && item.note.length > 0) {
                 var parsed = JSON.parse(item.note);
                 if (parsed && parsed.values) {
                     for (var k in parsed.values) {
@@ -417,17 +462,48 @@ var VariableFontPlugin = {
                 if (parsed && parsed.fontName) {
                     metaFontName = parsed.fontName;
                 }
-            } catch (e) {}
-        }
+            }
+        } catch (eNote) {}
 
-        if (item.typename === 'TextFrame') {
-            var tr = item.textRange;
-            var ca = tr.characterAttributes;
-            var font = ca.textFont;
+        var itemType = '';
+        try {
+            itemType = item.typename;
+        } catch (eIt) {}
+
+        if (itemType === 'TextFrame') {
+            var tr = null;
+            var font = null;
+            var hScale = 100;
+            var trk = 0;
+
+            try {
+                tr = item.textRange;
+                if (tr) {
+                    try {
+                        if (tr.characterAttributes) {
+                            font = tr.characterAttributes.textFont;
+                            hScale = tr.characterAttributes.horizontalScale || 100;
+                            trk = tr.characterAttributes.tracking || 0;
+                        }
+                    } catch (eCa1) {}
+
+                    if (!font && tr.characters && tr.characters.length > 0) {
+                        try {
+                            var firstCharCa = tr.characters[0].characterAttributes;
+                            if (firstCharCa) {
+                                font = firstCharCa.textFont;
+                                hScale = firstCharCa.horizontalScale || 100;
+                                trk = firstCharCa.tracking || 0;
+                            }
+                        } catch (eCa2) {}
+                    }
+                }
+            } catch (eTr) {}
 
             if (font) {
-                var map = VariableFontPlugin.getFamilyAxisMapping(font.family);
-                var familyMatches = (!metaFamily || metaFamily.toLowerCase() === font.family.toLowerCase());
+                var fam = font.family || '';
+                var map = VariableFontPlugin.getFamilyAxisMapping(fam);
+                var familyMatches = (!metaFamily || metaFamily.toLowerCase() === fam.toLowerCase());
                 if (!familyMatches) {
                     vals = {};
                 }
@@ -455,21 +531,25 @@ var VariableFontPlugin = {
                     else if (s.indexOf('semibold') !== -1 || s.indexOf('demi') !== -1) vals.wght = 600;
                     else if (s.indexOf('bold') !== -1) vals.wght = 700;
                     else if (s.indexOf('black') !== -1 || s.indexOf('heavy') !== -1) vals.wght = 900;
-                    else vals.wght = 400;
+                    else if (vals.wght === undefined) vals.wght = 400;
 
-                    vals.wdth = Math.round(ca.horizontalScale || 100);
+                    if (vals.wdth === undefined) {
+                        vals.wdth = Math.round(hScale);
+                    }
                 }
             }
             if (vals.tracking === undefined) {
-                vals.tracking = Math.round(ca.tracking || 0);
+                vals.tracking = Math.round(trk);
             }
-        } else if (item.typename === 'PathItem' || item.typename === 'CompoundPathItem') {
-            if (vals.strokeWidth === undefined) {
-                vals.strokeWidth = item.stroked ? Math.round(item.strokeWidth * 10) / 10 : 2;
-            }
-            if (vals.opacity === undefined) {
-                vals.opacity = Math.round(item.opacity !== undefined ? item.opacity : 100);
-            }
+        } else if (itemType === 'PathItem' || itemType === 'CompoundPathItem') {
+            try {
+                if (vals.strokeWidth === undefined) {
+                    vals.strokeWidth = item.stroked ? Math.round(item.strokeWidth * 10) / 10 : 2;
+                }
+                if (vals.opacity === undefined) {
+                    vals.opacity = Math.round(item.opacity !== undefined ? item.opacity : 100);
+                }
+            } catch (ePathMeta) {}
         }
 
         return { values: vals, curve: savedCurve };
@@ -538,7 +618,6 @@ var VariableFontPlugin = {
             }
 
             var doc = app.activeDocument;
-            VariableFontPlugin.cleanDefaultCharacterStyle(doc);
 
             var resolved = VariableFontPlugin.resolveSelection(doc);
             var selectedTextRange = resolved.selectedTextRange;
@@ -597,8 +676,8 @@ var VariableFontPlugin = {
                 result.charCount = charCount;
                 result.itemCount = charCount;
 
-                var fName = font ? font.name : 'Variable Font';
-                var fFamily = font ? font.family : 'Variable Font';
+                var fName = font ? font.name : 'Standard Font';
+                var fFamily = font ? font.family : 'Standard Font';
                 result.fontName = fName;
                 result.fontFamily = fFamily;
                 result.itemId = 'range_' + charCount + '_' + fName;
@@ -610,7 +689,7 @@ var VariableFontPlugin = {
                 }
 
                 result.axes = VariableFontPlugin.detectFontAxes(font);
-                result.isVariableFont = true;
+                result.isVariableFont = VariableFontPlugin.isVariableFont(font);
 
                 if (textFrames.length > 0) {
                     var meta = VariableFontPlugin.readItemMetadata(textFrames[0]);
@@ -620,28 +699,31 @@ var VariableFontPlugin = {
             } else if (textFrames.length > 0) {
                 result.type = 'text';
                 var firstTf = textFrames[0];
-                var tr = firstTf.textRange;
+                var tr = null;
                 var font = null;
                 try {
-                    font = tr.characterAttributes.textFont;
-                } catch (eF3) {}
-                if (!font) {
-                    try {
-                        if (tr.characters && tr.characters.length > 0) {
-                            font = tr.characters[0].characterAttributes.textFont;
+                    tr = firstTf.textRange;
+                    if (tr) {
+                        try {
+                            font = tr.characterAttributes.textFont;
+                        } catch (eF3) {}
+                        if (!font && tr.characters && tr.characters.length > 0) {
+                            try {
+                                font = tr.characters[0].characterAttributes.textFont;
+                            } catch (eF4) {}
                         }
-                    } catch (eF4) {}
-                }
+                    }
+                } catch (eTr2) {}
 
                 var charCount = 1;
                 try {
-                    charCount = tr.characters ? tr.characters.length : (tr.contents ? tr.contents.length : 1);
+                    charCount = tr ? (tr.characters ? tr.characters.length : (tr.contents ? tr.contents.length : 1)) : (firstTf.contents ? firstTf.contents.length : 1);
                 } catch (eCC2) {}
                 result.charCount = charCount;
                 result.itemCount = charCount;
 
-                var fName = font ? font.name : 'Variable Font';
-                var fFamily = font ? font.family : 'Variable Font';
+                var fName = font ? font.name : 'Standard Font';
+                var fFamily = font ? font.family : 'Standard Font';
                 result.fontName = fName;
                 result.fontFamily = fFamily;
 
@@ -652,13 +734,13 @@ var VariableFontPlugin = {
                 }
 
                 try {
-                    result.textSnippet = (tr.contents || '').substring(0, 128).replace(/[\r\n\t]+/g, ' ');
+                    result.textSnippet = (firstTf.contents || '').substring(0, 128).replace(/[\r\n\t]+/g, ' ');
                 } catch (eText2) {
                     result.textSnippet = '';
                 }
 
                 result.axes = VariableFontPlugin.detectFontAxes(font);
-                result.isVariableFont = true;
+                result.isVariableFont = VariableFontPlugin.isVariableFont(font);
 
                 var meta = VariableFontPlugin.readItemMetadata(firstTf);
                 result.currentValues = meta.values;
@@ -711,11 +793,22 @@ var VariableFontPlugin = {
                 } catch(e1) {}
 
                 try {
-                    if (tf.textRange && tf.textRange.characterAttributes && tf.textRange.characterAttributes.textFont) {
-                        var tfFont = tf.textRange.characterAttributes.textFont;
+                    var tfFont = null;
+                    if (tf.textRange) {
+                        try {
+                            if (tf.textRange.characterAttributes) {
+                                tfFont = tf.textRange.characterAttributes.textFont;
+                            }
+                        } catch (eCaList1) {}
+                        if (!tfFont && tf.textRange.characters && tf.textRange.characters.length > 0) {
+                            try {
+                                tfFont = tf.textRange.characters[0].characterAttributes.textFont;
+                            } catch (eCaList2) {}
+                        }
+                    }
+                    if (tfFont) {
                         fontName = tfFont.name || tfFont.family || 'Font';
-                        var axes = VariableFontPlugin.detectFontAxes(tfFont);
-                        isVar = (axes && axes.length > 0);
+                        isVar = VariableFontPlugin.isVariableFont(tfFont);
                     }
                 } catch(e2) {}
 
@@ -876,25 +969,55 @@ var VariableFontPlugin = {
             }
 
             if (selectedTextRange) {
-                var ca = selectedTextRange.characterAttributes;
-                if (ca.textFont && (params.wght !== undefined || params.wdth !== undefined || params.slnt !== undefined || params.opsz !== undefined)) {
-                    var targetF = VariableFontPlugin.findNearestFontInstance(ca.textFont.family, params);
-                    if (targetF && ca.textFont !== targetF) {
-                        ca.textFont = targetF;
+                var curFont = null;
+                try {
+                    curFont = selectedTextRange.characterAttributes.textFont;
+                } catch(eCf1) {}
+                if (!curFont && selectedTextRange.characters && selectedTextRange.characters.length > 0) {
+                    try { curFont = selectedTextRange.characters[0].characterAttributes.textFont; } catch(eCf2) {}
+                }
+
+                if (curFont && (params.wght !== undefined || params.wdth !== undefined || params.slnt !== undefined || params.opsz !== undefined)) {
+                    var targetF = VariableFontPlugin.findNearestFontInstance(curFont.family, params);
+                    if (targetF && curFont !== targetF) {
+                        try {
+                            selectedTextRange.characterAttributes.textFont = targetF;
+                        } catch(eSetF) {
+                            var chs = selectedTextRange.characters;
+                            for (var ci = 0; ci < chs.length; ci++) {
+                                try { chs[ci].characterAttributes.textFont = targetF; } catch(eChF) {}
+                            }
+                        }
                     }
                 }
 
-                if (ca.textFont) {
-                    var map = VariableFontPlugin.getFamilyAxisMapping(ca.textFont.family);
+                if (curFont) {
+                    var map = VariableFontPlugin.getFamilyAxisMapping(curFont.family);
                     if (!map.wdth && params.wdth !== undefined) {
-                        ca.horizontalScale = Math.max(25, Math.min(250, Number(params.wdth)));
+                        var hs = Math.max(25, Math.min(250, Number(params.wdth)));
+                        try {
+                            selectedTextRange.characterAttributes.horizontalScale = hs;
+                        } catch(eHs) {
+                            var chs = selectedTextRange.characters;
+                            for (var ci = 0; ci < chs.length; ci++) {
+                                try { chs[ci].characterAttributes.horizontalScale = hs; } catch(eChHs) {}
+                            }
+                        }
                     } else if (map.wdth) {
-                        ca.horizontalScale = 100;
+                        try { selectedTextRange.characterAttributes.horizontalScale = 100; } catch(eHs100) {}
                     }
                 }
 
                 if (params.tracking !== undefined) {
-                    ca.tracking = Number(params.tracking);
+                    var trkVal = Number(params.tracking);
+                    try {
+                        selectedTextRange.characterAttributes.tracking = trkVal;
+                    } catch(eTrk) {
+                        var chs = selectedTextRange.characters;
+                        for (var ci = 0; ci < chs.length; ci++) {
+                            try { chs[ci].characterAttributes.tracking = trkVal; } catch(eChTrk) {}
+                        }
+                    }
                 }
 
                 try {
@@ -905,27 +1028,55 @@ var VariableFontPlugin = {
             } else if (textFrames.length > 0) {
                 for (var i = 0; i < textFrames.length; i++) {
                     var item = textFrames[i];
-                    var tr = item.textRange;
-                    var ca = tr.characterAttributes;
+                    var curFont = null;
+                    try {
+                        curFont = item.textRange.characterAttributes.textFont;
+                    } catch(eCf3) {}
+                    if (!curFont && item.textRange.characters && item.textRange.characters.length > 0) {
+                        try { curFont = item.textRange.characters[0].characterAttributes.textFont; } catch(eCf4) {}
+                    }
 
-                    if (ca.textFont && (params.wght !== undefined || params.wdth !== undefined || params.slnt !== undefined || params.opsz !== undefined)) {
-                        var targetF = VariableFontPlugin.findNearestFontInstance(ca.textFont.family, params);
-                        if (targetF && ca.textFont !== targetF) {
-                            ca.textFont = targetF;
+                    if (curFont && (params.wght !== undefined || params.wdth !== undefined || params.slnt !== undefined || params.opsz !== undefined)) {
+                        var targetF = VariableFontPlugin.findNearestFontInstance(curFont.family, params);
+                        if (targetF && curFont !== targetF) {
+                            try {
+                                item.textRange.characterAttributes.textFont = targetF;
+                            } catch(eSetF2) {
+                                var chs = item.textRange.characters;
+                                for (var ci = 0; ci < chs.length; ci++) {
+                                    try { chs[ci].characterAttributes.textFont = targetF; } catch(eChF2) {}
+                                }
+                            }
                         }
                     }
 
-                    if (ca.textFont) {
-                        var map = VariableFontPlugin.getFamilyAxisMapping(ca.textFont.family);
+                    if (curFont) {
+                        var map = VariableFontPlugin.getFamilyAxisMapping(curFont.family);
                         if (!map.wdth && params.wdth !== undefined) {
-                            ca.horizontalScale = Math.max(25, Math.min(250, Number(params.wdth)));
+                            var hs = Math.max(25, Math.min(250, Number(params.wdth)));
+                            try {
+                                item.textRange.characterAttributes.horizontalScale = hs;
+                            } catch(eHs2) {
+                                var chs = item.textRange.characters;
+                                for (var ci = 0; ci < chs.length; ci++) {
+                                    try { chs[ci].characterAttributes.horizontalScale = hs; } catch(eChHs2) {}
+                                }
+                            }
                         } else if (map.wdth) {
-                            ca.horizontalScale = 100;
+                            try { item.textRange.characterAttributes.horizontalScale = 100; } catch(eHs1002) {}
                         }
                     }
 
                     if (params.tracking !== undefined) {
-                        ca.tracking = Number(params.tracking);
+                        var trkVal = Number(params.tracking);
+                        try {
+                            item.textRange.characterAttributes.tracking = trkVal;
+                        } catch(eTrk2) {
+                            var chs = item.textRange.characters;
+                            for (var ci = 0; ci < chs.length; ci++) {
+                                try { chs[ci].characterAttributes.tracking = trkVal; } catch(eChTrk2) {}
+                            }
+                        }
                     }
 
                     VariableFontPlugin.saveItemMetadata(item, params, null);
@@ -960,17 +1111,6 @@ var VariableFontPlugin = {
             var config = typeof jsonPayload === 'string' ? JSON.parse(jsonPayload) : jsonPayload;
             var doc = app.activeDocument;
 
-            VariableFontPlugin.cleanDefaultCharacterStyle(doc);
-
-            var resolved = VariableFontPlugin.resolveSelection(doc);
-            var selectedTextRange = resolved.selectedTextRange;
-            var textFrames = resolved.textFrames;
-            var pathItems = resolved.pathItems;
-
-            if (!selectedTextRange && textFrames.length === 0 && pathItems.length === 0) {
-                return JSON.stringify({ success: false, message: 'No selection' });
-            }
-
             var curveList = [];
             if (config.curves && config.curves.length > 0) {
                 curveList = config.curves;
@@ -989,7 +1129,9 @@ var VariableFontPlugin = {
                 if (count > 0 && curveList.length > 0) {
                     for (var c = 0; c < count; c++) {
                         var normIndex = count > 1 ? c / (count - 1) : 0;
-                        var charAttr = chars[c].characterAttributes;
+                        var charAttr = null;
+                        try { charAttr = chars[c].characterAttributes; } catch(eCa) {}
+                        if (!charAttr) continue;
 
                         var p = {};
                         for (var k = 0; k < curveList.length; k++) {
@@ -1004,21 +1146,23 @@ var VariableFontPlugin = {
                             }
                         }
 
-                        if (charAttr.textFont) {
-                            var targetF = VariableFontPlugin.findNearestFontInstance(charAttr.textFont.family, p);
-                            if (targetF && charAttr.textFont !== targetF) {
-                                charAttr.textFont = targetF;
+                        var charFont = null;
+                        try { charFont = charAttr.textFont; } catch(eCf) {}
+                        if (charFont) {
+                            var targetF = VariableFontPlugin.findNearestFontInstance(charFont.family, p);
+                            if (targetF && charFont !== targetF) {
+                                try { charAttr.textFont = targetF; } catch(eSetTf) {}
                             }
-                            var map = VariableFontPlugin.getFamilyAxisMapping(charAttr.textFont.family);
+                            var map = VariableFontPlugin.getFamilyAxisMapping(charFont.family);
                             if (p.wdth !== undefined) {
                                 if (map.wdth) {
-                                    charAttr.horizontalScale = 100;
+                                    try { charAttr.horizontalScale = 100; } catch(eHs) {}
                                 } else {
-                                    charAttr.horizontalScale = Math.max(25, Math.min(250, Number(p.wdth)));
+                                    try { charAttr.horizontalScale = Math.max(25, Math.min(250, Number(p.wdth))); } catch(eHs2) {}
                                 }
                             }
                             if (p.tracking !== undefined) {
-                                charAttr.tracking = Number(p.tracking);
+                                try { charAttr.tracking = Number(p.tracking); } catch(eTrk) {}
                             }
                         }
                     }
@@ -1038,7 +1182,9 @@ var VariableFontPlugin = {
                 if (count > 0 && curveList.length > 0) {
                     for (var c = 0; c < count; c++) {
                         var normIndex = count > 1 ? c / (count - 1) : 0;
-                        var charAttr = chars[c].characterAttributes;
+                        var charAttr = null;
+                        try { charAttr = chars[c].characterAttributes; } catch(eCaTf) {}
+                        if (!charAttr) continue;
 
                         var p = {};
                         for (var k = 0; k < curveList.length; k++) {
@@ -1053,21 +1199,23 @@ var VariableFontPlugin = {
                             }
                         }
 
-                        if (charAttr.textFont) {
-                            var targetF = VariableFontPlugin.findNearestFontInstance(charAttr.textFont.family, p);
-                            if (targetF && charAttr.textFont !== targetF) {
-                                charAttr.textFont = targetF;
+                        var charFont = null;
+                        try { charFont = charAttr.textFont; } catch(eCfTf) {}
+                        if (charFont) {
+                            var targetF = VariableFontPlugin.findNearestFontInstance(charFont.family, p);
+                            if (targetF && charFont !== targetF) {
+                                try { charAttr.textFont = targetF; } catch(eSetTf2) {}
                             }
-                            var map = VariableFontPlugin.getFamilyAxisMapping(charAttr.textFont.family);
+                            var map = VariableFontPlugin.getFamilyAxisMapping(charFont.family);
                             if (p.wdth !== undefined) {
                                 if (map.wdth) {
-                                    charAttr.horizontalScale = 100;
+                                    try { charAttr.horizontalScale = 100; } catch(eHs3) {}
                                 } else {
-                                    charAttr.horizontalScale = Math.max(25, Math.min(250, Number(p.wdth)));
+                                    try { charAttr.horizontalScale = Math.max(25, Math.min(250, Number(p.wdth))); } catch(eHs4) {}
                                 }
                             }
                             if (p.tracking !== undefined) {
-                                charAttr.tracking = Number(p.tracking);
+                                try { charAttr.tracking = Number(p.tracking); } catch(eTrk2) {}
                             }
                         }
                     }
@@ -1096,22 +1244,43 @@ var VariableFontPlugin = {
 
                         if (it.typename === 'TextFrame') {
                             var tr = it.textRange;
-                            var ca = tr.characterAttributes;
-                            if (ca.textFont) {
-                                var targetF = VariableFontPlugin.findNearestFontInstance(ca.textFont.family, p);
-                                if (targetF && ca.textFont !== targetF) {
-                                    ca.textFont = targetF;
-                                }
-                                var map = VariableFontPlugin.getFamilyAxisMapping(ca.textFont.family);
-                                if (p.wdth !== undefined) {
-                                    if (map.wdth) {
-                                        ca.horizontalScale = 100;
-                                    } else {
-                                        ca.horizontalScale = Math.max(25, Math.min(250, Number(p.wdth)));
+                            var ca = null;
+                            var curF = null;
+                            try {
+                                ca = tr.characterAttributes;
+                                if (ca) curF = ca.textFont;
+                            } catch(eCaIt) {}
+                            if (!curF && tr && tr.characters && tr.characters.length > 0) {
+                                try { curF = tr.characters[0].characterAttributes.textFont; } catch(eChIt) {}
+                            }
+                            if (curF) {
+                                var targetF = VariableFontPlugin.findNearestFontInstance(curF.family, p);
+                                if (targetF && curF !== targetF && ca) {
+                                    try { ca.textFont = targetF; } catch(eSetTf3) {
+                                        var chs = tr.characters;
+                                        for (var ci = 0; ci < chs.length; ci++) {
+                                            try { chs[ci].characterAttributes.textFont = targetF; } catch(eChF3) {}
+                                        }
                                     }
                                 }
-                                if (p.tracking !== undefined) {
-                                    ca.tracking = Number(p.tracking);
+                                var map = VariableFontPlugin.getFamilyAxisMapping(curF.family);
+                                if (p.wdth !== undefined && ca) {
+                                    var hs = map.wdth ? 100 : Math.max(25, Math.min(250, Number(p.wdth)));
+                                    try { ca.horizontalScale = hs; } catch(eHs5) {
+                                        var chs = tr.characters;
+                                        for (var ci = 0; ci < chs.length; ci++) {
+                                            try { chs[ci].characterAttributes.horizontalScale = hs; } catch(eChHs5) {}
+                                        }
+                                    }
+                                }
+                                if (p.tracking !== undefined && ca) {
+                                    var trkVal = Number(p.tracking);
+                                    try { ca.tracking = trkVal; } catch(eTrk3) {
+                                        var chs = tr.characters;
+                                        for (var ci = 0; ci < chs.length; ci++) {
+                                            try { chs[ci].characterAttributes.tracking = trkVal; } catch(eChTrk3) {}
+                                        }
+                                    }
                                 }
                             }
                         } else if (it.typename === 'PathItem' || it.typename === 'CompoundPathItem') {
