@@ -111,32 +111,29 @@
             <div class="app-modal-header">
                 <div class="modal-title-wrap">
                     <i class="hd-icon hd-icon-download"></i>
-                    <span id="update-modal-title" class="app-modal-title">Plugin Updates &amp; GitHub</span>
+                    <span id="update-modal-title" class="app-modal-title">Փլագինի Թարմացումներ</span>
                 </div>
-                <button type="button" id="btn-update-modal-close" class="app-modal-close-btn"><i class="hd-icon hd-icon-close"></i></button>
+                <button type="button" id="btn-update-modal-close" class="app-modal-close-btn" title="Փակել"><i class="hd-icon hd-icon-close"></i></button>
             </div>
             <div class="app-modal-body">
                 <div class="update-version-row">
                     <div class="version-block">
-                        <span class="version-label">Current:</span>
-                        <span class="version-badge current-ver">v2.1.0</span>
+                        <span class="version-label" id="lbl-update-current">Ընթացիկ՝</span>
+                        <span class="version-badge current-ver" id="update-current-version-badge">v2.1.0</span>
                     </div>
                     <div class="version-block">
-                        <span class="version-label">GitHub Latest:</span>
-                        <span class="version-badge latest-ver" id="update-latest-version-badge">Checking...</span>
+                        <span class="version-label" id="lbl-update-latest">Վերջինը՝</span>
+                        <span class="version-badge latest-ver" id="update-latest-version-badge">Ստուգվում է...</span>
                     </div>
                 </div>
 
                 <div id="update-status-msg" class="update-status-msg">
-                    <span>Press "Check Now" to query GitHub for the latest releases.</span>
+                    <span>Ստուգվում են թարմացումները...</span>
                 </div>
 
                 <div id="update-release-notes" class="update-release-notes" style="display:none;"></div>
             </div>
             <div class="app-modal-footer">
-                <button type="button" id="btn-check-updates-now" class="btn-modal-cancel">
-                    <i class="hd-icon hd-icon-redo-arrow"></i> Check Now
-                </button>
                 <div id="update-actions-container" class="update-actions-container"></div>
             </div>
         </div>

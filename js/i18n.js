@@ -245,7 +245,20 @@ const TRANSLATIONS = {
         tourStep5Title: '5. Նախադրվածքներ և Պանակներ',
         tourStep5Desc: 'Ընտրեք պատրաստի կորեր (S-Կոր, Ալիք, Ցատկ և այլն) կամ ստեղծեք ձերը («Ստեղծել Preset»)։ Խմբավորեք պանակներում և արտածեք/ներածեք JSON ֆայլերով։',
         tourStep6Title: '6. Փեղկերի Կառավարում և Պատուհան',
-        tourStep6Desc: 'Սեղմեք ցանկացած փեղկի վերնագրին՝ այն կոծկելու համար։ Քաշեք բռնակից՝ վերադասավորելու համար։ Կարող եք փակել, իսկ վերևի «Պատուհան» ցանկից՝ նորից միացնել փակված փեղկերը։'
+        tourStep6Desc: 'Սեղմեք ցանկացած փեղկի վերնագրին՝ այն կոծկելու համար։ Քաշեք բռնակից՝ վերադասավորելու համար։ Կարող եք փակել, իսկ վերևի «Պատուհան» ցանկից՝ նորից միացնել փակված փեղկերը։',
+
+        // GitHub Updates
+        updateModalTitle: 'Փլագինի Թարմացումներ',
+        currentVersionLabel: 'Ընթացիկ՝',
+        latestVersionLabel: 'Վերջինը՝',
+        checkingUpdates: 'Ստուգվում են թարմացումները...',
+        newVersionAvailable: 'Հասանելի է նոր թարմացում՝',
+        upToDate: 'Դուք օգտագործում եք վերջին տարբերակը',
+        updateNowBtn: 'Թարմացնել Հիմա',
+        checkAgainBtn: 'Ստուգել Կրկին',
+        downloadingUpdate: 'Ներբեռնվում և տեղադրվում է թարմացումը...',
+        updateCompletedReload: 'Թարմացումը բարեհաջող տեղադրվեց: Վերագործարկվում է...',
+        updateCheckFailed: 'Չհաջողվեց կապ հաստատել GitHub-ի հետ'
     },
     en: {
         // App Header & Selection
@@ -485,7 +498,20 @@ const TRANSLATIONS = {
         tourStep5Title: '5. Presets & Folders',
         tourStep5Desc: 'Choose from rich built-in presets (S-Curve, Wave, Bounce, etc.) or save your own ("Create Preset"). Group them into custom folders and export/import as JSON files.',
         tourStep6Title: '6. Modular Panels & Window Menu',
-        tourStep6Desc: 'Click any panel header to collapse/expand. Drag the handle to reorder panels. Use Close to close panels, and restore closed panels from the top "Window" menu.'
+        tourStep6Desc: 'Click any panel header to collapse/expand. Drag the handle to reorder panels. Use Close to close panels, and restore closed panels from the top "Window" menu.',
+
+        // GitHub Updates
+        updateModalTitle: 'Plugin Updates',
+        currentVersionLabel: 'Current:',
+        latestVersionLabel: 'Latest:',
+        checkingUpdates: 'Checking for updates...',
+        newVersionAvailable: 'New version available:',
+        upToDate: 'You are using the latest version.',
+        updateNowBtn: 'Update Now',
+        checkAgainBtn: 'Check Again',
+        downloadingUpdate: 'Downloading and applying update...',
+        updateCompletedReload: 'Update completed! Reloading extension...',
+        updateCheckFailed: 'Could not connect to GitHub repository'
     }
 };
 

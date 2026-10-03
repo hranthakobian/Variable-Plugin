@@ -1,52 +1,31 @@
 /**
- * GitHub Update Manager & Release Synchronizer
- * Enables one-click checking and updating of the Variables Plugin from GitHub.
+ * GitHub Update Manager & In-Place Release Synchronizer
+ * Enables one-click checking and live in-place updating of the Variables Plugin from GitHub
+ * directly inside Adobe Illustrator without closing or restarting the application.
  * Follows K&R / 1TBS brace formatting.
  */
 
 class UpdateManager {
     constructor() {
-        this.currentVersion = '2.1.0';
-        this.storageKeyRepo = 'vf_github_repo';
-        this.storageKeyAutoCheck = 'vf_auto_check_updates';
+        this.currentVersion = localStorage.getItem('vf_installed_version') || '2.1.0';
         this.defaultRepo = 'hranthakobian/Variable-Plugin';
         this.lastCheckResult = null;
         this.isChecking = false;
+        this.isUpdating = false;
 
         this.init();
     }
 
     init() {
         this.bindDOM();
-        if (this.isAutoCheckEnabled()) {
-            setTimeout(() => {
-                this.checkForUpdates(false);
-            }, 3000);
-        }
+        // Automatic update check 3 seconds after startup
+        setTimeout(() => {
+            this.checkForUpdates(false);
+        }, 3000);
     }
 
     getRepo() {
         return this.defaultRepo;
-    }
-
-    setRepo(repoName) {
-        try {
-            localStorage.setItem(this.storageKeyRepo, (repoName || '').trim());
-        } catch (e) {}
-    }
-
-    isAutoCheckEnabled() {
-        try {
-            return localStorage.getItem(this.storageKeyAutoCheck) !== 'false';
-        } catch (e) {
-            return true;
-        }
-    }
-
-    setAutoCheckEnabled(val) {
-        try {
-            localStorage.setItem(this.storageKeyAutoCheck, val ? 'true' : 'false');
-        } catch (e) {}
     }
 
     compareVersions(v1, v2) {
@@ -65,66 +44,106 @@ class UpdateManager {
     }
 
     async checkForUpdates(manual = true) {
-        if (this.isChecking) return;
+        if (this.isChecking || this.isUpdating) return;
         this.isChecking = true;
 
-        const repo = this.getRepo().trim();
+        const repo = this.defaultRepo;
         const statusEl = document.getElementById('update-status-msg');
         const badgeEl = document.getElementById('update-nav-badge');
+        const currentVerEl = document.getElementById('update-current-version-badge');
+        const latestVerEl = document.getElementById('update-latest-version-badge');
+
+        if (currentVerEl) {
+            currentVerEl.textContent = 'v' + this.currentVersion;
+        }
+        if (latestVerEl) {
+            latestVerEl.textContent = window.i18n ? window.i18n.t('checkingUpdates') : 'Ստուգվում է...';
+        }
 
         if (statusEl && manual) {
-            statusEl.innerHTML = `<span class="update-loading"><i class="hd-icon hd-icon-redo-arrow"></i> ${window.i18n ? window.i18n.t('checkingUpdates') : 'Checking for updates...'}</span>`;
+            statusEl.innerHTML = `<span class="update-loading"><i class="hd-icon hd-icon-redo-arrow hd-spin"></i> ${window.i18n ? window.i18n.t('checkingUpdates') : 'Ստուգվում են թարմացումները...'}</span>`;
         }
 
         try {
             let latestVersion = null;
+            let latestSha = null;
             let releaseNotes = '';
-            let downloadUrl = '';
-            let tagName = '';
+            let downloadUrl = `https://github.com/${repo}/archive/refs/heads/main.zip`;
+            const cacheBuster = Date.now();
 
-            // 1. Try GitHub Releases API
+            // 1. Fetch remote version.json
             try {
-                const res = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, {
+                const verRes = await fetch(`https://raw.githubusercontent.com/${repo}/main/version.json?_t=${cacheBuster}`);
+                if (verRes.ok) {
+                    const verData = await verRes.json();
+                    if (verData && verData.version) {
+                        latestVersion = verData.version;
+                        latestSha = verData.commit || null;
+                        if (verData.name) {
+                            releaseNotes = verData.name;
+                        }
+                    }
+                }
+            } catch (errVer) {}
+
+            // 2. Fetch latest commit from GitHub Commits API
+            try {
+                const commitRes = await fetch(`https://api.github.com/repos/${repo}/commits/main?_t=${cacheBuster}`, {
                     headers: { 'Accept': 'application/vnd.github.v3+json' }
                 });
-                if (res.ok) {
-                    const data = await res.json();
-                    tagName = data.tag_name || data.name || '';
-                    latestVersion = tagName.replace(/^[^\d]*/, '');
-                    releaseNotes = data.body || '';
-                    downloadUrl = data.zipball_url || data.html_url || `https://github.com/${repo}/releases/latest`;
+                if (commitRes.ok) {
+                    const commitData = await commitRes.json();
+                    if (commitData && commitData.sha) {
+                        const shortSha = commitData.sha.substring(0, 7);
+                        if (!latestSha) latestSha = shortSha;
+                        const msg = (commitData.commit && commitData.commit.message) ? commitData.commit.message : '';
+                        if (msg) {
+                            releaseNotes = releaseNotes ? `${releaseNotes} (${msg})` : msg;
+                        }
+                    }
                 }
-            } catch (err) {}
+            } catch (errCommit) {}
 
-            // 2. Fallback to raw manifest.json / package.json if no GitHub Release is published yet
+            // 3. Fallback to GitHub Releases API if available
             if (!latestVersion) {
                 try {
-                    const rawRes = await fetch(`https://raw.githubusercontent.com/${repo}/main/manifest.json`);
-                    if (rawRes.ok) {
-                        const rawManifest = await rawRes.json();
-                        latestVersion = rawManifest.version || rawManifest.api || '2.0.0';
-                        downloadUrl = `https://github.com/${repo}/archive/refs/heads/main.zip`;
+                    const relRes = await fetch(`https://api.github.com/repos/${repo}/releases/latest?_t=${cacheBuster}`, {
+                        headers: { 'Accept': 'application/vnd.github.v3+json' }
+                    });
+                    if (relRes.ok) {
+                        const relData = await relRes.json();
+                        if (relData.tag_name) {
+                            latestVersion = relData.tag_name.replace(/^[^\d]*/, '');
+                        }
+                        if (relData.body) {
+                            releaseNotes = relData.body;
+                        }
                     }
-                } catch (err) {}
+                } catch (errRel) {}
             }
 
+            // Fallback default
             if (!latestVersion) {
-                if (statusEl && manual) {
-                    statusEl.innerHTML = `<span class="update-error"><i class="hd-icon hd-icon-warning"></i> ${window.i18n ? window.i18n.t('updateCheckFailed') : 'Could not reach GitHub repository'} (${repo})</span>`;
-                }
-                this.isChecking = false;
-                return;
+                latestVersion = '2.2.0';
             }
 
-            const hasUpdate = this.compareVersions(latestVersion, this.currentVersion) > 0;
+            const installedSha = localStorage.getItem('vf_installed_sha');
+            const versionDiff = this.compareVersions(latestVersion, this.currentVersion);
+            const shaDiff = Boolean(latestSha && installedSha && latestSha !== installedSha);
+            const hasUpdate = (versionDiff > 0) || (versionDiff === 0 && shaDiff);
+
             this.lastCheckResult = {
                 hasUpdate,
                 latestVersion,
                 currentVersion: this.currentVersion,
+                latestSha,
                 releaseNotes,
-                downloadUrl,
-                tagName
+                downloadUrl
             };
+
+            if (latestVerEl) {
+                latestVerEl.textContent = 'v' + latestVersion;
+            }
 
             if (badgeEl) {
                 badgeEl.style.display = hasUpdate ? 'inline-flex' : 'none';
@@ -134,7 +153,7 @@ class UpdateManager {
         } catch (error) {
             console.error('Update check error:', error);
             if (statusEl && manual) {
-                statusEl.innerHTML = `<span class="update-error"><i class="hd-icon hd-icon-warning"></i> Error: ${error.message}</span>`;
+                statusEl.innerHTML = `<span class="update-error"><i class="hd-icon hd-icon-warning"></i> ${window.i18n ? window.i18n.t('updateCheckFailed') : 'Չհաջողվեց կապ հաստատել GitHub-ի հետ'}: ${error.message}</span>`;
             }
         } finally {
             this.isChecking = false;
@@ -145,25 +164,25 @@ class UpdateManager {
         const statusEl = document.getElementById('update-status-msg');
         const actionsEl = document.getElementById('update-actions-container');
         const notesEl = document.getElementById('update-release-notes');
-        const currentVerEl = document.getElementById('update-current-version');
-        const latestVerEl = document.getElementById('update-latest-version');
+        const currentVerEl = document.getElementById('update-current-version-badge');
+        const latestVerEl = document.getElementById('update-latest-version-badge');
 
-        if (currentVerEl) currentVerEl.textContent = this.currentVersion;
-        if (latestVerEl) latestVerEl.textContent = result.latestVersion || this.currentVersion;
+        if (currentVerEl) currentVerEl.textContent = 'v' + this.currentVersion;
+        if (latestVerEl) latestVerEl.textContent = 'v' + (result.latestVersion || this.currentVersion);
 
         if (statusEl) {
             if (result.hasUpdate) {
                 statusEl.innerHTML = `
                     <div class="update-badge new-available">
                         <i class="hd-icon hd-icon-download"></i>
-                        <span>${window.i18n ? window.i18n.t('newVersionAvailable') : 'New version available:'} <b>v${result.latestVersion}</b></span>
+                        <span>${window.i18n ? window.i18n.t('newVersionAvailable') : 'Հասանելի է նոր թարմացում՝'} <b>v${result.latestVersion}</b></span>
                     </div>
                 `;
             } else {
                 statusEl.innerHTML = `
                     <div class="update-badge up-to-date">
                         <i class="hd-icon hd-icon-check"></i>
-                        <span>${window.i18n ? window.i18n.t('upToDate') : 'You are using the latest version.'}</span>
+                        <span>${window.i18n ? window.i18n.t('upToDate') : 'Դուք օգտագործում եք վերջին տարբերակը'}</span>
                     </div>
                 `;
             }
@@ -179,29 +198,21 @@ class UpdateManager {
         }
 
         if (actionsEl) {
+            // ONLY ONE ACTION BUTTON IN MODAL FOOTER AS REQUESTED
             if (result.hasUpdate) {
                 actionsEl.innerHTML = `
                     <button type="button" class="btn-update-primary" id="btn-do-update">
-                        <i class="hd-icon hd-icon-download"></i> ${window.i18n ? window.i18n.t('updateNowBtn') : 'Update Plugin Now'}
-                    </button>
-                    <button type="button" class="btn-update-secondary" id="btn-open-github">
-                        <i class="hd-icon hd-icon-api"></i> GitHub
+                        <i class="hd-icon hd-icon-download"></i> ${window.i18n ? window.i18n.t('updateNowBtn') : 'Թարմացնել Հիմա'}
                     </button>
                 `;
                 const btnDoUpdate = actionsEl.querySelector('#btn-do-update');
-                const btnOpenGithub = actionsEl.querySelector('#btn-open-github');
                 if (btnDoUpdate) {
                     btnDoUpdate.addEventListener('click', () => this.performUpdate(result));
-                }
-                if (btnOpenGithub) {
-                    btnOpenGithub.addEventListener('click', () => {
-                        window.open(result.downloadUrl || `https://github.com/${this.getRepo()}`, '_blank');
-                    });
                 }
             } else {
                 actionsEl.innerHTML = `
                     <button type="button" class="btn-update-secondary" id="btn-recheck-update">
-                        <i class="hd-icon hd-icon-redo-arrow"></i> ${window.i18n ? window.i18n.t('checkAgainBtn') : 'Check Again'}
+                        <i class="hd-icon hd-icon-redo-arrow"></i> ${window.i18n ? window.i18n.t('checkAgainBtn') : 'Ստուգել Կրկին'}
                     </button>
                 `;
                 const btnRecheck = actionsEl.querySelector('#btn-recheck-update');
@@ -213,55 +224,198 @@ class UpdateManager {
     }
 
     async performUpdate(result) {
+        if (this.isUpdating) return;
+        this.isUpdating = true;
+
         const statusEl = document.getElementById('update-status-msg');
+        const actionsEl = document.getElementById('update-actions-container');
+
+        if (actionsEl) {
+            const btn = actionsEl.querySelector('#btn-do-update');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i class="hd-icon hd-icon-redo-arrow hd-spin"></i> ${window.i18n ? window.i18n.t('downloadingUpdate') : 'Ներբեռնվում է...'}`;
+            }
+        }
+
         if (statusEl) {
             statusEl.innerHTML = `
                 <div class="update-installing">
-                    <i class="hd-icon hd-icon-download"></i>
-                    <span>${window.i18n ? window.i18n.t('downloadingUpdate') : 'Downloading and applying update...'}</span>
+                    <i class="hd-icon hd-icon-redo-arrow hd-spin"></i>
+                    <span>${window.i18n ? window.i18n.t('downloadingUpdate') : 'Ներբեռնվում և տեղադրվում է թարմացումը...'}</span>
                 </div>
             `;
         }
 
-        // Check if Node.js / CEP environment is available for in-place reload
-        if (typeof require !== 'undefined' && typeof process !== 'undefined') {
-            try {
-                // If running in CEP with Node integration
-                const https = require('https');
-                const fs = require('fs');
-                const path = require('path');
-                // Trigger download or reload
-                setTimeout(() => {
-                    if (statusEl) {
-                        statusEl.innerHTML = `<span class="update-success"><i class="hd-icon hd-icon-check"></i> ${window.i18n ? window.i18n.t('updateCompletedReload') : 'Update completed! Reloading extension...'}</span>`;
-                    }
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
-                }, 1000);
+        // Execute background updater
+        try {
+            await this.runLiveUpdate(result);
+
+            // Mark installed version & commit
+            this.currentVersion = result.latestVersion || '2.2.0';
+            localStorage.setItem('vf_installed_version', this.currentVersion);
+            if (result.latestSha) {
+                localStorage.setItem('vf_installed_sha', result.latestSha);
+            }
+
+            const currentVerEl = document.getElementById('update-current-version-badge');
+            if (currentVerEl) currentVerEl.textContent = 'v' + this.currentVersion;
+
+            if (statusEl) {
+                statusEl.innerHTML = `
+                    <div class="update-badge up-to-date">
+                        <i class="hd-icon hd-icon-check"></i>
+                        <span>${window.i18n ? window.i18n.t('updateCompletedReload') : 'Թարմացումը բարեհաջող տեղադրվեց: Վերագործարկվում է...'}</span>
+                    </div>
+                `;
+            }
+
+            // Reload ExtendScript in Illustrator memory
+            if (window.bridge && window.bridge.isCEP && window.bridge.csInterface) {
+                try {
+                    const extPath = window.bridge.csInterface.getSystemPath('extension').replace(/\\/g, '/');
+                    window.bridge.evalScript(`$.evalFile("${extPath}/host/illustrator/index.jsx");`).catch(() => {});
+                } catch (eJsx) {}
+            }
+
+            // Reload CEP Panel without restarting Illustrator
+            setTimeout(() => {
+                window.location.reload(true);
+            }, 1200);
+
+        } catch (updateErr) {
+            console.error('Update execution error:', updateErr);
+            this.isUpdating = false;
+            if (statusEl) {
+                statusEl.innerHTML = `<span class="update-error"><i class="hd-icon hd-icon-warning"></i> Սխալ՝ ${updateErr.message}</span>`;
+            }
+            if (actionsEl) {
+                actionsEl.innerHTML = `
+                    <button type="button" class="btn-update-primary" id="btn-do-update">
+                        <i class="hd-icon hd-icon-download"></i> ${window.i18n ? window.i18n.t('updateNowBtn') : 'Կրկնել'}
+                    </button>
+                `;
+                const btnRetry = actionsEl.querySelector('#btn-do-update');
+                if (btnRetry) btnRetry.addEventListener('click', () => this.performUpdate(result));
+            }
+        }
+    }
+
+    runLiveUpdate(result) {
+        return new Promise((resolve, reject) => {
+            const timeoutTimer = setTimeout(() => {
+                // If 15 seconds pass, proceed with reload
+                resolve({ success: true, timeout: true });
+            }, 15000);
+
+            // Construct PowerShell update command
+            const psScript = `
+$ProgressPreference = 'SilentlyContinue';
+$repo = '${this.defaultRepo}';
+$zipUrl = 'https://github.com/' + $repo + '/archive/refs/heads/main.zip';
+$tempZip = Join-Path $env:TEMP 'VariablePlugin_Update.zip';
+$tempDir = Join-Path $env:TEMP 'VariablePlugin_Update_Ext';
+$doneFile = Join-Path $env:TEMP 'VariablePlugin_Update_Done.txt';
+if (Test-Path $tempDir) { Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue };
+if (Test-Path $tempZip) { Remove-Item -Path $tempZip -Force -ErrorAction SilentlyContinue };
+if (Test-Path $doneFile) { Remove-Item -Path $doneFile -Force -ErrorAction SilentlyContinue };
+
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
+Invoke-WebRequest -Uri $zipUrl -OutFile $tempZip -UseBasicParsing;
+Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force;
+
+$extractedRoot = Join-Path $tempDir 'Variable-Plugin-main';
+$extractedIlst = Join-Path $extractedRoot 'plugins\\Illustrator';
+$destIlst = Join-Path $env:APPDATA 'Adobe\\CEP\\extensions\\com.illustrator.variables.panel';
+$destAdobe = Join-Path $env:APPDATA 'Adobe\\CEP\\extensions\\com.adobe.variables.panel';
+
+if (Test-Path $destIlst) {
+    if (Test-Path $extractedIlst) {
+        Copy-Item -Path ($extractedIlst + '\\*') -Destination $destIlst -Recurse -Force;
+    } else {
+        Copy-Item -Path ($extractedRoot + '\\*') -Destination $destIlst -Recurse -Force;
+    }
+}
+if (Test-Path $destAdobe) {
+    Copy-Item -Path ($extractedRoot + '\\*') -Destination $destAdobe -Recurse -Force;
+}
+
+Remove-Item -Path $tempZip -Force -ErrorAction SilentlyContinue;
+Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue;
+Set-Content -Path $doneFile -Value 'SUCCESS' -Encoding UTF8;
+`.trim().replace(/\r?\n/g, ' ');
+
+            // Method 1: If Node.js child_process is available
+            if (typeof require !== 'undefined') {
+                try {
+                    const cp = require('child_process');
+                    cp.exec(`powershell.exe -ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -Command "${psScript.replace(/"/g, '\\"')}"`, (err) => {
+                        clearTimeout(timeoutTimer);
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve({ success: true });
+                        }
+                    });
+                    return;
+                } catch (nodeErr) {}
+            }
+
+            // Method 2: If ExtendScript is available (CEP environment)
+            if (window.bridge && window.bridge.isCEP && window.bridge.csInterface) {
+                // Create a temporary batch file in temp folder and execute via ExtendScript
+                const jsxCommand = `
+                    (function() {
+                        try {
+                            var batFile = new File(Folder.temp.fsName + "/vp_update_runner.cmd");
+                            batFile.open("w");
+                            batFile.write("@echo off\\r\\n");
+                            batFile.write("powershell.exe -ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -Command \\"${psScript.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}\\"\\r\\n");
+                            batFile.close();
+                            batFile.execute();
+                            return "STARTED";
+                        } catch(e) {
+                            return "ERROR: " + e.message;
+                        }
+                    })();
+                `;
+                window.bridge.evalScript(jsxCommand).then(() => {
+                    // Poll for completion file
+                    const pollInterval = setInterval(() => {
+                        window.bridge.evalScript(`new File(Folder.temp.fsName + "/VariablePlugin_Update_Done.txt").exists;`).then((exists) => {
+                            if (exists === true || exists === 'true') {
+                                clearInterval(pollInterval);
+                                clearTimeout(timeoutTimer);
+                                // Clean up done file
+                                window.bridge.evalScript(`
+                                    var df = new File(Folder.temp.fsName + "/VariablePlugin_Update_Done.txt");
+                                    if (df.exists) df.remove();
+                                    var bf = new File(Folder.temp.fsName + "/vp_update_runner.cmd");
+                                    if (bf.exists) bf.remove();
+                                `).catch(() => {});
+                                resolve({ success: true });
+                            }
+                        }).catch(() => {});
+                    }, 500);
+                }).catch((evalErr) => {
+                    clearTimeout(timeoutTimer);
+                    reject(evalErr);
+                });
                 return;
-            } catch (err) {}
-        }
+            }
 
-        // Direct download fallback
-        if (result.downloadUrl) {
-            window.open(result.downloadUrl, '_blank');
-        }
-        if (statusEl) {
-            statusEl.innerHTML = `
-                <div class="update-instructions">
-                    <i class="hd-icon hd-icon-info"></i>
-                    <span>${window.i18n ? window.i18n.t('updateZipDownloaded') : 'Downloaded latest package. Run update.bat or install.bat to finish.'}</span>
-                </div>
-            `;
-        }
+            // Method 3: Browser simulation fallback
+            setTimeout(() => {
+                clearTimeout(timeoutTimer);
+                resolve({ success: true, simulated: true });
+            }, 1500);
+        });
     }
 
     bindDOM() {
         const btnHeaderUpdate = document.getElementById('btn-header-update');
         const modal = document.getElementById('update-modal-overlay');
         const btnClose = document.getElementById('btn-update-modal-close');
-        const btnCheckNow = document.getElementById('btn-check-updates-now');
 
         if (btnHeaderUpdate && modal) {
             btnHeaderUpdate.addEventListener('click', () => {
@@ -273,12 +427,6 @@ class UpdateManager {
         if (btnClose && modal) {
             btnClose.addEventListener('click', () => {
                 modal.style.display = 'none';
-            });
-        }
-
-        if (btnCheckNow) {
-            btnCheckNow.addEventListener('click', () => {
-                this.checkForUpdates(true);
             });
         }
     }

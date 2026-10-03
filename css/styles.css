@@ -3690,35 +3690,47 @@ button,
 
 .update-actions-container {
     display: flex;
+    width: 100%;
+    justify-content: flex-end;
     gap: 6px;
 }
 
 .btn-update-primary {
     background: var(--accent-blue);
     color: #ffffff;
-    padding: 6px 14px;
+    padding: 6px 16px;
     font-size: 11px;
     font-weight: 600;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    transition: background 0.15s ease;
+    border: none !important;
+    border-radius: 9999px !important;
+    transition: background 0.15s ease, opacity 0.15s ease;
 }
 
 .btn-update-primary:hover {
     background: var(--accent-blue-hover);
 }
 
+.btn-update-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .btn-update-secondary {
     background: var(--bg-hover);
     color: var(--text-main);
-    padding: 6px 12px;
+    padding: 6px 14px;
     font-size: 11px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    border: none !important;
+    border-radius: 9999px !important;
+    transition: background 0.15s ease;
 }
 
 .btn-update-secondary:hover {
@@ -3733,6 +3745,16 @@ button,
     height: 6px;
     border-radius: 50%;
     background: var(--accent-blue);
+}
+
+@keyframes hd-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.hd-spin {
+    display: inline-block;
+    animation: hd-spin 1s linear infinite;
 }
 
 /* =========================================
