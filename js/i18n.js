@@ -25,7 +25,7 @@ const TRANSLATIONS = {
         vectorObjects: 'Դինամիկ վեկտորային օբյեկտ(ներ)',
 
         // Tabs
-        tabSliders: 'Սահիչներ եւ Կորեր',
+        tabSliders: 'Սահիչներ',
         tabGraph: 'Արվեստանոց',
         tabDesignSpace: '2չափ',
 
