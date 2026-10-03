@@ -6,8 +6,14 @@
 (function() {
     'use strict';
     
-    var scriptFile = new File($.fileName);
-    var hostDir = scriptFile.parent;
+    var hostDir = null;
+    if ($.includePath) {
+        hostDir = new Folder($.includePath);
+    }
+    if (!hostDir || !hostDir.exists) {
+        var scriptFile = new File($.fileName);
+        hostDir = scriptFile.parent;
+    }
     
     var appName = (typeof app !== 'undefined' && app.name) ? app.name.toLowerCase() : '';
     if (!appName && typeof BridgeTalk !== 'undefined' && BridgeTalk.appName) {

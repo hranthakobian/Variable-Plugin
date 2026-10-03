@@ -65,6 +65,7 @@ class IllustratorBridge {
 
     init() {
         if (this.isCEP) {
+            this.reloadHostScript();
             // Register native Adobe host event hooks for real-time selection updates
             const events = [
                 'documentAfterActivate',
@@ -151,8 +152,16 @@ class IllustratorBridge {
                     reject(new Error('ExtendScript evaluation failed: ' + script));
                     return;
                 }
+                if (typeof result === 'string' && (result.indexOf('Error') === 0 || result.indexOf('VariableFontPlugin is undefined') !== -1)) {
+                    reject(new Error('ExtendScript error: ' + result));
+                    return;
+                }
                 try {
                     const parsed = JSON.parse(result);
+                    if (parsed && parsed.success === false && parsed.error) {
+                        reject(new Error('ExtendScript error: ' + parsed.error));
+                        return;
+                    }
                     resolve(parsed);
                 } catch (e) {
                     resolve(result);
@@ -270,11 +279,46 @@ class IllustratorBridge {
         }
     }
 
+    reloadHostScript() {
+        if (!this.isCEP) return Promise.resolve(null);
+        return new Promise((resolve) => {
+            try {
+                let extPath = this.csInterface.getSystemPath(SystemPath.EXTENSION);
+                if (extPath) {
+                    if (extPath.indexOf('file://') === 0) {
+                        extPath = extPath.substring(7);
+                        if (extPath.indexOf('/') === 0 && extPath.charAt(2) === ':') {
+                            extPath = extPath.substring(1);
+                        }
+                    }
+                    const normalized = extPath.replace(/\\/g, '/');
+                    const loadScript = "(function() { var f = new File('" + normalized + "/host/illustrator/index.jsx'); if (f.exists) { $.evalFile(f); return 'OK'; } return 'NOT_FOUND'; })()";
+                    this.csInterface.evalScript(loadScript, (res) => {
+                        resolve(res);
+                    });
+                } else {
+                    resolve(null);
+                }
+            } catch (e) {
+                console.warn('reloadHostScript failed:', e);
+                resolve(null);
+            }
+        });
+    }
+
     /**
      * Inspect active selection
      */
     async getSelectionInfo() {
-        return await this.evalScript('VariableFontPlugin.getSelectionInfo()');
+        try {
+            return await this.evalScript('VariableFontPlugin.getSelectionInfo()');
+        } catch (err) {
+            if (this.isCEP) {
+                await this.reloadHostScript();
+                return await this.evalScript('VariableFontPlugin.getSelectionInfo()');
+            }
+            throw err;
+        }
     }
 
     /**

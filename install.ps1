@@ -63,6 +63,7 @@ if (Test-Path $illustratorPluginSrc) {
     Get-ChildItem -Path $illustratorPluginSrc | ForEach-Object {
         if ($excludePatterns -notcontains $_.Name) {
             Copy-Item -Path $_.FullName -Destination $targetDir -Recurse -Force
+            Copy-Item -Path $_.FullName -Destination $altTargetDir -Recurse -Force
         }
     }
 }
