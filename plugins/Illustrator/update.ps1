@@ -7,7 +7,7 @@ Write-Host "       Variable Fonts Controller - GitHub Auto-Updater" -ForegroundC
 Write-Host "======================================================================" -ForegroundColor Cyan
 Write-Host ""
 
-$repo = "hakobian-am/Variables-Plugin"
+$repo = "hranthakobian/Variable-Plugin"
 $sourceDir = $PSScriptRoot
 $zipUrl = "https://github.com/$repo/archive/refs/heads/main.zip"
 $tempZip = Join-Path $env:TEMP "Variables-Plugin-Latest.zip"

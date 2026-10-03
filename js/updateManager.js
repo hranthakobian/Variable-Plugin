@@ -9,7 +9,7 @@ class UpdateManager {
         this.currentVersion = '2.1.0';
         this.storageKeyRepo = 'vf_github_repo';
         this.storageKeyAutoCheck = 'vf_auto_check_updates';
-        this.defaultRepo = 'hakobian-am/Variables-Plugin';
+        this.defaultRepo = 'hranthakobian/Variable-Plugin';
         this.lastCheckResult = null;
         this.isChecking = false;
 
@@ -26,11 +26,7 @@ class UpdateManager {
     }
 
     getRepo() {
-        try {
-            return localStorage.getItem(this.storageKeyRepo) || this.defaultRepo;
-        } catch (e) {
-            return this.defaultRepo;
-        }
+        return this.defaultRepo;
     }
 
     setRepo(repoName) {
@@ -265,13 +261,10 @@ class UpdateManager {
         const btnHeaderUpdate = document.getElementById('btn-header-update');
         const modal = document.getElementById('update-modal-overlay');
         const btnClose = document.getElementById('btn-update-modal-close');
-        const btnSaveRepo = document.getElementById('btn-save-repo');
-        const inputRepo = document.getElementById('update-repo-input');
         const btnCheckNow = document.getElementById('btn-check-updates-now');
 
         if (btnHeaderUpdate && modal) {
             btnHeaderUpdate.addEventListener('click', () => {
-                if (inputRepo) inputRepo.value = this.getRepo();
                 modal.style.display = 'flex';
                 this.checkForUpdates(true);
             });
@@ -280,16 +273,6 @@ class UpdateManager {
         if (btnClose && modal) {
             btnClose.addEventListener('click', () => {
                 modal.style.display = 'none';
-            });
-        }
-
-        if (btnSaveRepo && inputRepo) {
-            btnSaveRepo.addEventListener('click', () => {
-                const newRepo = inputRepo.value.trim();
-                if (newRepo) {
-                    this.setRepo(newRepo);
-                    this.checkForUpdates(true);
-                }
             });
         }
 
