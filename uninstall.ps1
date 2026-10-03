@@ -1,17 +1,15 @@
-# Variable Fonts & Design Space Controller - Multi-App Uninstaller
+# Variable Fonts & Design Space Controller for Adobe Illustrator - Uninstaller
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 Write-Host "======================================================================" -ForegroundColor Yellow
-Write-Host "   Variable Fonts Controller Suite for Adobe CC - Uninstaller" -ForegroundColor Yellow
+Write-Host "   Variable Fonts Controller for Adobe Illustrator - Uninstaller" -ForegroundColor Yellow
 Write-Host "======================================================================" -ForegroundColor Yellow
 Write-Host ""
 
 $cepBase = Join-Path $env:APPDATA "Adobe\CEP\extensions"
 $panels = @(
-    "com.adobe.variables.panel",
     "com.illustrator.variables.panel",
-    "com.indesign.variables.panel",
-    "com.photoshop.variables.panel"
+    "com.adobe.variables.panel"
 )
 
 foreach ($p in $panels) {

@@ -92,6 +92,7 @@ class SliderMode {
             const curveBtnText = window.i18n ? window.i18n.t('curveBtn') : 'Curve';
             const distHeaderText = window.i18n ? window.i18n.t('easingDistFor', { name: axisDisplayName }) : `Bézier Easing Distribution for ${axis.name}`;
             const distTargetText = window.i18n ? (this.distributionTarget === 'characters' ? window.i18n.t('mapAcrossChars') : window.i18n.t('mapAcrossItems')) : `Map across ${this.distributionTarget}`;
+            const axisPresets = this.getPresetsForAxis(axis);
 
             row.innerHTML = `
                 <div class="slider-row-header">
@@ -125,6 +126,13 @@ class SliderMode {
                     </hd-slider>
                     <span class="range-bound max-bound">${max}</span>
                 </div>
+                ${axisPresets.length > 0 ? `
+                <div class="axis-presets-row" id="presets-${axisId}">
+                    ${axisPresets.map((p) => `
+                        <button type="button" class="btn-axis-preset ${Math.abs(val - p.val) < 0.01 ? 'active' : ''}" data-axis="${axisId}" data-val="${p.val}">${p.label}</button>
+                    `).join('')}
+                </div>
+                ` : ''}
                 
                 <!-- Individual Expandable Bézier Curve Drawer -->
                 <div class="slider-curve-drawer" id="drawer-${axisId}">
@@ -193,10 +201,11 @@ class SliderMode {
             rangeInput.addEventListener('input', (e) => {
                 const numericVal = parseFloat(e.target.value);
                 numInput.value = numericVal;
+                this.updateActiveAxisPreset(row, axisId, numericVal);
                 this.updateValue(axisId, numericVal);
             });
 
-            // Numerical input event (allows typing arbitrary numbers like 854 without premature clamping)
+            // Numerical input event
             numInput.addEventListener('input', (e) => {
                 const raw = e.target.value.trim();
                 if (raw === '' || raw === '-') {
@@ -214,6 +223,7 @@ class SliderMode {
                     rangeInput.value = numericVal;
                     const newPercent = Math.max(0, Math.min(100, ((numericVal - min) / (max - min)) * 100));
                     hdWrapper.style.setProperty('--slider-percentage', newPercent + '%');
+                    this.updateActiveAxisPreset(row, axisId, numericVal);
                     this.updateValue(axisId, numericVal);
                 }
             });
@@ -229,6 +239,7 @@ class SliderMode {
                 rangeInput.value = numericVal;
                 const newPercent = Math.max(0, Math.min(100, ((numericVal - min) / (max - min)) * 100));
                 hdWrapper.style.setProperty('--slider-percentage', newPercent + '%');
+                this.updateActiveAxisPreset(row, axisId, numericVal);
                 this.updateValue(axisId, numericVal);
             });
 
@@ -238,6 +249,19 @@ class SliderMode {
                 }
             });
 
+            // Axis quick preset chips event
+            row.querySelectorAll('.btn-axis-preset').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const presetVal = parseFloat(btn.dataset.val);
+                    rangeInput.value = presetVal;
+                    numInput.value = presetVal;
+                    const newPercent = Math.max(0, Math.min(100, ((presetVal - min) / (max - min)) * 100));
+                    hdWrapper.style.setProperty('--slider-percentage', newPercent + '%');
+                    this.updateActiveAxisPreset(row, axisId, presetVal);
+                    this.updateValue(axisId, presetVal);
+                });
+            });
+
             // Reset button
             resetBtn.addEventListener('click', () => {
                 const defaultVal = axis.defaultVal !== undefined ? axis.defaultVal : min;
@@ -245,6 +269,7 @@ class SliderMode {
                 numInput.value = defaultVal;
                 const newPercent = Math.max(0, Math.min(100, ((defaultVal - min) / (max - min)) * 100));
                 hdWrapper.style.setProperty('--slider-percentage', newPercent + '%');
+                this.updateActiveAxisPreset(row, axisId, defaultVal);
                 this.updateValue(axisId, defaultVal);
             });
 
@@ -279,49 +304,16 @@ class SliderMode {
             listContainer.appendChild(row);
         });
 
-        // Quick Presets bar if weight is available
-        const hasWeight = this.axes.some((a) => a.id === 'wght');
-        if (hasWeight) {
+        // Global Reset to Regular / Defaults bar
+        if (this.axes.length > 0) {
             const presetBar = document.createElement('div');
             presetBar.className = 'slider-presets-bar';
-            const curWght = Number(this.currentValues.wght || 400);
-            const presetsLabelText = window.i18n ? window.i18n.t('weightPresets') : 'Weight Presets:';
             const resetRegularAllText = window.i18n ? window.i18n.t('resetRegularAll') : 'Reset to Regular (400 / 100)';
             presetBar.innerHTML = `
-                <div class="preset-label">${presetsLabelText}</div>
-                <div class="preset-btn-group">
-                    <button type="button" class="btn-preset ${curWght === 100 ? 'active' : ''}" data-wght="100">${window.i18n ? window.i18n.t('presetThin') : 'Thin (100)'}</button>
-                    <button type="button" class="btn-preset ${curWght === 300 ? 'active' : ''}" data-wght="300">${window.i18n ? window.i18n.t('presetLight') : 'Light (300)'}</button>
-                    <button type="button" class="btn-preset ${curWght === 400 ? 'active' : ''}" data-wght="400">${window.i18n ? window.i18n.t('presetRegular') : 'Regular (400)'}</button>
-                    <button type="button" class="btn-preset ${curWght === 700 ? 'active' : ''}" data-wght="700">${window.i18n ? window.i18n.t('presetBold') : 'Bold (700)'}</button>
-                    <button type="button" class="btn-preset ${curWght === 900 ? 'active' : ''}" data-wght="900">${window.i18n ? window.i18n.t('presetBlack') : 'Black (900)'}</button>
-                </div>
                 <button type="button" class="btn-reset-all-defaults" id="btn-reset-all-defaults" title="${resetRegularAllText}">
                     <i class="hd-icon hd-icon-undo-arrow"></i> ${resetRegularAllText}
                 </button>
             `;
-
-            presetBar.querySelectorAll('.btn-preset').forEach((btn) => {
-                btn.addEventListener('click', () => {
-                    const wghtVal = parseFloat(btn.dataset.wght);
-                    const wghtRange = this.container.querySelector('#range-wght');
-                    const wghtNum = this.container.querySelector('#num-wght');
-                    const hd = this.container.querySelector('#hd-wght');
-                    if (wghtRange && wghtNum) {
-                        wghtRange.value = wghtVal;
-                        wghtNum.value = wghtVal;
-                        if (hd) {
-                            const min = parseFloat(wghtRange.min) || 100;
-                            const max = parseFloat(wghtRange.max) || 900;
-                            const percentage = Math.max(0, Math.min(100, ((wghtVal - min) / (max - min)) * 100));
-                            hd.style.setProperty('--slider-percentage', percentage + '%');
-                        }
-                        presetBar.querySelectorAll('.btn-preset').forEach((b) => b.classList.remove('active'));
-                        btn.classList.add('active');
-                        this.updateValue('wght', wghtVal);
-                    }
-                });
-            });
 
             const btnResetAll = presetBar.querySelector('#btn-reset-all-defaults');
             if (btnResetAll) {
@@ -333,6 +325,7 @@ class SliderMode {
                         const range = this.container.querySelector(`#range-${axis.id}`);
                         const num = this.container.querySelector(`#num-${axis.id}`);
                         const hd = this.container.querySelector(`#hd-${axis.id}`);
+                        const row = this.container.querySelector(`#row-${axis.id}`);
                         if (range && num) {
                             range.value = def;
                             num.value = def;
@@ -342,11 +335,10 @@ class SliderMode {
                                 const percentage = Math.max(0, Math.min(100, ((def - min) / (max - min)) * 100));
                                 hd.style.setProperty('--slider-percentage', percentage + '%');
                             }
+                            if (row) {
+                                this.updateActiveAxisPreset(row, axis.id, def);
+                            }
                         }
-                    });
-
-                    presetBar.querySelectorAll('.btn-preset').forEach((b) => {
-                        b.classList.toggle('active', parseFloat(b.dataset.wght) === 400);
                     });
 
                     Object.assign(this.currentValues, defaultPayload);
@@ -360,6 +352,125 @@ class SliderMode {
         }
 
         this.container.appendChild(listContainer);
+    }
+
+    /**
+     * Get quick preset chips definition for an axis
+     */
+    getPresetsForAxis(axis) {
+        const id = axis.id;
+        const min = axis.min;
+        const max = axis.max;
+        const list = [];
+
+        if (id === 'wght') {
+            const weights = [
+                { val: 100, label: window.i18n ? window.i18n.t('presetThin') : 'Thin (100)' },
+                { val: 300, label: window.i18n ? window.i18n.t('presetLight') : 'Light (300)' },
+                { val: 400, label: window.i18n ? window.i18n.t('presetRegular') : 'Regular (400)' },
+                { val: 500, label: 'Medium (500)' },
+                { val: 600, label: 'SemiBold (600)' },
+                { val: 700, label: window.i18n ? window.i18n.t('presetBold') : 'Bold (700)' },
+                { val: 800, label: 'ExtraBold (800)' },
+                { val: 900, label: window.i18n ? window.i18n.t('presetBlack') : 'Black (900)' }
+            ];
+            weights.forEach((w) => {
+                if (w.val >= min && w.val <= max) {
+                    list.push(w);
+                }
+            });
+        } else if (id === 'wdth') {
+            const widths = [
+                { val: 50, label: '50%' },
+                { val: 75, label: '75%' },
+                { val: 100, label: '100%' },
+                { val: 125, label: '125%' },
+                { val: 150, label: '150%' }
+            ];
+            widths.forEach((w) => {
+                if (w.val >= min && w.val <= max) {
+                    list.push(w);
+                }
+            });
+        } else if (id === 'slnt') {
+            const slants = [
+                { val: 0, label: '0°' },
+                { val: -6, label: '-6°' },
+                { val: -10, label: '-10°' },
+                { val: -12, label: '-12°' },
+                { val: -15, label: '-15°' }
+            ];
+            slants.forEach((s) => {
+                if (s.val >= min && s.val <= max) {
+                    list.push(s);
+                }
+            });
+        } else if (id === 'opsz') {
+            const sizes = [
+                { val: 6, label: '6pt' },
+                { val: 11, label: '11pt' },
+                { val: 24, label: '24pt' },
+                { val: 72, label: '72pt' },
+                { val: 144, label: '144pt' }
+            ];
+            sizes.forEach((s) => {
+                if (s.val >= min && s.val <= max) {
+                    list.push(s);
+                }
+            });
+        } else if (id === 'ital') {
+            list.push({ val: 0, label: 'Upright (0)' });
+            list.push({ val: 1, label: 'Italic (1)' });
+        } else if (id === 'strokeWidth') {
+            const strokes = [
+                { val: 0.5, label: '0.5pt' },
+                { val: 1, label: '1pt' },
+                { val: 2, label: '2pt' },
+                { val: 5, label: '5pt' },
+                { val: 10, label: '10pt' }
+            ];
+            strokes.forEach((st) => {
+                if (st.val >= min && st.val <= max) {
+                    list.push(st);
+                }
+            });
+        } else if (id === 'opacity') {
+            const opacities = [
+                { val: 0, label: '0%' },
+                { val: 25, label: '25%' },
+                { val: 50, label: '50%' },
+                { val: 75, label: '75%' },
+                { val: 100, label: '100%' }
+            ];
+            opacities.forEach((op) => {
+                if (op.val >= min && op.val <= max) {
+                    list.push(op);
+                }
+            });
+        }
+
+        if (list.length === 0) {
+            list.push({ val: min, label: `Min (${min})` });
+            if (axis.defaultVal !== undefined && axis.defaultVal > min && axis.defaultVal < max) {
+                list.push({ val: axis.defaultVal, label: `Def (${axis.defaultVal})` });
+            }
+            list.push({ val: max, label: `Max (${max})` });
+        }
+
+        return list;
+    }
+
+    /**
+     * Update active class on preset chips for a single axis
+     */
+    updateActiveAxisPreset(rowElement, axisId, value) {
+        if (!rowElement) {
+            return;
+        }
+        rowElement.querySelectorAll(`.btn-axis-preset[data-axis="${axisId}"]`).forEach((btn) => {
+            const bVal = parseFloat(btn.dataset.val);
+            btn.classList.toggle('active', Math.abs(bVal - Number(value)) < 0.01);
+        });
     }
 
     /**
@@ -891,6 +1002,7 @@ class SliderMode {
             const range = this.container.querySelector(`#range-${axisId}`);
             const num = this.container.querySelector(`#num-${axisId}`);
             const hd = this.container.querySelector(`#hd-${axisId}`);
+            const row = this.container.querySelector(`#row-${axisId}`);
             if (range && num) {
                 // Do not clobber number input if user is actively typing in it
                 if (document.activeElement !== num) {
@@ -904,10 +1016,8 @@ class SliderMode {
                     hd.style.setProperty('--slider-percentage', percentage + '%');
                 }
             }
-            if (axisId === 'wght') {
-                this.container.querySelectorAll('.btn-preset').forEach((btn) => {
-                    btn.classList.toggle('active', parseFloat(btn.dataset.wght) === Number(val));
-                });
+            if (row) {
+                this.updateActiveAxisPreset(row, axisId, val);
             }
         }
     }

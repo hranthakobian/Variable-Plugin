@@ -1,0 +1,19 @@
+{
+  "name": "Variable Font & Dynamic Parameter Controller",
+  "id": "com.figma.variables.controller",
+  "api": "1.0.0",
+  "main": "js/figmaCode.js",
+  "ui": "index.html",
+  "editorType": [
+    "figma",
+    "figjam"
+  ],
+  "permissions": [
+    "currentuser"
+  ],
+  "networkAccess": {
+    "allowedDomains": [
+      "none"
+    ]
+  }
+}

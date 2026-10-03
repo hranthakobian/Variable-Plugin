@@ -1,17 +1,15 @@
 #!/bin/bash
-# Variable Fonts & Design Space Controller - macOS Multi-App Uninstaller
+# Variable Fonts & Design Space Controller for Adobe Illustrator - macOS Uninstaller
 
 echo "======================================================================"
-echo "   Variable Fonts Controller Suite for Adobe CC - macOS Uninstaller"
+echo "   Variable Fonts Controller for Adobe Illustrator - macOS Uninstaller"
 echo "======================================================================"
 echo ""
 
 CEP_BASE="$HOME/Library/Application Support/Adobe/CEP/extensions"
 PANELS=(
-    "com.adobe.variables.panel"
     "com.illustrator.variables.panel"
-    "com.indesign.variables.panel"
-    "com.photoshop.variables.panel"
+    "com.adobe.variables.panel"
 )
 
 for panel in "${PANELS[@]}"; do

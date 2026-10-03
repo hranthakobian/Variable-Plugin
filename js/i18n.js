@@ -248,7 +248,7 @@ const TRANSLATIONS = {
         tourStep6Desc: 'Սեղմեք ցանկացած փեղկի վերնագրին՝ այն կոծկելու համար։ Քաշեք բռնակից՝ վերադասավորելու համար։ Կարող եք փակել, իսկ վերևի «Պատուհան» ցանկից՝ նորից միացնել փակված փեղկերը։',
 
         // GitHub Updates
-        updateModalTitle: 'Փլագինի Թարմացումներ',
+        updateModalTitle: 'Խրվակի Թարմացումներ',
         currentVersionLabel: 'Ընթացիկ՝',
         latestVersionLabel: 'Վերջինը՝',
         checkingUpdates: 'Ստուգվում են թարմացումները...',
