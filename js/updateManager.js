@@ -335,183 +335,134 @@ class UpdateManager {
         }
     }
 
-    runLiveUpdate(result) {
-        return new Promise((resolve, reject) => {
-            const timeoutTimer = setTimeout(() => {
-                // If 25 seconds pass, proceed with reload
-                resolve({ success: true, timeout: true });
-            }, 25000);
+    async runLiveUpdate(result) {
+        const repo = this.defaultRepo;
+        const bridge = window.illustratorBridge || window.bridge;
+        const statusEl = document.getElementById('update-status-msg');
 
-            // Dynamically detect current running extension path
-            let currentExtPath = '';
-            if (window.bridge && window.bridge.csInterface) {
-                try {
-                    currentExtPath = window.bridge.csInterface.getSystemPath('extension') || '';
-                    if (currentExtPath.indexOf('file:///') === 0) {
-                        currentExtPath = currentExtPath.substring(8);
-                    } else if (currentExtPath.indexOf('file://') === 0) {
-                        currentExtPath = currentExtPath.substring(7);
+        const fallbackFiles = [
+            'index.html',
+            'version.json',
+            'CSXS/manifest.xml',
+            'css/styles.css',
+            'css/components.css',
+            'css/figma-theme.css',
+            'js/app.js',
+            'js/bridge.js',
+            'js/i18n.js',
+            'js/themeManager.js',
+            'js/tourGuide.js',
+            'js/updateManager.js',
+            'js/figmaCode.js',
+            'js/lib/CSInterface.js',
+            'js/lib/components.js',
+            'js/modes/sliderMode.js',
+            'js/modes/graphMode.js',
+            'js/modes/designSpaceMode.js',
+            'host/index.jsx',
+            'host/illustrator/index.jsx',
+            'host/indesign/index.jsx',
+            'host/photoshop/index.jsx'
+        ];
+
+        let filesToDownload = [];
+        try {
+            const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees/main?recursive=1&_t=${Date.now()}`);
+            if (treeRes.ok) {
+                const treeData = await treeRes.json();
+                if (treeData && Array.isArray(treeData.tree)) {
+                    const ilstPrefix = 'plugins/Illustrator/';
+                    const ilstBlobs = treeData.tree.filter((item) => item.type === 'blob' && item.path.indexOf(ilstPrefix) === 0);
+                    if (ilstBlobs.length > 0) {
+                        filesToDownload = ilstBlobs.map((item) => ({
+                            remotePath: item.path,
+                            localPath: item.path.substring(ilstPrefix.length)
+                        }));
+                    } else {
+                        filesToDownload = treeData.tree
+                            .filter((item) => item.type === 'blob' && !item.path.startsWith('.') && !item.path.startsWith('plugins/') && !item.path.startsWith('figma/'))
+                            .map((item) => ({ remotePath: item.path, localPath: item.path }));
                     }
-                    if (currentExtPath.indexOf('/') === 0 && currentExtPath.charAt(2) === ':') {
-                        currentExtPath = currentExtPath.substring(1);
+                }
+            }
+        } catch (eTree) {}
+
+        if (!filesToDownload.length) {
+            filesToDownload = fallbackFiles.map((f) => ({
+                remotePath: `plugins/Illustrator/${f}`,
+                localPath: f,
+                fallbackRemote: f
+            }));
+        }
+
+        // Get extension path
+        let extPath = '';
+        if (bridge && bridge.csInterface) {
+            try {
+                extPath = bridge.csInterface.getSystemPath('extension') || '';
+                if (extPath.indexOf('file:///') === 0) extPath = extPath.substring(8);
+                else if (extPath.indexOf('file://') === 0) extPath = extPath.substring(7);
+                if (extPath.indexOf('/') === 0 && extPath.charAt(2) === ':') extPath = extPath.substring(1);
+                extPath = decodeURI(extPath).replace(/\\/g, '/');
+            } catch (eP) {}
+        }
+
+        let completed = 0;
+        const total = filesToDownload.length;
+
+        for (const fileItem of filesToDownload) {
+            let content = null;
+            const cacheBust = Date.now();
+
+            try {
+                const url = `https://raw.githubusercontent.com/${repo}/main/${fileItem.remotePath}?_t=${cacheBust}`;
+                const res = await fetch(url);
+                if (res.ok) {
+                    content = await res.text();
+                } else if (fileItem.fallbackRemote) {
+                    const fallbackUrl = `https://raw.githubusercontent.com/${repo}/main/${fileItem.fallbackRemote}?_t=${cacheBust}`;
+                    const res2 = await fetch(fallbackUrl);
+                    if (res2.ok) {
+                        content = await res2.text();
                     }
-                    currentExtPath = decodeURI(currentExtPath);
-                } catch (ePath) {}
+                }
+            } catch (errDl) {
+                console.warn('Failed downloading:', fileItem.remotePath, errDl);
             }
-            const normalizedExtPath = currentExtPath ? currentExtPath.replace(/\\/g, '/') : '';
 
-            // Construct Windows PowerShell update command
-            const psScript = `
-$ProgressPreference = 'SilentlyContinue';
-$repo = '${this.defaultRepo}';
-$zipUrl = 'https://github.com/' + $repo + '/archive/refs/heads/main.zip';
-$tempZip = Join-Path $env:TEMP 'VariablePlugin_Update.zip';
-$tempDir = Join-Path $env:TEMP 'VariablePlugin_Update_Ext';
-$doneFile = Join-Path $env:TEMP 'VariablePlugin_Update_Done.txt';
-
-if (Test-Path $tempDir) { Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue };
-if (Test-Path $tempZip) { Remove-Item -Path $tempZip -Force -ErrorAction SilentlyContinue };
-if (Test-Path $doneFile) { Remove-Item -Path $doneFile -Force -ErrorAction SilentlyContinue };
-
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
-try {
-    Invoke-WebRequest -Uri $zipUrl -OutFile $tempZip -UseBasicParsing;
-} catch {
-    (New-Object System.Net.WebClient).DownloadFile($zipUrl, $tempZip);
-}
-
-Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force;
-
-$extractedContainer = Get-ChildItem -Path $tempDir | Where-Object { $_.PSIsContainer } | Select-Object -First 1;
-$extractedRoot = if ($extractedContainer) { $extractedContainer.FullName } else { Join-Path $tempDir 'Variable-Plugin-main' };
-$extractedIlst = Join-Path $extractedRoot 'plugins\\Illustrator';
-
-$targets = @(
-    (Join-Path $env:APPDATA 'Adobe\\CEP\\extensions\\com.illustrator.variables.panel'),
-    (Join-Path $env:APPDATA 'Adobe\\CEP\\extensions\\com.adobe.variables.panel')
-);
-if ('${normalizedExtPath}') {
-    $targets += '${normalizedExtPath}';
-}
-
-$exclude = @('.git', '.vscode', 'install.bat', 'uninstall.bat', 'install.ps1', 'uninstall.ps1', 'install.sh', 'uninstall.sh', 'plugins', 'figma');
-
-foreach ($target in ($targets | Select-Object -Unique)) {
-    if (!(Test-Path $target)) {
-        New-Item -ItemType Directory -Path $target -Force | Out-Null;
-    }
-    if (Test-Path $extractedRoot) {
-        Get-ChildItem -Path $extractedRoot | ForEach-Object {
-            if ($exclude -notcontains $_.Name) {
-                Copy-Item -Path $_.FullName -Destination $target -Recurse -Force -ErrorAction SilentlyContinue;
-            }
-        };
-    }
-    if (Test-Path $extractedIlst) {
-        Get-ChildItem -Path $extractedIlst | ForEach-Object {
-            if ($exclude -notcontains $_.Name) {
-                Copy-Item -Path $_.FullName -Destination $target -Recurse -Force -ErrorAction SilentlyContinue;
-            }
-        };
-    }
-}
-
-Remove-Item -Path $tempZip -Force -ErrorAction SilentlyContinue;
-Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue;
-Set-Content -Path $doneFile -Value 'SUCCESS' -Encoding UTF8;
-`.trim().replace(/\r?\n/g, ' ');
-
-            // Method 1: If Node.js child_process is available
-            if (typeof require !== 'undefined') {
+            if (content !== null && bridge && bridge.isCEP) {
                 try {
-                    const cp = require('child_process');
-                    cp.exec(`powershell.exe -ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -Command "${psScript.replace(/"/g, '\\"')}"`, (err) => {
-                        clearTimeout(timeoutTimer);
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve({ success: true });
-                        }
+                    const payloadStr = JSON.stringify({
+                        extPath: extPath,
+                        path: fileItem.localPath,
+                        content: content
                     });
-                    return;
-                } catch (nodeErr) {}
-            }
-
-            // Method 2: If ExtendScript is available (CEP environment)
-            if (window.bridge && window.bridge.isCEP && window.bridge.csInterface) {
-                const jsxCommand = `
-                    (function() {
-                        try {
-                            var isWin = (Folder.fs === 'Windows') || ($.os.indexOf('Windows') !== -1);
-                            if (isWin) {
-                                var batFile = new File(Folder.temp.fsName + "/vp_update_runner.cmd");
-                                batFile.open("w");
-                                batFile.write("@echo off\\r\\n");
-                                batFile.write("powershell.exe -ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -Command \\"${psScript.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}\\"\\r\\n");
-                                batFile.close();
-                                batFile.execute();
-                            } else {
-                                var shFile = new File(Folder.temp.fsName + "/vp_update_runner.sh");
-                                shFile.open("w");
-                                shFile.write("#!/bin/bash\\n");
-                                shFile.write("TMP_ZIP=\\"/tmp/VariablePlugin_Update.zip\\"\\n");
-                                shFile.write("TMP_DIR=\\"/tmp/VariablePlugin_Update_Ext\\"\\n");
-                                shFile.write("DONE_FILE=\\"/tmp/VariablePlugin_Update_Done.txt\\"\\n");
-                                shFile.write("rm -rf \\"$TMP_DIR\\" \\"$TMP_ZIP\\" \\"$DONE_FILE\\"\\n");
-                                shFile.write("mkdir -p \\"$TMP_DIR\\"\\n");
-                                shFile.write("curl -L -s \\"https://github.com/${this.defaultRepo}/archive/refs/heads/main.zip\\" -o \\"$TMP_ZIP\\"\\n");
-                                shFile.write("unzip -q -o \\"$TMP_ZIP\\" -d \\"$TMP_DIR\\"\\n");
-                                shFile.write("EXT_ROOT=$(find \\"$TMP_DIR\\" -mindepth 1 -maxdepth 1 -type d | head -n 1)\\n");
-                                shFile.write("TARGET_DIR=\\"$HOME/Library/Application Support/Adobe/CEP/extensions/com.illustrator.variables.panel\\"\\n");
-                                shFile.write("TARGET_ALT=\\"$HOME/Library/Application Support/Adobe/CEP/extensions/com.adobe.variables.panel\\"\\n");
-                                shFile.write("mkdir -p \\"$TARGET_DIR\\" \\"$TARGET_ALT\\"\\n");
-                                shFile.write("if [ -d \\"$EXT_ROOT\\" ]; then rsync -av --exclude='.git' --exclude='plugins' --exclude='figma' \\"$EXT_ROOT/\\" \\"$TARGET_DIR/\\"; rsync -av --exclude='.git' --exclude='plugins' --exclude='figma' \\"$EXT_ROOT/\\" \\"$TARGET_ALT/\\"; fi\\n");
-                                shFile.write("if [ -d \\"$EXT_ROOT/plugins/Illustrator\\" ]; then rsync -av --exclude='.git' \\"$EXT_ROOT/plugins/Illustrator/\\" \\"$TARGET_DIR/\\"; rsync -av --exclude='.git' \\"$EXT_ROOT/plugins/Illustrator/\\" \\"$TARGET_ALT/\\"; fi\\n");
-                                shFile.write("if [ -n \\"${normalizedExtPath}\\" ]; then mkdir -p \\"${normalizedExtPath}\\"; if [ -d \\"$EXT_ROOT\\" ]; then rsync -av --exclude='.git' --exclude='plugins' --exclude='figma' \\"$EXT_ROOT/\\" \\"${normalizedExtPath}/\\"; fi; if [ -d \\"$EXT_ROOT/plugins/Illustrator\\" ]; then rsync -av --exclude='.git' \\"$EXT_ROOT/plugins/Illustrator/\\" \\"${normalizedExtPath}/\\"; fi; fi\\n");
-                                shFile.write("rm -rf \\"$TMP_ZIP\\" \\"$TMP_DIR\\"\\n");
-                                shFile.write("echo \\"SUCCESS\\" > \\"$DONE_FILE\\"\\n");
-                                shFile.close();
-                                app.system("chmod +x \\"" + shFile.fsName + "\\" && \\"" + shFile.fsName + "\\" &");
-                            }
-                            return "STARTED";
-                        } catch(e) {
-                            return "ERROR: " + e.message;
+                    const b64 = btoa(unescape(encodeURIComponent(payloadStr)));
+                    const writeCmd = `(function() {
+                        if (typeof VariableFontPlugin !== 'undefined' && typeof VariableFontPlugin.writeFileBase64 === 'function') {
+                            return VariableFontPlugin.writeFileBase64('${b64}');
                         }
-                    })();
-                `;
-                window.bridge.evalScript(jsxCommand).then(() => {
-                    // Poll for completion file
-                    const pollInterval = setInterval(() => {
-                        window.bridge.evalScript(`new File(Folder.temp.fsName + "/VariablePlugin_Update_Done.txt").exists;`).then((exists) => {
-                            if (exists === true || exists === 'true') {
-                                clearInterval(pollInterval);
-                                clearTimeout(timeoutTimer);
-                                // Clean up done file
-                                window.bridge.evalScript(`
-                                    var df = new File(Folder.temp.fsName + "/VariablePlugin_Update_Done.txt");
-                                    if (df.exists) df.remove();
-                                    var bf = new File(Folder.temp.fsName + "/vp_update_runner.cmd");
-                                    if (bf.exists) bf.remove();
-                                    var sf = new File(Folder.temp.fsName + "/vp_update_runner.sh");
-                                    if (sf.exists) sf.remove();
-                                `).catch(() => {});
-                                resolve({ success: true });
-                            }
-                        }).catch(() => {});
-                    }, 500);
-                }).catch((evalErr) => {
-                    clearTimeout(timeoutTimer);
-                    reject(evalErr);
-                });
-                return;
+                        return JSON.stringify({ success: false, error: 'writeFileBase64 missing' });
+                    })()`;
+
+                    await bridge.evalScript(writeCmd);
+                } catch (errWrite) {
+                    console.error('Failed writing file via ExtendScript:', fileItem.localPath, errWrite);
+                }
             }
 
-            // Method 3: Browser simulation fallback
-            setTimeout(() => {
-                clearTimeout(timeoutTimer);
-                resolve({ success: true, simulated: true });
-            }, 1500);
-        });
+            completed++;
+            if (statusEl) {
+                statusEl.innerHTML = `
+                    <div class="update-installing">
+                        <i class="hd-icon hd-icon-redo-arrow hd-spin"></i>
+                        <span>${window.i18n ? window.i18n.t('downloadingUpdate') : 'Տեղադրվում է...'} (${completed}/${total})</span>
+                    </div>
+                `;
+            }
+        }
+
+        return { success: true, totalUpdated: completed };
     }
 
     showUpdateToast(result) {

@@ -852,6 +852,51 @@ var VariableFontPlugin = {
         }
     },
 
+    writeFileBase64: function(base64Payload) {
+        try {
+            var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+            var str = String(base64Payload);
+            while (str.charAt(str.length - 1) === '=') {
+                str = str.substring(0, str.length - 1);
+            }
+            var output = '';
+            for (var bc = 0, bs = 0, buffer, idx = 0; idx < str.length; idx++) {
+                buffer = chars.indexOf(str.charAt(idx));
+                if (buffer === -1) continue;
+                bs = bc % 4 ? bs * 64 + buffer : buffer;
+                if (bc++ % 4) output += String.fromCharCode(255 & bs >> (-2 * bc & 6));
+            }
+            var jsonStr = decodeURIComponent(escape(output));
+            var data = JSON.parse(jsonStr);
+
+            var basePath = '';
+            if (data.extPath) {
+                basePath = data.extPath;
+            } else {
+                var scriptFile = new File($.fileName);
+                basePath = scriptFile.parent.parent.fullName;
+            }
+            if (basePath.indexOf('file:///') === 0) basePath = basePath.substring(8);
+            else if (basePath.indexOf('file://') === 0) basePath = basePath.substring(7);
+            if (basePath.indexOf('/') === 0 && basePath.charAt(2) === ':') basePath = basePath.substring(1);
+
+            var f = new File(basePath + '/' + data.path);
+            if (!f.parent.exists) {
+                f.parent.create();
+            }
+            f.encoding = 'UTF-8';
+            if (f.open('w')) {
+                f.write(data.content);
+                f.close();
+                return JSON.stringify({ success: true, path: data.path });
+            } else {
+                return JSON.stringify({ success: false, error: f.error });
+            }
+        } catch(e) {
+            return JSON.stringify({ success: false, error: e.toString() });
+        }
+    },
+
     findNearestFontInstance: function(family, params, fontName) {
         if (!family && !fontName) {
             return null;
