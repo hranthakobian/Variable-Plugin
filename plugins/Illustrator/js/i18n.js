@@ -258,7 +258,11 @@ const TRANSLATIONS = {
         checkAgainBtn: 'Ստուգել Կրկին',
         downloadingUpdate: 'Ներբեռնվում և տեղադրվում է թարմացումը...',
         updateCompletedReload: 'Թարմացումը բարեհաջող տեղադրվեց: Վերագործարկվում է...',
-        updateCheckFailed: 'Չհաջողվեց կապ հաստատել GitHub-ի հետ'
+        updateCheckFailed: 'Չհաջողվեց կապ հաստատել GitHub-ի հետ',
+        updateToastTitle: 'Առկա է նոր թարմացում',
+        updateToastDesc: 'Տարբերակ v{version}-ը պատրաստ է',
+        updateToastAction: 'Թարմացնել',
+        updateToastDismiss: 'Փակել'
     },
     en: {
         // App Header & Selection
@@ -511,7 +515,11 @@ const TRANSLATIONS = {
         checkAgainBtn: 'Check Again',
         downloadingUpdate: 'Downloading and applying update...',
         updateCompletedReload: 'Update completed! Reloading extension...',
-        updateCheckFailed: 'Could not connect to GitHub repository'
+        updateCheckFailed: 'Could not connect to GitHub repository',
+        updateToastTitle: 'New update available',
+        updateToastDesc: 'Version v{version} is ready',
+        updateToastAction: 'Update',
+        updateToastDismiss: 'Dismiss'
     }
 };
 

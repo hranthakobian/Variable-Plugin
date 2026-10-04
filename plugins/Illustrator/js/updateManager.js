@@ -149,6 +149,15 @@ class UpdateManager {
                 badgeEl.style.display = hasUpdate ? 'inline-flex' : 'none';
             }
 
+            if (hasUpdate) {
+                const dismissedVer = sessionStorage.getItem('vf_dismissed_update_ver');
+                if (manual || dismissedVer !== latestVersion) {
+                    this.showUpdateToast(this.lastCheckResult);
+                }
+            } else {
+                this.hideUpdateToast();
+            }
+
             this.renderUpdateModalContent(this.lastCheckResult);
         } catch (error) {
             console.error('Update check error:', error);
@@ -226,6 +235,7 @@ class UpdateManager {
     async performUpdate(result) {
         if (this.isUpdating) return;
         this.isUpdating = true;
+        this.hideUpdateToast();
 
         const statusEl = document.getElementById('update-status-msg');
         const actionsEl = document.getElementById('update-actions-container');
@@ -412,10 +422,62 @@ Set-Content -Path $doneFile -Value 'SUCCESS' -Encoding UTF8;
         });
     }
 
+    showUpdateToast(result) {
+        if (result) {
+            this.lastCheckResult = result;
+        }
+        const toast = document.getElementById('update-toast-notification');
+        if (!toast) return;
+
+        // If update modal is currently open, don't overlap with toast
+        const modal = document.getElementById('update-modal-overlay');
+        if (modal && modal.classList.contains('is-open')) {
+            return;
+        }
+
+        const titleEl = document.getElementById('update-toast-title');
+        const descEl = document.getElementById('update-toast-desc');
+        const actionEl = document.getElementById('update-toast-action-text');
+
+        const i18n = window.i18n;
+        const ver = result.latestVersion || '2.2.0';
+
+        if (titleEl) {
+            titleEl.textContent = i18n ? i18n.t('updateToastTitle') : 'Առկա է նոր թարմացում';
+        }
+        if (descEl) {
+            descEl.textContent = i18n ? i18n.t('updateToastDesc', { version: ver }) : `Տարբերակ v${ver}-ը պատրաստ է`;
+        }
+        if (actionEl) {
+            actionEl.textContent = i18n ? i18n.t('updateToastAction') : 'Թարմացնել';
+        }
+
+        toast.style.display = 'flex';
+        void toast.offsetWidth; // Force reflow for smooth pop up transition
+        toast.classList.add('is-visible');
+    }
+
+    hideUpdateToast() {
+        const toast = document.getElementById('update-toast-notification');
+        if (!toast) return;
+
+        toast.classList.remove('is-visible');
+        setTimeout(() => {
+            if (!toast.classList.contains('is-visible')) {
+                toast.style.display = 'none';
+            }
+        }, 450);
+    }
+
     bindDOM() {
         const btnHeaderUpdate = document.getElementById('btn-header-update');
         const modal = document.getElementById('update-modal-overlay');
         const btnClose = document.getElementById('btn-update-modal-close');
+
+        const toast = document.getElementById('update-toast-notification');
+        const toastContent = document.getElementById('update-toast-content');
+        const btnToastUpdate = document.getElementById('btn-toast-update');
+        const btnToastDismiss = document.getElementById('btn-toast-dismiss');
 
         const openModal = () => {
             modal.style.display = 'flex';
@@ -434,6 +496,7 @@ Set-Content -Path $doneFile -Value 'SUCCESS' -Encoding UTF8;
 
         if (btnHeaderUpdate && modal) {
             btnHeaderUpdate.addEventListener('click', () => {
+                this.hideUpdateToast();
                 openModal();
                 this.checkForUpdates(true);
             });
@@ -449,6 +512,60 @@ Set-Content -Path $doneFile -Value 'SUCCESS' -Encoding UTF8;
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     closeModal();
+                }
+            });
+        }
+
+        // Bottom push notification toast event bindings
+        if (btnToastUpdate) {
+            btnToastUpdate.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.hideUpdateToast();
+                openModal();
+                if (this.lastCheckResult) {
+                    this.renderUpdateModalContent(this.lastCheckResult);
+                } else {
+                    this.checkForUpdates(true);
+                }
+            });
+        }
+
+        if (toastContent) {
+            toastContent.addEventListener('click', () => {
+                this.hideUpdateToast();
+                openModal();
+                if (this.lastCheckResult) {
+                    this.renderUpdateModalContent(this.lastCheckResult);
+                } else {
+                    this.checkForUpdates(true);
+                }
+            });
+        }
+
+        if (btnToastDismiss) {
+            btnToastDismiss.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (this.lastCheckResult && this.lastCheckResult.latestVersion) {
+                    try {
+                        sessionStorage.setItem('vf_dismissed_update_ver', this.lastCheckResult.latestVersion);
+                    } catch (err) {}
+                }
+                this.hideUpdateToast();
+            });
+        }
+
+        // Update toast texts dynamically on language switch
+        if (window.i18n && typeof window.i18n.onLanguageChange === 'function') {
+            window.i18n.onLanguageChange(() => {
+                if (this.lastCheckResult && this.lastCheckResult.hasUpdate) {
+                    const titleEl = document.getElementById('update-toast-title');
+                    const descEl = document.getElementById('update-toast-desc');
+                    const actionEl = document.getElementById('update-toast-action-text');
+                    const i18n = window.i18n;
+                    const ver = this.lastCheckResult.latestVersion || '2.2.0';
+                    if (titleEl) titleEl.textContent = i18n ? i18n.t('updateToastTitle') : 'Առկա է նոր թարմացում';
+                    if (descEl) descEl.textContent = i18n ? i18n.t('updateToastDesc', { version: ver }) : `Տարբերակ v${ver}-ը պատրաստ է`;
+                    if (actionEl) actionEl.textContent = i18n ? i18n.t('updateToastAction') : 'Թարմացնել';
                 }
             });
         }
