@@ -31,7 +31,7 @@ class IllustratorBridge {
             fontFamily: 'Acumin Pro',
             textSnippet: 'The quick brown fox jumps over the lazy dog',
             isVariableFont: true,
-            charCount: 16,
+            charCount: 43,
             axes: [
                 { id: 'wght', name: 'Weight', min: 100, max: 900, step: 1, defaultVal: 400 },
                 { id: 'wdth', name: 'Width', min: 50, max: 200, step: 1, defaultVal: 100 },
@@ -65,6 +65,7 @@ class IllustratorBridge {
 
     init() {
         if (this.isCEP) {
+            this.reloadHostScript();
             // Register native Adobe host event hooks for real-time selection updates
             const events = [
                 'documentAfterActivate',
@@ -151,8 +152,16 @@ class IllustratorBridge {
                     reject(new Error('ExtendScript evaluation failed: ' + script));
                     return;
                 }
+                if (typeof result === 'string' && (result.indexOf('Error') === 0 || result.indexOf('VariableFontPlugin is undefined') !== -1)) {
+                    reject(new Error('ExtendScript error: ' + result));
+                    return;
+                }
                 try {
                     const parsed = JSON.parse(result);
+                    if (parsed && parsed.success === false && parsed.error) {
+                        reject(new Error('ExtendScript error: ' + parsed.error));
+                        return;
+                    }
                     resolve(parsed);
                 } catch (e) {
                     resolve(result);
@@ -270,11 +279,51 @@ class IllustratorBridge {
         }
     }
 
+    reloadHostScript() {
+        if (!this.isCEP) return Promise.resolve(null);
+        return new Promise((resolve) => {
+            try {
+                let extPath = this.csInterface.getSystemPath(SystemPath.EXTENSION);
+                if (extPath) {
+                    if (extPath.indexOf('file:///') === 0) {
+                        extPath = extPath.substring(8);
+                    } else if (extPath.indexOf('file://') === 0) {
+                        extPath = extPath.substring(7);
+                    }
+                    if (extPath.indexOf('/') === 0 && extPath.charAt(2) === ':') {
+                        extPath = extPath.substring(1);
+                    }
+                    try {
+                        extPath = decodeURI(extPath);
+                    } catch (eDec) {}
+                    const normalized = extPath.replace(/\\/g, '/');
+                    const loadScript = "(function() { var f = new File('" + normalized + "/host/illustrator/index.jsx'); if (f.exists) { $.evalFile(f); if (typeof VariableFontPlugin !== 'undefined') { $.global.VariableFontPlugin = VariableFontPlugin; } return 'OK'; } return 'NOT_FOUND'; })()";
+                    this.csInterface.evalScript(loadScript, (res) => {
+                        resolve(res);
+                    });
+                } else {
+                    resolve(null);
+                }
+            } catch (e) {
+                console.warn('reloadHostScript failed:', e);
+                resolve(null);
+            }
+        });
+    }
+
     /**
      * Inspect active selection
      */
     async getSelectionInfo() {
-        return await this.evalScript('VariableFontPlugin.getSelectionInfo()');
+        try {
+            return await this.evalScript('VariableFontPlugin.getSelectionInfo()');
+        } catch (err) {
+            if (this.isCEP) {
+                await this.reloadHostScript();
+                return await this.evalScript('VariableFontPlugin.getSelectionInfo()');
+            }
+            throw err;
+        }
     }
 
     /**
@@ -310,3 +359,4 @@ class IllustratorBridge {
 
 // Export singleton
 window.illustratorBridge = new IllustratorBridge();
+window.bridge = window.illustratorBridge;

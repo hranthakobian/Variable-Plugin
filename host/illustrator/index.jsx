@@ -1287,3 +1287,6 @@ var VariableFontPlugin = {
         }
     }
 };
+
+$.global.VariableFontPlugin = VariableFontPlugin;
+

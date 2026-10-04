@@ -35,5 +35,8 @@
     
     if (targetEngine && targetEngine.exists) {
         $.evalFile(targetEngine);
+        if (typeof VariableFontPlugin !== 'undefined') {
+            $.global.VariableFontPlugin = VariableFontPlugin;
+        }
     }
 })();

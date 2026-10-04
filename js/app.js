@@ -303,6 +303,10 @@ class AppController {
             this.handleDesignSpaceChange(coords);
         });
 
+        window.sliderMode = this.sliderMode;
+        window.graphMode = this.graphMode;
+        window.designSpaceMode = this.designSpaceMode;
+
         // Studio Interactive Tour Guide & Onboarding
         if (typeof StudioTourGuide !== 'undefined') {
             this.tourGuide = new StudioTourGuide(this);

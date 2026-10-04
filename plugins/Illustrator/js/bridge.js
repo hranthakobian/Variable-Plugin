@@ -285,14 +285,19 @@ class IllustratorBridge {
             try {
                 let extPath = this.csInterface.getSystemPath(SystemPath.EXTENSION);
                 if (extPath) {
-                    if (extPath.indexOf('file://') === 0) {
+                    if (extPath.indexOf('file:///') === 0) {
+                        extPath = extPath.substring(8);
+                    } else if (extPath.indexOf('file://') === 0) {
                         extPath = extPath.substring(7);
-                        if (extPath.indexOf('/') === 0 && extPath.charAt(2) === ':') {
-                            extPath = extPath.substring(1);
-                        }
                     }
+                    if (extPath.indexOf('/') === 0 && extPath.charAt(2) === ':') {
+                        extPath = extPath.substring(1);
+                    }
+                    try {
+                        extPath = decodeURI(extPath);
+                    } catch (eDec) {}
                     const normalized = extPath.replace(/\\/g, '/');
-                    const loadScript = "(function() { var f = new File('" + normalized + "/host/illustrator/index.jsx'); if (f.exists) { $.evalFile(f); return 'OK'; } return 'NOT_FOUND'; })()";
+                    const loadScript = "(function() { var f = new File('" + normalized + "/host/illustrator/index.jsx'); if (f.exists) { $.evalFile(f); if (typeof VariableFontPlugin !== 'undefined') { $.global.VariableFontPlugin = VariableFontPlugin; } return 'OK'; } return 'NOT_FOUND'; })()";
                     this.csInterface.evalScript(loadScript, (res) => {
                         resolve(res);
                     });
@@ -354,3 +359,4 @@ class IllustratorBridge {
 
 // Export singleton
 window.illustratorBridge = new IllustratorBridge();
+window.bridge = window.illustratorBridge;

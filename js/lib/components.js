@@ -1,3 +1,8 @@
+(function() {
+if (typeof customElements !== 'undefined' && customElements.get('hd-input')) {
+  return;
+}
+
 /**
  * Helper to convert a Hex color string to HSL values
  * @param {string} hex 
@@ -2126,3 +2131,4 @@ if (document.readyState === 'loading') {
 } else {
   initAllCustomComponents();
 }
+})();

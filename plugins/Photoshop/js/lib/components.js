@@ -1,3 +1,8 @@
+(function() {
+if (typeof customElements !== 'undefined' && customElements.get('hd-input')) {
+  return;
+}
+
 /**
  * Helper to convert a Hex color string to HSL values
  * @param {string} hex 
@@ -1047,6 +1052,15 @@ class HdSlider extends HTMLElement {
   connectedCallback() {
     if (this.dataset.initialized) return;
     this.dataset.initialized = 'true';
+
+    const existingInput = this.querySelector('.real-slider');
+    if (existingInput) {
+      this.classList.add('custom-slider-wrapper');
+      applySliderAttributes(this);
+      initCustomSlider(this);
+      initAttributeObserver(this, applySliderAttributes);
+      return;
+    }
 
     const min = this.getAttribute('min') || '0';
     const max = this.getAttribute('max') || '100';
@@ -2117,3 +2131,4 @@ if (document.readyState === 'loading') {
 } else {
   initAllCustomComponents();
 }
+})();
