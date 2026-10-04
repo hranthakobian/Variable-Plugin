@@ -314,11 +314,29 @@ class UpdateManager {
     runLiveUpdate(result) {
         return new Promise((resolve, reject) => {
             const timeoutTimer = setTimeout(() => {
-                // If 15 seconds pass, proceed with reload
+                // If 25 seconds pass, proceed with reload
                 resolve({ success: true, timeout: true });
-            }, 15000);
+            }, 25000);
 
-            // Construct PowerShell update command
+            // Dynamically detect current running extension path
+            let currentExtPath = '';
+            if (window.bridge && window.bridge.csInterface) {
+                try {
+                    currentExtPath = window.bridge.csInterface.getSystemPath('extension') || '';
+                    if (currentExtPath.indexOf('file:///') === 0) {
+                        currentExtPath = currentExtPath.substring(8);
+                    } else if (currentExtPath.indexOf('file://') === 0) {
+                        currentExtPath = currentExtPath.substring(7);
+                    }
+                    if (currentExtPath.indexOf('/') === 0 && currentExtPath.charAt(2) === ':') {
+                        currentExtPath = currentExtPath.substring(1);
+                    }
+                    currentExtPath = decodeURI(currentExtPath);
+                } catch (ePath) {}
+            }
+            const normalizedExtPath = currentExtPath ? currentExtPath.replace(/\\/g, '/') : '';
+
+            // Construct Windows PowerShell update command
             const psScript = `
 $ProgressPreference = 'SilentlyContinue';
 $repo = '${this.defaultRepo}';
@@ -326,28 +344,52 @@ $zipUrl = 'https://github.com/' + $repo + '/archive/refs/heads/main.zip';
 $tempZip = Join-Path $env:TEMP 'VariablePlugin_Update.zip';
 $tempDir = Join-Path $env:TEMP 'VariablePlugin_Update_Ext';
 $doneFile = Join-Path $env:TEMP 'VariablePlugin_Update_Done.txt';
+
 if (Test-Path $tempDir) { Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue };
 if (Test-Path $tempZip) { Remove-Item -Path $tempZip -Force -ErrorAction SilentlyContinue };
 if (Test-Path $doneFile) { Remove-Item -Path $doneFile -Force -ErrorAction SilentlyContinue };
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
-Invoke-WebRequest -Uri $zipUrl -OutFile $tempZip -UseBasicParsing;
+try {
+    Invoke-WebRequest -Uri $zipUrl -OutFile $tempZip -UseBasicParsing;
+} catch {
+    (New-Object System.Net.WebClient).DownloadFile($zipUrl, $tempZip);
+}
+
 Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force;
 
-$extractedRoot = Join-Path $tempDir 'Variable-Plugin-main';
+$extractedContainer = Get-ChildItem -Path $tempDir | Where-Object { $_.PSIsContainer } | Select-Object -First 1;
+$extractedRoot = if ($extractedContainer) { $extractedContainer.FullName } else { Join-Path $tempDir 'Variable-Plugin-main' };
 $extractedIlst = Join-Path $extractedRoot 'plugins\\Illustrator';
-$destIlst = Join-Path $env:APPDATA 'Adobe\\CEP\\extensions\\com.illustrator.variables.panel';
-$destAdobe = Join-Path $env:APPDATA 'Adobe\\CEP\\extensions\\com.adobe.variables.panel';
 
-if (Test-Path $destIlst) {
-    if (Test-Path $extractedIlst) {
-        Copy-Item -Path ($extractedIlst + '\\*') -Destination $destIlst -Recurse -Force;
-    } else {
-        Copy-Item -Path ($extractedRoot + '\\*') -Destination $destIlst -Recurse -Force;
-    }
+$targets = @(
+    (Join-Path $env:APPDATA 'Adobe\\CEP\\extensions\\com.illustrator.variables.panel'),
+    (Join-Path $env:APPDATA 'Adobe\\CEP\\extensions\\com.adobe.variables.panel')
+);
+if ('${normalizedExtPath}') {
+    $targets += '${normalizedExtPath}';
 }
-if (Test-Path $destAdobe) {
-    Copy-Item -Path ($extractedRoot + '\\*') -Destination $destAdobe -Recurse -Force;
+
+$exclude = @('.git', '.vscode', 'install.bat', 'uninstall.bat', 'install.ps1', 'uninstall.ps1', 'install.sh', 'uninstall.sh', 'plugins', 'figma');
+
+foreach ($target in ($targets | Select-Object -Unique)) {
+    if (!(Test-Path $target)) {
+        New-Item -ItemType Directory -Path $target -Force | Out-Null;
+    }
+    if (Test-Path $extractedRoot) {
+        Get-ChildItem -Path $extractedRoot | ForEach-Object {
+            if ($exclude -notcontains $_.Name) {
+                Copy-Item -Path $_.FullName -Destination $target -Recurse -Force -ErrorAction SilentlyContinue;
+            }
+        };
+    }
+    if (Test-Path $extractedIlst) {
+        Get-ChildItem -Path $extractedIlst | ForEach-Object {
+            if ($exclude -notcontains $_.Name) {
+                Copy-Item -Path $_.FullName -Destination $target -Recurse -Force -ErrorAction SilentlyContinue;
+            }
+        };
+    }
 }
 
 Remove-Item -Path $tempZip -Force -ErrorAction SilentlyContinue;
@@ -373,16 +415,40 @@ Set-Content -Path $doneFile -Value 'SUCCESS' -Encoding UTF8;
 
             // Method 2: If ExtendScript is available (CEP environment)
             if (window.bridge && window.bridge.isCEP && window.bridge.csInterface) {
-                // Create a temporary batch file in temp folder and execute via ExtendScript
                 const jsxCommand = `
                     (function() {
                         try {
-                            var batFile = new File(Folder.temp.fsName + "/vp_update_runner.cmd");
-                            batFile.open("w");
-                            batFile.write("@echo off\\r\\n");
-                            batFile.write("powershell.exe -ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -Command \\"${psScript.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}\\"\\r\\n");
-                            batFile.close();
-                            batFile.execute();
+                            var isWin = (Folder.fs === 'Windows') || ($.os.indexOf('Windows') !== -1);
+                            if (isWin) {
+                                var batFile = new File(Folder.temp.fsName + "/vp_update_runner.cmd");
+                                batFile.open("w");
+                                batFile.write("@echo off\\r\\n");
+                                batFile.write("powershell.exe -ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -Command \\"${psScript.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}\\"\\r\\n");
+                                batFile.close();
+                                batFile.execute();
+                            } else {
+                                var shFile = new File(Folder.temp.fsName + "/vp_update_runner.sh");
+                                shFile.open("w");
+                                shFile.write("#!/bin/bash\\n");
+                                shFile.write("TMP_ZIP=\\"/tmp/VariablePlugin_Update.zip\\"\\n");
+                                shFile.write("TMP_DIR=\\"/tmp/VariablePlugin_Update_Ext\\"\\n");
+                                shFile.write("DONE_FILE=\\"/tmp/VariablePlugin_Update_Done.txt\\"\\n");
+                                shFile.write("rm -rf \\"$TMP_DIR\\" \\"$TMP_ZIP\\" \\"$DONE_FILE\\"\\n");
+                                shFile.write("mkdir -p \\"$TMP_DIR\\"\\n");
+                                shFile.write("curl -L -s \\"https://github.com/${this.defaultRepo}/archive/refs/heads/main.zip\\" -o \\"$TMP_ZIP\\"\\n");
+                                shFile.write("unzip -q -o \\"$TMP_ZIP\\" -d \\"$TMP_DIR\\"\\n");
+                                shFile.write("EXT_ROOT=$(find \\"$TMP_DIR\\" -mindepth 1 -maxdepth 1 -type d | head -n 1)\\n");
+                                shFile.write("TARGET_DIR=\\"$HOME/Library/Application Support/Adobe/CEP/extensions/com.illustrator.variables.panel\\"\\n");
+                                shFile.write("TARGET_ALT=\\"$HOME/Library/Application Support/Adobe/CEP/extensions/com.adobe.variables.panel\\"\\n");
+                                shFile.write("mkdir -p \\"$TARGET_DIR\\" \\"$TARGET_ALT\\"\\n");
+                                shFile.write("if [ -d \\"$EXT_ROOT\\" ]; then rsync -av --exclude='.git' --exclude='plugins' --exclude='figma' \\"$EXT_ROOT/\\" \\"$TARGET_DIR/\\"; rsync -av --exclude='.git' --exclude='plugins' --exclude='figma' \\"$EXT_ROOT/\\" \\"$TARGET_ALT/\\"; fi\\n");
+                                shFile.write("if [ -d \\"$EXT_ROOT/plugins/Illustrator\\" ]; then rsync -av --exclude='.git' \\"$EXT_ROOT/plugins/Illustrator/\\" \\"$TARGET_DIR/\\"; rsync -av --exclude='.git' \\"$EXT_ROOT/plugins/Illustrator/\\" \\"$TARGET_ALT/\\"; fi\\n");
+                                shFile.write("if [ -n \\"${normalizedExtPath}\\" ]; then mkdir -p \\"${normalizedExtPath}\\"; if [ -d \\"$EXT_ROOT\\" ]; then rsync -av --exclude='.git' --exclude='plugins' --exclude='figma' \\"$EXT_ROOT/\\" \\"${normalizedExtPath}/\\"; fi; if [ -d \\"$EXT_ROOT/plugins/Illustrator\\" ]; then rsync -av --exclude='.git' \\"$EXT_ROOT/plugins/Illustrator/\\" \\"${normalizedExtPath}/\\"; fi; fi\\n");
+                                shFile.write("rm -rf \\"$TMP_ZIP\\" \\"$TMP_DIR\\"\\n");
+                                shFile.write("echo \\"SUCCESS\\" > \\"$DONE_FILE\\"\\n");
+                                shFile.close();
+                                app.system("chmod +x \\"" + shFile.fsName + "\\" && \\"" + shFile.fsName + "\\" &");
+                            }
                             return "STARTED";
                         } catch(e) {
                             return "ERROR: " + e.message;
@@ -402,6 +468,8 @@ Set-Content -Path $doneFile -Value 'SUCCESS' -Encoding UTF8;
                                     if (df.exists) df.remove();
                                     var bf = new File(Folder.temp.fsName + "/vp_update_runner.cmd");
                                     if (bf.exists) bf.remove();
+                                    var sf = new File(Folder.temp.fsName + "/vp_update_runner.sh");
+                                    if (sf.exists) sf.remove();
                                 `).catch(() => {});
                                 resolve({ success: true });
                             }
