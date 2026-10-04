@@ -280,18 +280,42 @@ class UpdateManager {
                 `;
             }
 
-            // Reload ExtendScript in Illustrator memory
-            if (window.bridge && window.bridge.isCEP && window.bridge.csInterface) {
+            // Reload ExtendScript in Illustrator memory with proper path stripping & $.global assignment
+            const bridge = window.illustratorBridge || window.bridge;
+            if (bridge && bridge.isCEP && bridge.csInterface) {
                 try {
-                    const extPath = window.bridge.csInterface.getSystemPath('extension').replace(/\\/g, '/');
-                    window.bridge.evalScript(`$.evalFile("${extPath}/host/illustrator/index.jsx");`).catch(() => {});
-                } catch (eJsx) {}
+                    let extPath = bridge.csInterface.getSystemPath('extension') || '';
+                    if (extPath.indexOf('file:///') === 0) {
+                        extPath = extPath.substring(8);
+                    } else if (extPath.indexOf('file://') === 0) {
+                        extPath = extPath.substring(7);
+                    }
+                    if (extPath.indexOf('/') === 0 && extPath.charAt(2) === ':') {
+                        extPath = extPath.substring(1);
+                    }
+                    extPath = decodeURI(extPath).replace(/\\/g, '/');
+                    const evalCmd = `(function() {
+                        var f = new File("${extPath}/host/illustrator/index.jsx");
+                        if (f.exists) {
+                            $.evalFile(f);
+                            if (typeof VariableFontPlugin !== 'undefined') {
+                                $.global.VariableFontPlugin = VariableFontPlugin;
+                            }
+                            return 'RELOADED';
+                        }
+                        return 'FILE_NOT_FOUND';
+                    })()`;
+                    await bridge.evalScript(evalCmd);
+                } catch (eJsx) {
+                    console.warn('ExtendScript live reload error:', eJsx);
+                }
             }
 
-            // Reload CEP Panel without restarting Illustrator
+            // Reload CEP Panel with cache-busting timestamp
             setTimeout(() => {
-                window.location.reload(true);
-            }, 1200);
+                const cleanUrl = window.location.href.split('?')[0];
+                window.location.href = cleanUrl + '?_v=' + Date.now();
+            }, 1000);
 
         } catch (updateErr) {
             console.error('Update execution error:', updateErr);
