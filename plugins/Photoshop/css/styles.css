@@ -1573,7 +1573,8 @@ hd-slider.custom-slider-wrapper,
 
 .custom-presets-list {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
     gap: 4px;
 }
 
@@ -2743,17 +2744,19 @@ hd-slider.custom-slider-wrapper,
 .custom-folder-group {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    margin-bottom: 6px;
+    gap: 3px;
+    margin-bottom: 3px;
     background: var(--bg-card-subtle);
     border: 1px solid var(--border-subtle);
     border-radius: 4px;
-    padding: 5px 6px;
+    padding: 2px 4px;
+    width: 100%;
+    box-sizing: border-box;
     transition: all 0.15s ease;
 }
 
 .custom-folder-group.is-collapsed {
-    padding-bottom: 5px;
+    padding: 2px 4px;
 }
 
 .custom-folder-group.is-collapsed .custom-folder-group-header {
@@ -4184,3 +4187,257 @@ body.light-theme .update-toast-title,
     font-weight: 900 !important;
 }
 
+
+/* =========================================
+   Per-letter editing, help popup, folder drag & drop
+   ========================================= */
+.btn-panel-help,
+.btn-curves-help {
+    font-weight: 700;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    cursor: pointer;
+    overflow: hidden;
+    vertical-align: middle;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-panel-help:hover,
+.btn-curves-help:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background-color: var(--bg-hover);
+}
+
+.armenian-qm {
+    display: inline-block;
+    font-size: 19px;
+    font-weight: 800;
+    line-height: 20px;
+    height: 20px;
+    width: 20px;
+    text-align: center;
+    transform: translateY(4px) scale(1.35);
+    pointer-events: none;
+    user-select: none;
+}
+
+.dist-points-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 6px 0 2px;
+    font-size: 10.5px;
+    color: var(--text-muted);
+    cursor: pointer;
+    user-select: none;
+}
+
+.dist-points-toggle input {
+    margin: 0;
+    cursor: pointer;
+}
+
+.btn-reset-overrides {
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    border-radius: 3px;
+    font-size: 11px;
+    line-height: 1;
+    padding: 1px 5px;
+    margin-left: auto;
+    margin-right: 6px;
+    cursor: pointer;
+}
+
+.btn-reset-overrides:hover {
+    color: var(--text-main);
+    border-color: var(--text-muted);
+}
+
+.dist-bar-item {
+    touch-action: none;
+    cursor: ns-resize;
+}
+
+.dist-bar-fill {
+    min-height: 2px;
+}
+
+.dist-bar-item.is-override .dist-bar-track,
+.dist-bar-item.is-anchor-point .dist-bar-track {
+    box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.7);
+}
+
+.curves-help-dialog {
+    max-width: 440px;
+}
+
+.curves-help-dialog .app-modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.curves-help-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.curves-help-list li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 11px;
+}
+
+.curves-help-list .help-what {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.curves-help-list .help-key {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+.help-dialog-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+}
+
+.help-tab-btn {
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.help-tab-btn:hover {
+    color: var(--text-main);
+    border-color: var(--border-hover);
+    background: var(--bg-hover);
+}
+
+.help-tab-btn.is-active {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-subtle);
+}
+
+/* Folder header: icon + name on one line, left aligned, collapse arrow hidden */
+.custom-folder-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+    padding: 2px 4px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.custom-folder-header-left {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    min-height: 18px;
+}
+
+.custom-folder-group-title {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    white-space: nowrap;
+    line-height: 1;
+    font-size: 10.5px;
+    font-weight: 600;
+}
+
+.custom-folder-group-title svg {
+    flex-shrink: 0;
+}
+
+.btn-folder-collapse {
+    display: none !important;
+}
+
+.btn-del-folder {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 2px 4px;
+    color: var(--text-muted);
+    border-radius: 3px;
+}
+
+.btn-del-folder:hover {
+    color: #ef4444;
+}
+
+.folder-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.folder-chip svg {
+    flex-shrink: 0;
+}
+
+.custom-preset-chip[data-preset-id] {
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.custom-preset-chip.is-drag-source {
+    opacity: 0.3;
+}
+
+.preset-drag-ghost {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    opacity: 0.95;
+    cursor: grabbing;
+    will-change: transform;
+}
+
+.custom-folder-group.is-drop-target {
+    border-color: var(--accent-blue);
+    background: rgba(56, 189, 248, 0.1);
+    box-shadow: 0 0 0 1px var(--accent-blue);
+}
+
+.is-dragging-preset .custom-folder-group {
+    transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}

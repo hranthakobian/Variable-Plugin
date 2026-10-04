@@ -1,6 +1,9 @@
 // Folder icon
 const FOLDER_ICON_SVG = '<svg width="11" height="9" viewBox="0 0 104 85" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; flex-shrink: 0;"><path d="M4 4L4 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M28 4L28 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M16 4L16 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M40 11L40 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M76 18L76 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M64 18L64 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M100 18L100 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M52 18L52 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M88 18L88 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path></svg>';
 
+// Help icon
+const HELP_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 83 82" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; flex-shrink: 0;"><path d="M8 42.5V60.5" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M30 12V31" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M30 51V74" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M75 27V46" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M19 22V74" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M63 12V58" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M41 9V23" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M52 9V24" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M52 46V60" stroke="currentColor" stroke-width="7" stroke-linecap="round"/></svg>';
+
 /**
  * Graph Studio Mode (Dedicated Multi-Point Spline Studio)
  * Interactive HTML5 Canvas multi-curve spline editor that maps non-linear value
@@ -463,7 +466,7 @@ class GraphMode {
         const isCollapsed = (id) => Boolean(layout.collapsed && layout.collapsed[id]);
         const isVisible = (id) => layout.visibility[id] !== false;
         const helpTitle = i18n && i18n.currentLang === 'en' ? 'Features & shortcuts' : 'Հնարավորություններ և ստեղներ';
-        const helpBtn = (topic) => `<button type="button" class="btn-card-ctrl btn-panel-help" data-topic="${topic}" title="${helpTitle}"><span class="armenian-qm">՞</span></button>`;
+        const helpBtn = (topic) => `<button type="button" class="btn-card-ctrl btn-panel-help" data-topic="${topic}" title="${helpTitle}">${HELP_ICON_SVG}</button>`;
 
         this.container.innerHTML = `
             <div class="graph-mode-panel no-collapse-transition">
@@ -1065,7 +1068,8 @@ class GraphMode {
             chip.type = 'button';
             const isBroken = Boolean(pt.brokenHandles);
             const isStraight = Boolean((!pt.cpIn || pt.hasNoCpIn) && (!pt.cpOut || pt.hasNoCpOut));
-            chip.className = `point-chip ${idx === cur.selectedPointIdx ? 'active' : ''} ${isStraight ? 'straight-mode' : (isBroken ? 'broken-mode' : '')}`;
+            const isSelected = (idx === cur.selectedPointIdx) || (this.selectedItems && this.selectedItems.has('anchor_' + idx));
+            chip.className = `point-chip ${isSelected ? 'active' : ''} ${isStraight ? 'straight-mode' : (isBroken ? 'broken-mode' : '')}`;
             chip.textContent = `P${idx}`;
             const stateLabel = isStraight
                 ? (window.i18n ? window.i18n.t('pointStraight') : 'Straight / No Handles')
@@ -1073,6 +1077,16 @@ class GraphMode {
             chip.title = `Point ${idx}: (${pt.x.toFixed(2)}, ${pt.y.toFixed(2)}) [${stateLabel}] - (Alt + Right-click to toggle straight/smooth)`;
             chip.addEventListener('click', (e) => {
                 e.stopPropagation();
+                if (e.shiftKey) {
+                    if (!this.selectedItems) this.selectedItems = new Set();
+                    if (this.selectedItems.has('anchor_' + idx)) {
+                        this.selectedItems.delete('anchor_' + idx);
+                    } else {
+                        this.selectedItems.add('anchor_' + idx);
+                    }
+                } else {
+                    this.selectedItems = new Set(['anchor_' + idx]);
+                }
                 cur.selectedPointIdx = idx;
                 this.renderPointChips();
                 this.syncPointInspector();
@@ -4126,15 +4140,25 @@ class GraphMode {
             // 4. Points (Anchor Nodes) rendering - drawn on top of handles
             pts.forEach((pt, idx) => {
                 const pix = this.normToPixel(pt);
-                const isSelected = (idx === activeCur.selectedPointIdx);
+                const isSelected = (idx === activeCur.selectedPointIdx) || (this.selectedItems && this.selectedItems.has('anchor_' + idx));
                 const isHovered = (this.hoverTarget && this.hoverTarget.type === 'anchor' && this.hoverTarget.idx === idx);
                 const isStraightNode = (!pt.cpIn || pt.hasNoCpIn) && (!pt.cpOut || pt.hasNoCpOut);
 
-                // Dashed vertical guideline to baseline for selected point
-                if (isSelected) {
+                // Check if enclosed in active marquee candidate
+                let isMarqueeCandidate = false;
+                if (this.activeMarquee) {
+                    if (this.activeMarquee.type === 'box') {
+                        isMarqueeCandidate = this.isPointInBox(pix, this.activeMarquee.start, this.activeMarquee.current);
+                    } else if (this.activeMarquee.type === 'lasso') {
+                        isMarqueeCandidate = this.isPointInPolygon(pix, this.activeMarquee.points);
+                    }
+                }
+
+                // Dashed vertical guideline to baseline for selected point or marquee candidate
+                if (isSelected || isMarqueeCandidate) {
                     ctx.save();
                     ctx.setLineDash([3, 3]);
-                    ctx.strokeStyle = palette.dropline;
+                    ctx.strokeStyle = isMarqueeCandidate ? 'rgba(13, 153, 255, 0.8)' : palette.dropline;
                     ctx.lineWidth = 1;
                     ctx.beginPath();
                     ctx.moveTo(pix.x, pix.y);
@@ -4143,26 +4167,33 @@ class GraphMode {
                     ctx.restore();
                 }
 
-                // Outer focus ring for selected point
-                if (isSelected) {
+                // Outer focus / selection / marquee halo ring
+                if (isSelected || isMarqueeCandidate) {
                     ctx.save();
-                    ctx.strokeStyle = pt.brokenHandles ? '#f97316' : (isStraightNode ? '#38bdf8' : activeCur.color);
-                    ctx.lineWidth = 2.0;
+                    ctx.strokeStyle = isMarqueeCandidate ? '#0d99ff' : (pt.brokenHandles ? '#f97316' : (isStraightNode ? '#38bdf8' : activeCur.color));
+                    ctx.lineWidth = isMarqueeCandidate ? 2.8 : 2.2;
+                    if (isMarqueeCandidate) {
+                        ctx.setLineDash([4, 2]);
+                    }
                     ctx.beginPath();
                     if (isStraightNode) {
-                        ctx.strokeRect(pix.x - 10, pix.y - 10, 20, 20);
+                        ctx.strokeRect(pix.x - 11, pix.y - 11, 22, 22);
                     } else {
-                        ctx.arc(pix.x, pix.y, 11, 0, Math.PI * 2);
+                        ctx.arc(pix.x, pix.y, 12, 0, Math.PI * 2);
                         ctx.stroke();
+                    }
+                    if (isMarqueeCandidate) {
+                        ctx.fillStyle = 'rgba(13, 153, 255, 0.25)';
+                        ctx.fill();
                     }
                     ctx.restore();
                 }
 
                 // Anchor Point knob (Square for Corner/Straight points, Circle for Smooth points)
                 ctx.save();
-                const radius = isSelected ? 7.5 : (isHovered ? 6.5 : 5.0);
-                ctx.fillStyle = isSelected ? '#ffffff' : activeCur.color;
-                ctx.strokeStyle = pt.brokenHandles ? '#f97316' : (isStraightNode ? '#38bdf8' : '#ffffff');
+                const radius = (isSelected || isMarqueeCandidate) ? 7.5 : (isHovered ? 6.5 : 5.0);
+                ctx.fillStyle = (isSelected || isMarqueeCandidate) ? '#ffffff' : activeCur.color;
+                ctx.strokeStyle = isMarqueeCandidate ? '#0d99ff' : (pt.brokenHandles ? '#f97316' : (isStraightNode ? '#38bdf8' : '#ffffff'));
                 ctx.lineWidth = pt.brokenHandles ? 2.4 : 2.0;
                 ctx.beginPath();
                 if (isStraightNode) {
@@ -4173,15 +4204,72 @@ class GraphMode {
                 }
                 ctx.fill();
                 ctx.stroke();
-                ctx.restore();
 
+                // Distinct selection point label badge (e.g. P0, P1, P2) when multiple items are selected or marquee candidate
+                if (isSelected || isMarqueeCandidate) {
+                    ctx.font = 'bold 8.5px "Inter", sans-serif';
+                    ctx.fillStyle = isMarqueeCandidate ? '#0d99ff' : '#ffffff';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillText(`P${idx}`, pix.x, pix.y - 13);
+                }
+                ctx.restore();
             });
 
-            // 5. Draw Distribution Hover Projection Lines & Floating Value Badge
+            // 5. Draw Distribution Hover Projection Lines & Floating Value Badges on ALL points
             if (this.hoveredDistIndex !== null) {
                 const realCount = Math.max(1, this.itemCount || 16);
                 const count = Math.max(2, Math.min(128, realCount));
                 if (this.hoveredDistIndex >= 0 && this.hoveredDistIndex < count) {
+                    const axisObj = this.availableAxes.find((a) => a.id === activeCur.axisId);
+                    const rawAxisName = axisObj ? axisObj.name : activeCur.axisId;
+                    const axisName = window.i18n ? window.i18n.getAxisName(activeCur.axisId, rawAxisName) : rawAxisName;
+                    const range = this.getAxisRange(activeCur.axisId);
+
+                    // 1. Draw secondary value tooltips on all other points first
+                    ctx.save();
+                    const badgeStep = count > 36 ? Math.ceil(count / 24) : 1;
+                    for (let j = 0; j < count; j += badgeStep) {
+                        if (j === this.hoveredDistIndex) {
+                            continue; // Active hovered point is drawn in full prominence below
+                        }
+                        const sIdx = this.getBarSampleIndex(j, count, realCount);
+                        const xN = realCount > 1 ? sIdx / (realCount - 1) : 0;
+                        const yN = this.getLetterY(activeCur, sIdx, realCount);
+                        const pX = pad + xN * plotW;
+                        const pY = h - pad - yN * plotH;
+                        const val = Math.round(range.min + yN * (range.max - range.min));
+                        const rChar = (this.textSnippet && this.textSnippet[sIdx]) ? this.textSnippet[sIdx] : null;
+                        const label = rChar ? `${rChar}: ${val}` : `${val}`;
+
+                        ctx.font = 'bold 8px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                        const tm = ctx.measureText(label);
+                        const bw = Math.round(tm.width + 8);
+                        const bh = 14;
+                        let bx = Math.round(pX - bw / 2);
+                        if (bx < pad + 2) bx = pad + 2;
+                        if (bx + bw > w - pad - 2) bx = w - pad - 2 - bw;
+                        let by = Math.round(pY - bh - 6);
+                        if (by < pad + 2) by = Math.round(pY + 6);
+
+                        // Pill background
+                        ctx.fillStyle = 'rgba(18, 18, 22, 0.88)';
+                        ctx.strokeStyle = `${activeCur.color || '#38bdf8'}66`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.roundRect ? ctx.roundRect(bx, by, bw, bh, 3) : ctx.rect(bx, by, bw, bh);
+                        ctx.fill();
+                        ctx.stroke();
+
+                        // Text
+                        ctx.fillStyle = '#f1f5f9';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(label, bx + bw / 2, by + bh / 2);
+                    }
+                    ctx.restore();
+
+                    // 2. Draw prominent primary badge & projection lines for the hovered point
                     const i = this.hoveredDistIndex;
                     const sampleIdx = this.getBarSampleIndex(i, count, realCount);
                     const xNorm = realCount > 1 ? sampleIdx / (realCount - 1) : 0;
@@ -4194,17 +4282,13 @@ class GraphMode {
                     const rightAxisX = w - pad;
                     const topAxisY = pad;
 
-                    const axisObj = this.availableAxes.find((a) => a.id === activeCur.axisId);
-                    const rawAxisName = axisObj ? axisObj.name : activeCur.axisId;
-                    const axisName = window.i18n ? window.i18n.getAxisName(activeCur.axisId, rawAxisName) : rawAxisName;
-                    const range = this.getAxisRange(activeCur.axisId);
                     const calculatedVal = Math.round(range.min + yNorm * (range.max - range.min));
                     const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
                     const letterDisplay = rawChar ? `'${rawChar}'` : `#${sampleIdx + 1}`;
 
                     ctx.save();
 
-                    // 1. Vertical parallel/projection line: from baseline up to curve point (parallel to Y-axis)
+                    // 1. Vertical projection line
                     ctx.strokeStyle = activeCur.color || '#38bdf8';
                     ctx.lineWidth = 1.8;
                     ctx.setLineDash([4, 3]);
@@ -4213,13 +4297,13 @@ class GraphMode {
                     ctx.lineTo(pixX, pixY);
                     ctx.stroke();
 
-                    // 2. Horizontal parallel/projection line: from curve point left to Y-axis (parallel to X-axis)
+                    // 2. Horizontal projection line
                     ctx.beginPath();
                     ctx.moveTo(leftAxisX, pixY);
                     ctx.lineTo(pixX, pixY);
                     ctx.stroke();
 
-                    // 3. Subtle dashed extensions across canvas
+                    // 3. Subtle extensions
                     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
                     ctx.lineWidth = 1;
                     ctx.setLineDash([2, 4]);
@@ -4233,9 +4317,7 @@ class GraphMode {
                     // 4. Axis Tick Indicators
                     ctx.setLineDash([]);
                     ctx.fillStyle = activeCur.color || '#38bdf8';
-                    // Bottom baseline tick
                     ctx.fillRect(pixX - 2.5, baselineY - 2.5, 5, 5);
-                    // Left Y-axis tick
                     ctx.fillRect(leftAxisX - 2.5, pixY - 2.5, 5, 5);
 
                     // 5. Glowing Intersection Node on Curve
@@ -4273,27 +4355,18 @@ class GraphMode {
                         badgeY = Math.round(pixY + 10);
                     }
 
-                    // Flat badge pill (no shadow)
+                    // Flat badge pill
                     ctx.shadowColor = 'transparent';
                     ctx.shadowBlur = 0;
                     ctx.shadowOffsetX = 0;
                     ctx.shadowOffsetY = 0;
                     ctx.fillStyle = '#161618';
                     ctx.strokeStyle = activeCur.color || '#38bdf8';
-                    ctx.lineWidth = 1.2;
+                    ctx.lineWidth = 1.4;
 
                     const r = 5;
                     ctx.beginPath();
-                    ctx.moveTo(badgeX + r, badgeY);
-                    ctx.lineTo(badgeX + badgeW - r, badgeY);
-                    ctx.quadraticCurveTo(badgeX + badgeW, badgeY, badgeX + badgeW, badgeY + r);
-                    ctx.lineTo(badgeX + badgeW, badgeY + badgeH - r);
-                    ctx.quadraticCurveTo(badgeX + badgeW, badgeY + badgeH, badgeX + badgeW - r, badgeY + badgeH);
-                    ctx.lineTo(badgeX + r, badgeY + badgeH);
-                    ctx.quadraticCurveTo(badgeX, badgeY + badgeH, badgeX, badgeY + badgeH - r);
-                    ctx.lineTo(badgeX, badgeY + r);
-                    ctx.quadraticCurveTo(badgeX, badgeY, badgeX + r, badgeY);
-                    ctx.closePath();
+                    ctx.roundRect ? ctx.roundRect(badgeX, badgeY, badgeW, badgeH, r) : ctx.rect(badgeX, badgeY, badgeW, badgeH);
                     ctx.fill();
                     ctx.stroke();
 

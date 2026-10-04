@@ -1,3 +1,9 @@
+// Folder icon
+const FOLDER_ICON_SVG = '<svg width="11" height="9" viewBox="0 0 104 85" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; flex-shrink: 0;"><path d="M4 4L4 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M28 4L28 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M16 4L16 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M40 11L40 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M76 18L76 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M64 18L64 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M100 18L100 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M52 18L52 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M88 18L88 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path></svg>';
+
+// Help icon
+const HELP_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 83 82" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; flex-shrink: 0;"><path d="M8 42.5V60.5" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M30 12V31" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M30 51V74" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M75 27V46" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M19 22V74" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M63 12V58" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M41 9V23" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M52 9V24" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M52 46V60" stroke="currentColor" stroke-width="7" stroke-linecap="round"/></svg>';
+
 /**
  * Graph Studio Mode (Dedicated Multi-Point Spline Studio)
  * Interactive HTML5 Canvas multi-curve spline editor that maps non-linear value
@@ -459,6 +465,8 @@ class GraphMode {
         const layout = this.getSectionsLayout();
         const isCollapsed = (id) => Boolean(layout.collapsed && layout.collapsed[id]);
         const isVisible = (id) => layout.visibility[id] !== false;
+        const helpTitle = i18n && i18n.currentLang === 'en' ? 'Features & shortcuts' : 'Հնարավորություններ և ստեղներ';
+        const helpBtn = (topic) => `<button type="button" class="btn-card-ctrl btn-panel-help" data-topic="${topic}" title="${helpTitle}">${HELP_ICON_SVG}</button>`;
 
         this.container.innerHTML = `
             <div class="graph-mode-panel no-collapse-transition">
@@ -471,6 +479,7 @@ class GraphMode {
                             <span class="card-title">${i18n ? i18n.t('panelCurves') : 'Curve Layers'}</span>
                         </div>
                         <div class="card-header-right">
+                            ${helpBtn('curves')}
                             <button type="button" class="btn-card-ctrl btn-card-up" data-card="curves" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}"><i class="hd-icon hd-icon-arrow-up"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-down" data-card="curves" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}"><i class="hd-icon hd-icon-arrow-bottom"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-close" data-card="curves" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}"><i class="hd-icon hd-icon-close"></i></button>
@@ -501,6 +510,7 @@ class GraphMode {
                             <span class="card-title">${i18n ? i18n.t('panelToolbar') : 'Axis Settings'}</span>
                         </div>
                         <div class="card-header-right">
+                            ${helpBtn('toolbar')}
                             <button type="button" class="btn-card-ctrl btn-card-up" data-card="toolbar" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}"><i class="hd-icon hd-icon-arrow-up"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-down" data-card="toolbar" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}"><i class="hd-icon hd-icon-arrow-bottom"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-close" data-card="toolbar" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}"><i class="hd-icon hd-icon-close"></i></button>
@@ -532,6 +542,7 @@ class GraphMode {
                             <span class="card-title">${i18n ? i18n.t('panelCanvas') : 'Spline Canvas'}</span>
                         </div>
                         <div class="card-header-right">
+                            ${helpBtn('canvas')}
                             <button type="button" class="btn-card-ctrl btn-card-up" data-card="canvas" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}"><i class="hd-icon hd-icon-arrow-up"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-down" data-card="canvas" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}"><i class="hd-icon hd-icon-arrow-bottom"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-close" data-card="canvas" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}"><i class="hd-icon hd-icon-close"></i></button>
@@ -547,10 +558,15 @@ class GraphMode {
                                 <span class="ann-x-end">${i18n ? i18n.t('annEnd') : 'End [N]'}</span>
                             </div>
                         </div>
+                        <label class="dist-points-toggle">
+                            <input type="checkbox" id="chk-show-dist-points">
+                            <span>${i18n && i18n.currentLang === 'en' ? 'Show distribution points on curve' : 'Ցուցադրել բաշխիչ կետերը կորի վրա'}</span>
+                        </label>
                         <div class="distribution-preview-wrap">
                             <div class="preview-header">
                                 <span id="preview-axis-label" class="preview-axis-label">${i18n ? i18n.t('charDistribution') : 'Տառերի բաշխում'}</span>
                                 <span id="preview-hover-readout" class="preview-hover-readout"></span>
+                                <button type="button" id="btn-reset-overrides" class="btn-reset-overrides" title="${i18n && i18n.currentLang === 'en' ? 'Reset all per-letter edits' : 'Վերականգնել տառերի բոլոր փոփոխությունները'}">&#8634;</button>
                                 <span id="preview-sample-count">16</span>
                             </div>
                             <div id="distribution-bars" class="distribution-bars"></div>
@@ -568,6 +584,7 @@ class GraphMode {
                             <span class="card-title">${i18n ? i18n.t('panelPoints') : 'Points Control'}</span>
                         </div>
                         <div class="card-header-right">
+                            ${helpBtn('points')}
                             <button type="button" class="btn-card-ctrl btn-card-up" data-card="points" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}"><i class="hd-icon hd-icon-arrow-up"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-down" data-card="points" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}"><i class="hd-icon hd-icon-arrow-bottom"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-close" data-card="points" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}"><i class="hd-icon hd-icon-close"></i></button>
@@ -621,6 +638,7 @@ class GraphMode {
                             <span class="card-title">${i18n ? i18n.t('panelPresets') : 'Presets & Folders'}</span>
                         </div>
                         <div class="card-header-right">
+                            ${helpBtn('presets')}
                             <button type="button" class="btn-card-ctrl btn-card-up" data-card="presets" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}"><i class="hd-icon hd-icon-arrow-up"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-down" data-card="presets" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}"><i class="hd-icon hd-icon-arrow-bottom"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-close" data-card="presets" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}"><i class="hd-icon hd-icon-close"></i></button>
@@ -1050,7 +1068,8 @@ class GraphMode {
             chip.type = 'button';
             const isBroken = Boolean(pt.brokenHandles);
             const isStraight = Boolean((!pt.cpIn || pt.hasNoCpIn) && (!pt.cpOut || pt.hasNoCpOut));
-            chip.className = `point-chip ${idx === cur.selectedPointIdx ? 'active' : ''} ${isStraight ? 'straight-mode' : (isBroken ? 'broken-mode' : '')}`;
+            const isSelected = (idx === cur.selectedPointIdx) || (this.selectedItems && this.selectedItems.has('anchor_' + idx));
+            chip.className = `point-chip ${isSelected ? 'active' : ''} ${isStraight ? 'straight-mode' : (isBroken ? 'broken-mode' : '')}`;
             chip.textContent = `P${idx}`;
             const stateLabel = isStraight
                 ? (window.i18n ? window.i18n.t('pointStraight') : 'Straight / No Handles')
@@ -1058,6 +1077,16 @@ class GraphMode {
             chip.title = `Point ${idx}: (${pt.x.toFixed(2)}, ${pt.y.toFixed(2)}) [${stateLabel}] - (Alt + Right-click to toggle straight/smooth)`;
             chip.addEventListener('click', (e) => {
                 e.stopPropagation();
+                if (e.shiftKey) {
+                    if (!this.selectedItems) this.selectedItems = new Set();
+                    if (this.selectedItems.has('anchor_' + idx)) {
+                        this.selectedItems.delete('anchor_' + idx);
+                    } else {
+                        this.selectedItems.add('anchor_' + idx);
+                    }
+                } else {
+                    this.selectedItems = new Set(['anchor_' + idx]);
+                }
                 cur.selectedPointIdx = idx;
                 this.renderPointChips();
                 this.syncPointInspector();
@@ -2007,6 +2036,21 @@ class GraphMode {
     // =========================================
     // Preset Folders & Custom Presets Management
     // =========================================
+    getBuiltInFolderOverrides() {
+        try {
+            const raw = localStorage.getItem('vf_builtin_folder_overrides');
+            return raw ? JSON.parse(raw) : {};
+        } catch (e) {
+            return {};
+        }
+    }
+
+    saveBuiltInFolderOverrides(map) {
+        try {
+            localStorage.setItem('vf_builtin_folder_overrides', JSON.stringify(map));
+        } catch (e) {}
+    }
+
     getCustomFolders() {
         try {
             const raw = localStorage.getItem('vf_custom_graph_folders');
@@ -2367,7 +2411,7 @@ class GraphMode {
             const builtInChip = document.createElement('button');
             builtInChip.type = 'button';
             builtInChip.className = `folder-chip ${this.activeFolderFilter === 'builtin' ? 'active' : ''}`;
-            builtInChip.innerHTML = `<i class="hd-icon hd-icon-hamburger-menu"></i> ${i18n ? i18n.t('folderBuiltIn') : 'Basic'}`;
+            builtInChip.innerHTML = `${FOLDER_ICON_SVG} ${i18n ? i18n.t('folderBuiltIn') : 'Basic'}`;
             builtInChip.addEventListener('click', () => {
                 this.activeFolderFilter = 'builtin';
                 this.renderCustomPresets();
@@ -2377,7 +2421,7 @@ class GraphMode {
             const shapesChip = document.createElement('button');
             shapesChip.type = 'button';
             shapesChip.className = `folder-chip ${this.activeFolderFilter === 'shapes' ? 'active' : ''}`;
-            shapesChip.innerHTML = `<i class="hd-icon hd-icon-hamburger-menu"></i> ${i18n ? i18n.t('folderShapes') : 'Curves'}`;
+            shapesChip.innerHTML = `${FOLDER_ICON_SVG} ${i18n ? i18n.t('folderShapes') : 'Curves'}`;
             shapesChip.addEventListener('click', () => {
                 this.activeFolderFilter = 'shapes';
                 this.renderCustomPresets();
@@ -2387,7 +2431,7 @@ class GraphMode {
             const dynamicsChip = document.createElement('button');
             dynamicsChip.type = 'button';
             dynamicsChip.className = `folder-chip ${this.activeFolderFilter === 'dynamics' ? 'active' : ''}`;
-            dynamicsChip.innerHTML = `<i class="hd-icon hd-icon-hamburger-menu"></i> ${i18n ? i18n.t('folderDynamics') : 'Dynamics'}`;
+            dynamicsChip.innerHTML = `${FOLDER_ICON_SVG} ${i18n ? i18n.t('folderDynamics') : 'Dynamics'}`;
             dynamicsChip.addEventListener('click', () => {
                 this.activeFolderFilter = 'dynamics';
                 this.renderCustomPresets();
@@ -2400,7 +2444,7 @@ class GraphMode {
                 const fChip = document.createElement('button');
                 fChip.type = 'button';
                 fChip.className = `folder-chip ${this.activeFolderFilter === f.id ? 'active' : ''}`;
-                fChip.innerHTML = `<i class="hd-icon hd-icon-hamburger-menu"></i> ${f.name}`;
+                fChip.innerHTML = `${FOLDER_ICON_SVG} ${f.name}`;
                 fChip.addEventListener('click', () => {
                     this.activeFolderFilter = f.id;
                     this.renderCustomPresets();
@@ -2417,24 +2461,43 @@ class GraphMode {
             const customPresets = this.getCustomPresets();
             const customFolders = this.getCustomFolders();
             const collapsedFolders = this.getCollapsedFolders();
+            const folderOverrides = this.getBuiltInFolderOverrides();
 
             const builtInFolders = [
-                { id: 'builtin', name: i18n ? i18n.t('folderBuiltIn') : 'Basic' },
-                { id: 'shapes', name: i18n ? i18n.t('folderShapes') : 'Curves' },
-                { id: 'dynamics', name: i18n ? i18n.t('folderDynamics') : 'Dynamics' }
+                { id: 'builtin', name: i18n ? i18n.t('folderBuiltIn') : 'Basic', isBuiltIn: true },
+                { id: 'shapes', name: i18n ? i18n.t('folderShapes') : 'Curves', isBuiltIn: true },
+                { id: 'dynamics', name: i18n ? i18n.t('folderDynamics') : 'Dynamics', isBuiltIn: true }
             ];
 
-            // Render Built-in folders if active filter matches
-            builtInFolders.forEach((folder) => {
-                if (this.activeFolderFilter !== 'all' && this.activeFolderFilter !== folder.id) {
-                    return;
-                }
+            const allFolders = [
+                ...builtInFolders,
+                ...customFolders
+            ];
 
+            const visibleFolders = this.activeFolderFilter === 'all'
+                ? allFolders
+                : allFolders.filter((f) => f.id === this.activeFolderFilter);
+
+            visibleFolders.forEach((folder) => {
                 const isCollapsed = collapsedFolders.includes(folder.id);
-                const availablePresets = DEFAULT_PRESETS_DATA.filter((p) => p.folder === folder.id && !deletedBuiltIns.includes(p.id));
+
+                // Find all built-ins in this folder
+                const folderBuiltIns = DEFAULT_PRESETS_DATA.filter((p) => {
+                    const targetFolder = folderOverrides[p.id] || p.folder;
+                    return targetFolder === folder.id && !deletedBuiltIns.includes(p.id);
+                });
+
+                // Find all custom presets in this folder
+                const folderCustoms = customPresets.filter((p) => {
+                    const targetFolder = p.folderId || 'general';
+                    return targetFolder === folder.id;
+                });
+
+                const totalPresetsCount = folderBuiltIns.length + folderCustoms.length;
 
                 const groupEl = document.createElement('div');
                 groupEl.className = `custom-folder-group ${isCollapsed ? 'is-collapsed' : ''}`;
+                groupEl.dataset.dropFolder = folder.id;
 
                 const headerEl = document.createElement('div');
                 headerEl.className = 'custom-folder-group-header';
@@ -2442,47 +2505,53 @@ class GraphMode {
                 const headerLeftEl = document.createElement('div');
                 headerLeftEl.className = 'custom-folder-header-left';
 
-                const btnCollapseFolder = document.createElement('button');
-                btnCollapseFolder.type = 'button';
-                btnCollapseFolder.className = 'btn-folder-collapse';
-                btnCollapseFolder.innerHTML = isCollapsed ? '<i class="hd-icon hd-icon-chevrolt-arrow-right"></i>' : '<i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i>';
-                btnCollapseFolder.title = isCollapsed
-                    ? (i18n ? i18n.t('expandFolderTitle') : 'Expand folder')
-                    : (i18n ? i18n.t('collapseFolderTitle') : 'Collapse folder');
-                btnCollapseFolder.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.toggleFolderCollapse(folder.id);
-                });
-
                 const titleEl = document.createElement('span');
                 titleEl.className = 'custom-folder-group-title';
-                titleEl.innerHTML = `<i class="hd-icon hd-icon-hamburger-menu"></i> ${folder.name} (${availablePresets.length})`;
-                titleEl.style.cursor = 'pointer';
+                titleEl.innerHTML = `${FOLDER_ICON_SVG} <span>${folder.name} (${totalPresetsCount})</span>`;
                 titleEl.title = isCollapsed
                     ? (i18n ? i18n.t('expandFolderTitle') : 'Expand folder')
                     : (i18n ? i18n.t('collapseFolderTitle') : 'Collapse folder');
-                titleEl.addEventListener('click', () => {
+
+                headerLeftEl.appendChild(titleEl);
+                headerEl.appendChild(headerLeftEl);
+
+                // If user custom folder and not 'general', allow deleting folder
+                if (!folder.isBuiltIn && folder.id !== 'general') {
+                    const btnDelFolder = document.createElement('button');
+                    btnDelFolder.type = 'button';
+                    btnDelFolder.className = 'btn-del-folder';
+                    btnDelFolder.innerHTML = '<i class="hd-icon hd-icon-close"></i>';
+                    btnDelFolder.title = i18n ? i18n.t('deleteFolderTitle') : 'Delete folder';
+                    btnDelFolder.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.deleteCustomFolder(folder.id);
+                    });
+                    headerEl.appendChild(btnDelFolder);
+                }
+
+                headerEl.addEventListener('click', (e) => {
+                    if (e.target.closest('.btn-del-folder')) return;
                     this.toggleFolderCollapse(folder.id);
                 });
 
-                headerLeftEl.appendChild(btnCollapseFolder);
-                headerLeftEl.appendChild(titleEl);
-                headerEl.appendChild(headerLeftEl);
                 groupEl.appendChild(headerEl);
 
                 const itemsListEl = document.createElement('div');
                 itemsListEl.className = 'custom-folder-items-list';
 
-                if (availablePresets.length === 0) {
+                if (totalPresetsCount === 0) {
                     const emptyEl = document.createElement('span');
                     emptyEl.className = 'no-custom-presets-hint';
                     emptyEl.textContent = i18n ? i18n.t('noCustomPresets') : 'No presets in this folder';
                     itemsListEl.appendChild(emptyEl);
                 } else {
-                    availablePresets.forEach((p) => {
+                    // 1. Render built-in presets in this folder
+                    folderBuiltIns.forEach((p) => {
                         const item = document.createElement('div');
                         const isActive = cur && cur.preset === p.id;
                         item.className = `custom-preset-chip ${isActive ? 'active' : ''}`;
+                        item.dataset.presetId = p.id;
+                        item.dataset.presetType = 'builtin';
 
                         const btnApply = document.createElement('button');
                         btnApply.type = 'button';
@@ -2508,86 +2577,14 @@ class GraphMode {
                         item.appendChild(btnDel);
                         itemsListEl.appendChild(item);
                     });
-                }
 
-                groupEl.appendChild(itemsListEl);
-                presetsListEl.appendChild(groupEl);
-            });
-
-            // Render Custom folders if active filter matches
-            const targetCustomFolders = this.activeFolderFilter === 'all'
-                ? customFolders
-                : customFolders.filter((f) => f.id === this.activeFolderFilter);
-
-            targetCustomFolders.forEach((folder) => {
-                const isCollapsed = collapsedFolders.includes(folder.id);
-                const folderPresets = customPresets.filter((p) => (p.folderId || 'general') === folder.id);
-
-                const groupEl = document.createElement('div');
-                groupEl.className = `custom-folder-group ${isCollapsed ? 'is-collapsed' : ''}`;
-
-                const headerEl = document.createElement('div');
-                headerEl.className = 'custom-folder-group-header';
-
-                const headerLeftEl = document.createElement('div');
-                headerLeftEl.className = 'custom-folder-header-left';
-
-                const btnCollapseFolder = document.createElement('button');
-                btnCollapseFolder.type = 'button';
-                btnCollapseFolder.className = 'btn-folder-collapse';
-                btnCollapseFolder.innerHTML = isCollapsed ? '<i class="hd-icon hd-icon-chevrolt-arrow-right"></i>' : '<i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i>';
-                btnCollapseFolder.title = isCollapsed
-                    ? (i18n ? i18n.t('expandFolderTitle') : 'Expand folder')
-                    : (i18n ? i18n.t('collapseFolderTitle') : 'Collapse folder');
-                btnCollapseFolder.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.toggleFolderCollapse(folder.id);
-                });
-
-                const titleEl = document.createElement('span');
-                titleEl.className = 'custom-folder-group-title';
-                titleEl.innerHTML = `<i class="hd-icon hd-icon-hamburger-menu"></i> ${folder.name} (${folderPresets.length})`;
-                titleEl.style.cursor = 'pointer';
-                titleEl.title = isCollapsed
-                    ? (i18n ? i18n.t('expandFolderTitle') : 'Expand folder')
-                    : (i18n ? i18n.t('collapseFolderTitle') : 'Collapse folder');
-                titleEl.addEventListener('click', () => {
-                    this.toggleFolderCollapse(folder.id);
-                });
-
-                headerLeftEl.appendChild(btnCollapseFolder);
-                headerLeftEl.appendChild(titleEl);
-                headerEl.appendChild(headerLeftEl);
-
-                // If user folder and not 'general', allow deleting folder
-                if (folder.id !== 'general') {
-                    const btnDelFolder = document.createElement('button');
-                    btnDelFolder.type = 'button';
-                    btnDelFolder.className = 'btn-del-folder';
-                    btnDelFolder.innerHTML = '<i class="hd-icon hd-icon-close"></i>';
-                    btnDelFolder.title = i18n ? i18n.t('deleteFolderTitle') : 'Delete folder';
-                    btnDelFolder.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        this.deleteCustomFolder(folder.id);
-                    });
-                    headerEl.appendChild(btnDelFolder);
-                }
-
-                groupEl.appendChild(headerEl);
-
-                const itemsListEl = document.createElement('div');
-                itemsListEl.className = 'custom-folder-items-list';
-
-                if (folderPresets.length === 0) {
-                    const emptyEl = document.createElement('span');
-                    emptyEl.className = 'no-custom-presets-hint';
-                    emptyEl.textContent = i18n ? i18n.t('noCustomPresets') : 'No presets in this folder';
-                    itemsListEl.appendChild(emptyEl);
-                } else {
-                    folderPresets.forEach((p) => {
+                    // 2. Render custom presets in this folder
+                    folderCustoms.forEach((p) => {
                         const item = document.createElement('div');
                         const isActive = cur && cur.preset === ('custom_' + p.id);
                         item.className = `custom-preset-chip ${isActive ? 'active' : ''}`;
+                        item.dataset.presetId = p.id;
+                        item.dataset.presetType = 'custom';
 
                         const btnApply = document.createElement('button');
                         btnApply.type = 'button';
@@ -2617,9 +2614,161 @@ class GraphMode {
                 groupEl.appendChild(itemsListEl);
                 presetsListEl.appendChild(groupEl);
             });
+            this.setupPresetDragAndDrop(presetsListEl);
         }
     }
 
+    setupPresetDragAndDrop(listEl) {
+        const self = this;
+        listEl.querySelectorAll('.custom-preset-chip[data-preset-id]').forEach((chip) => {
+            chip.addEventListener('pointerdown', (e) => {
+                if (e.button !== 0 || e.target.closest('.btn-del-custom-preset')) {
+                    return;
+                }
+                const presetId = chip.dataset.presetId;
+                const presetType = chip.dataset.presetType;
+                const srcGroup = chip.closest('[data-drop-folder]');
+                const srcFolder = srcGroup ? srcGroup.dataset.dropFolder : 'general';
+                const startX = e.clientX;
+                const startY = e.clientY;
+                let dragging = false;
+                let ghost = null;
+                let originRect = null;
+                let lastTarget = null;
+
+                const findTarget = (x, y) => {
+                    const els = document.elementsFromPoint(x, y);
+                    for (let k = 0; k < els.length; k++) {
+                        const g = els[k].closest ? els[k].closest('[data-drop-folder]') : null;
+                        if (g && listEl.contains(g)) {
+                            return g;
+                        }
+                    }
+                    return null;
+                };
+
+                const clearHighlight = () => {
+                    listEl.querySelectorAll('.is-drop-target').forEach((g) => g.classList.remove('is-drop-target'));
+                };
+
+                const cleanupDrag = () => {
+                    clearHighlight();
+                    listEl.classList.remove('is-dragging-preset');
+                    chip.classList.remove('is-drag-source');
+                    if (ghost && ghost.parentNode) {
+                        ghost.remove();
+                    }
+                };
+
+                const onMove = (ev) => {
+                    if (!dragging) {
+                        if (Math.hypot(ev.clientX - startX, ev.clientY - startY) < 5) {
+                            return;
+                        }
+                        dragging = true;
+                        originRect = chip.getBoundingClientRect();
+                        ghost = chip.cloneNode(true);
+                        ghost.classList.add('preset-drag-ghost');
+                        ghost.style.cssText = `position:fixed;left:${originRect.left}px;top:${originRect.top}px;width:${originRect.width}px;height:${originRect.height}px;margin:0;z-index:10000;pointer-events:none;`;
+                        document.body.appendChild(ghost);
+                        chip.classList.add('is-drag-source');
+                        listEl.classList.add('is-dragging-preset');
+                    }
+                    ev.preventDefault();
+                    ghost.style.transform = `translate(${ev.clientX - startX}px, ${ev.clientY - startY}px) scale(1.06)`;
+                    const target = findTarget(ev.clientX, ev.clientY);
+                    if (target !== lastTarget) {
+                        clearHighlight();
+                        if (target && target.dataset.dropFolder !== srcFolder) {
+                            target.classList.add('is-drop-target');
+                        }
+                        lastTarget = target;
+                    }
+                };
+
+                const onUp = (ev) => {
+                    document.removeEventListener('pointermove', onMove, true);
+                    document.removeEventListener('pointerup', onUp, true);
+                    document.removeEventListener('pointercancel', onUp, true);
+                    if (!dragging) {
+                        return;
+                    }
+                    // swallow the click that follows a drag
+                    const swallow = (ce) => { ce.stopPropagation(); ce.preventDefault(); };
+                    chip.addEventListener('click', swallow, { capture: true, once: true });
+                    setTimeout(() => chip.removeEventListener('click', swallow, true), 0);
+
+                    const target = findTarget(ev.clientX, ev.clientY);
+                    const destFolder = target ? target.dataset.dropFolder : null;
+                    const ghostRect = ghost.getBoundingClientRect();
+
+                    if (destFolder && destFolder !== srcFolder) {
+                        // FLIP: remember positions, move, re-render, animate from old positions
+                        const before = {};
+                        listEl.querySelectorAll('.custom-preset-chip[data-preset-id]').forEach((c) => {
+                            before[c.dataset.presetId] = c.getBoundingClientRect();
+                        });
+                        const isBuiltIn = presetType === 'builtin' || DEFAULT_PRESETS_DATA.some((x) => x.id === presetId);
+                        if (isBuiltIn) {
+                            const overrides = self.getBuiltInFolderOverrides();
+                            overrides[presetId] = destFolder;
+                            self.saveBuiltInFolderOverrides(overrides);
+                        } else {
+                            const presets = self.getCustomPresets();
+                            const p = presets.find((x) => String(x.id) === String(presetId));
+                            if (p) {
+                                p.folderId = destFolder;
+                                self.saveCustomPresetsList(presets);
+                            }
+                        }
+                        const collapsed = self.getCollapsedFolders();
+                        const ci = collapsed.indexOf(destFolder);
+                        if (ci !== -1) {
+                            collapsed.splice(ci, 1);
+                            self.saveCollapsedFolders(collapsed);
+                        }
+                        self.renderCustomPresets();
+                        cleanupDrag();
+                        const newList = self.container.querySelector('#custom-presets-list');
+                        if (newList) {
+                            newList.querySelectorAll('.custom-preset-chip[data-preset-id]').forEach((c) => {
+                                const id = c.dataset.presetId;
+                                const nr = c.getBoundingClientRect();
+                                const from = (String(id) === String(presetId)) ? ghostRect : before[id];
+                                if (!from) {
+                                    return;
+                                }
+                                const dx = from.left - nr.left;
+                                const dy = from.top - nr.top;
+                                if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
+                                    return;
+                                }
+                                c.animate(
+                                    [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }],
+                                    { duration: 320, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }
+                                );
+                            });
+                        }
+                    } else {
+                        // Snap back smoothly
+                        const dx = originRect.left - ghostRect.left;
+                        const dy = originRect.top - ghostRect.top;
+                        const anim = ghost.animate(
+                            [{ transform: ghost.style.transform }, { transform: 'translate(0, 0) scale(1)' }],
+                            { duration: 220, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }
+                        );
+                        anim.onfinish = () => {
+                            cleanupDrag();
+                        };
+                    }
+                };
+
+                document.addEventListener('pointermove', onMove, true);
+                document.addEventListener('pointerup', onUp, true);
+                document.addEventListener('pointercancel', onUp, true);
+            });
+        });
+    }
     getAxisRange(axisId) {
         if (this.availableAxes && this.availableAxes.length > 0) {
             const found = this.availableAxes.find((a) => a.id === axisId);
@@ -3692,6 +3841,15 @@ class GraphMode {
             handleCanvasDoubleClick(pos, e);
         };
 
+        this.setupLetterEditing();
+        this.container.querySelectorAll('.btn-panel-help, #btn-curves-help').forEach((helpBtn) => {
+            helpBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const topic = helpBtn.dataset.topic || 'canvas';
+                this.showCurvesHelp(topic);
+            });
+        });
+
         this.canvas.addEventListener('pointerdown', onDown);
         this.canvas.addEventListener('pointermove', onMove);
         this.canvas.addEventListener('pointerup', onUp);
@@ -3982,15 +4140,25 @@ class GraphMode {
             // 4. Points (Anchor Nodes) rendering - drawn on top of handles
             pts.forEach((pt, idx) => {
                 const pix = this.normToPixel(pt);
-                const isSelected = (idx === activeCur.selectedPointIdx);
+                const isSelected = (idx === activeCur.selectedPointIdx) || (this.selectedItems && this.selectedItems.has('anchor_' + idx));
                 const isHovered = (this.hoverTarget && this.hoverTarget.type === 'anchor' && this.hoverTarget.idx === idx);
                 const isStraightNode = (!pt.cpIn || pt.hasNoCpIn) && (!pt.cpOut || pt.hasNoCpOut);
 
-                // Dashed vertical guideline to baseline for selected point
-                if (isSelected) {
+                // Check if enclosed in active marquee candidate
+                let isMarqueeCandidate = false;
+                if (this.activeMarquee) {
+                    if (this.activeMarquee.type === 'box') {
+                        isMarqueeCandidate = this.isPointInBox(pix, this.activeMarquee.start, this.activeMarquee.current);
+                    } else if (this.activeMarquee.type === 'lasso') {
+                        isMarqueeCandidate = this.isPointInPolygon(pix, this.activeMarquee.points);
+                    }
+                }
+
+                // Dashed vertical guideline to baseline for selected point or marquee candidate
+                if (isSelected || isMarqueeCandidate) {
                     ctx.save();
                     ctx.setLineDash([3, 3]);
-                    ctx.strokeStyle = palette.dropline;
+                    ctx.strokeStyle = isMarqueeCandidate ? 'rgba(13, 153, 255, 0.8)' : palette.dropline;
                     ctx.lineWidth = 1;
                     ctx.beginPath();
                     ctx.moveTo(pix.x, pix.y);
@@ -3999,26 +4167,33 @@ class GraphMode {
                     ctx.restore();
                 }
 
-                // Outer focus ring for selected point
-                if (isSelected) {
+                // Outer focus / selection / marquee halo ring
+                if (isSelected || isMarqueeCandidate) {
                     ctx.save();
-                    ctx.strokeStyle = pt.brokenHandles ? '#f97316' : (isStraightNode ? '#38bdf8' : activeCur.color);
-                    ctx.lineWidth = 2.0;
+                    ctx.strokeStyle = isMarqueeCandidate ? '#0d99ff' : (pt.brokenHandles ? '#f97316' : (isStraightNode ? '#38bdf8' : activeCur.color));
+                    ctx.lineWidth = isMarqueeCandidate ? 2.8 : 2.2;
+                    if (isMarqueeCandidate) {
+                        ctx.setLineDash([4, 2]);
+                    }
                     ctx.beginPath();
                     if (isStraightNode) {
-                        ctx.strokeRect(pix.x - 10, pix.y - 10, 20, 20);
+                        ctx.strokeRect(pix.x - 11, pix.y - 11, 22, 22);
                     } else {
-                        ctx.arc(pix.x, pix.y, 11, 0, Math.PI * 2);
+                        ctx.arc(pix.x, pix.y, 12, 0, Math.PI * 2);
                         ctx.stroke();
+                    }
+                    if (isMarqueeCandidate) {
+                        ctx.fillStyle = 'rgba(13, 153, 255, 0.25)';
+                        ctx.fill();
                     }
                     ctx.restore();
                 }
 
                 // Anchor Point knob (Square for Corner/Straight points, Circle for Smooth points)
                 ctx.save();
-                const radius = isSelected ? 7.5 : (isHovered ? 6.5 : 5.0);
-                ctx.fillStyle = isSelected ? '#ffffff' : activeCur.color;
-                ctx.strokeStyle = pt.brokenHandles ? '#f97316' : (isStraightNode ? '#38bdf8' : '#ffffff');
+                const radius = (isSelected || isMarqueeCandidate) ? 7.5 : (isHovered ? 6.5 : 5.0);
+                ctx.fillStyle = (isSelected || isMarqueeCandidate) ? '#ffffff' : activeCur.color;
+                ctx.strokeStyle = isMarqueeCandidate ? '#0d99ff' : (pt.brokenHandles ? '#f97316' : (isStraightNode ? '#38bdf8' : '#ffffff'));
                 ctx.lineWidth = pt.brokenHandles ? 2.4 : 2.0;
                 ctx.beginPath();
                 if (isStraightNode) {
@@ -4029,18 +4204,76 @@ class GraphMode {
                 }
                 ctx.fill();
                 ctx.stroke();
-                ctx.restore();
 
+                // Distinct selection point label badge (e.g. P0, P1, P2) when multiple items are selected or marquee candidate
+                if (isSelected || isMarqueeCandidate) {
+                    ctx.font = 'bold 8.5px "Inter", sans-serif';
+                    ctx.fillStyle = isMarqueeCandidate ? '#0d99ff' : '#ffffff';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillText(`P${idx}`, pix.x, pix.y - 13);
+                }
+                ctx.restore();
             });
 
-            // 5. Draw Distribution Hover Projection Lines & Floating Value Badge
+            // 5. Draw Distribution Hover Projection Lines & Floating Value Badges on ALL points
             if (this.hoveredDistIndex !== null) {
                 const realCount = Math.max(1, this.itemCount || 16);
-                const count = Math.max(2, Math.min(48, realCount));
+                const count = Math.max(2, Math.min(128, realCount));
                 if (this.hoveredDistIndex >= 0 && this.hoveredDistIndex < count) {
+                    const axisObj = this.availableAxes.find((a) => a.id === activeCur.axisId);
+                    const rawAxisName = axisObj ? axisObj.name : activeCur.axisId;
+                    const axisName = window.i18n ? window.i18n.getAxisName(activeCur.axisId, rawAxisName) : rawAxisName;
+                    const range = this.getAxisRange(activeCur.axisId);
+
+                    // 1. Draw secondary value tooltips on all other points first
+                    ctx.save();
+                    const badgeStep = count > 36 ? Math.ceil(count / 24) : 1;
+                    for (let j = 0; j < count; j += badgeStep) {
+                        if (j === this.hoveredDistIndex) {
+                            continue; // Active hovered point is drawn in full prominence below
+                        }
+                        const sIdx = this.getBarSampleIndex(j, count, realCount);
+                        const xN = realCount > 1 ? sIdx / (realCount - 1) : 0;
+                        const yN = this.getLetterY(activeCur, sIdx, realCount);
+                        const pX = pad + xN * plotW;
+                        const pY = h - pad - yN * plotH;
+                        const val = Math.round(range.min + yN * (range.max - range.min));
+                        const rChar = (this.textSnippet && this.textSnippet[sIdx]) ? this.textSnippet[sIdx] : null;
+                        const label = rChar ? `${rChar}: ${val}` : `${val}`;
+
+                        ctx.font = 'bold 8px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                        const tm = ctx.measureText(label);
+                        const bw = Math.round(tm.width + 8);
+                        const bh = 14;
+                        let bx = Math.round(pX - bw / 2);
+                        if (bx < pad + 2) bx = pad + 2;
+                        if (bx + bw > w - pad - 2) bx = w - pad - 2 - bw;
+                        let by = Math.round(pY - bh - 6);
+                        if (by < pad + 2) by = Math.round(pY + 6);
+
+                        // Pill background
+                        ctx.fillStyle = 'rgba(18, 18, 22, 0.88)';
+                        ctx.strokeStyle = `${activeCur.color || '#38bdf8'}66`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.roundRect ? ctx.roundRect(bx, by, bw, bh, 3) : ctx.rect(bx, by, bw, bh);
+                        ctx.fill();
+                        ctx.stroke();
+
+                        // Text
+                        ctx.fillStyle = '#f1f5f9';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(label, bx + bw / 2, by + bh / 2);
+                    }
+                    ctx.restore();
+
+                    // 2. Draw prominent primary badge & projection lines for the hovered point
                     const i = this.hoveredDistIndex;
-                    const xNorm = count > 1 ? i / (count - 1) : 0;
-                    const yNorm = this.evaluateCurveAtFor(activeCur, xNorm);
+                    const sampleIdx = this.getBarSampleIndex(i, count, realCount);
+                    const xNorm = realCount > 1 ? sampleIdx / (realCount - 1) : 0;
+                    const yNorm = this.getLetterY(activeCur, sampleIdx, realCount);
 
                     const pixX = pad + xNorm * plotW;
                     const pixY = h - pad - yNorm * plotH;
@@ -4049,18 +4282,13 @@ class GraphMode {
                     const rightAxisX = w - pad;
                     const topAxisY = pad;
 
-                    const axisObj = this.availableAxes.find((a) => a.id === activeCur.axisId);
-                    const rawAxisName = axisObj ? axisObj.name : activeCur.axisId;
-                    const axisName = window.i18n ? window.i18n.getAxisName(activeCur.axisId, rawAxisName) : rawAxisName;
-                    const range = this.getAxisRange(activeCur.axisId);
                     const calculatedVal = Math.round(range.min + yNorm * (range.max - range.min));
-                    const sampleIdx = (realCount === count) ? i : Math.min(Math.round(xNorm * (realCount - 1)), realCount - 1);
                     const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
                     const letterDisplay = rawChar ? `'${rawChar}'` : `#${sampleIdx + 1}`;
 
                     ctx.save();
 
-                    // 1. Vertical parallel/projection line: from baseline up to curve point (parallel to Y-axis)
+                    // 1. Vertical projection line
                     ctx.strokeStyle = activeCur.color || '#38bdf8';
                     ctx.lineWidth = 1.8;
                     ctx.setLineDash([4, 3]);
@@ -4069,13 +4297,13 @@ class GraphMode {
                     ctx.lineTo(pixX, pixY);
                     ctx.stroke();
 
-                    // 2. Horizontal parallel/projection line: from curve point left to Y-axis (parallel to X-axis)
+                    // 2. Horizontal projection line
                     ctx.beginPath();
                     ctx.moveTo(leftAxisX, pixY);
                     ctx.lineTo(pixX, pixY);
                     ctx.stroke();
 
-                    // 3. Subtle dashed extensions across canvas
+                    // 3. Subtle extensions
                     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
                     ctx.lineWidth = 1;
                     ctx.setLineDash([2, 4]);
@@ -4089,9 +4317,7 @@ class GraphMode {
                     // 4. Axis Tick Indicators
                     ctx.setLineDash([]);
                     ctx.fillStyle = activeCur.color || '#38bdf8';
-                    // Bottom baseline tick
                     ctx.fillRect(pixX - 2.5, baselineY - 2.5, 5, 5);
-                    // Left Y-axis tick
                     ctx.fillRect(leftAxisX - 2.5, pixY - 2.5, 5, 5);
 
                     // 5. Glowing Intersection Node on Curve
@@ -4129,27 +4355,18 @@ class GraphMode {
                         badgeY = Math.round(pixY + 10);
                     }
 
-                    // Flat badge pill (no shadow)
+                    // Flat badge pill
                     ctx.shadowColor = 'transparent';
                     ctx.shadowBlur = 0;
                     ctx.shadowOffsetX = 0;
                     ctx.shadowOffsetY = 0;
                     ctx.fillStyle = '#161618';
                     ctx.strokeStyle = activeCur.color || '#38bdf8';
-                    ctx.lineWidth = 1.2;
+                    ctx.lineWidth = 1.4;
 
                     const r = 5;
                     ctx.beginPath();
-                    ctx.moveTo(badgeX + r, badgeY);
-                    ctx.lineTo(badgeX + badgeW - r, badgeY);
-                    ctx.quadraticCurveTo(badgeX + badgeW, badgeY, badgeX + badgeW, badgeY + r);
-                    ctx.lineTo(badgeX + badgeW, badgeY + badgeH - r);
-                    ctx.quadraticCurveTo(badgeX + badgeW, badgeY + badgeH, badgeX + badgeW - r, badgeY + badgeH);
-                    ctx.lineTo(badgeX + r, badgeY + badgeH);
-                    ctx.quadraticCurveTo(badgeX, badgeY + badgeH, badgeX, badgeY + badgeH - r);
-                    ctx.lineTo(badgeX, badgeY + r);
-                    ctx.quadraticCurveTo(badgeX, badgeY, badgeX + r, badgeY);
-                    ctx.closePath();
+                    ctx.roundRect ? ctx.roundRect(badgeX, badgeY, badgeW, badgeH, r) : ctx.rect(badgeX, badgeY, badgeW, badgeH);
                     ctx.fill();
                     ctx.stroke();
 
@@ -4202,6 +4419,13 @@ class GraphMode {
             }
         }
 
+        if (this.showDistPoints) {
+            const dpCur = this.getActiveCurve();
+            if (dpCur) {
+                this.drawDistributionPoints(ctx, dpCur, pad, plotW, plotH, h);
+            }
+        }
+
         this.updateDistributionPreview();
     }
 
@@ -4233,7 +4457,7 @@ class GraphMode {
 
         barContainer.classList.remove('has-limit-warning');
         const realCount = Math.max(1, this.itemCount || 16);
-        const count = Math.max(2, Math.min(48, realCount));
+        const count = Math.max(2, Math.min(128, realCount));
         barContainer.classList.toggle('is-thin', count > 20);
         barContainer.classList.toggle('dist-bars-dense', count > 36);
         barContainer.classList.toggle('dist-bars-ultra', count > 44);
@@ -4257,83 +4481,29 @@ class GraphMode {
         }
 
         const hoverReadout = this.container.querySelector('#preview-hover-readout');
-        const existingItems = barContainer.querySelectorAll('.dist-bar-item');
+        let existingItems = barContainer.querySelectorAll('.dist-bar-item');
 
-        if (existingItems.length === count) {
-            // Update existing DOM elements without recreation to preserve hover interactions
-            existingItems.forEach((item, i) => {
-                const xNorm = count > 1 ? i / (count - 1) : 0;
-                const yNorm = this.evaluateCurveAtFor(cur, xNorm);
-                const heightPercent = Math.max(4, Math.round(yNorm * 100));
-                const calculatedVal = Math.round(range.min + yNorm * (range.max - range.min));
-
-                const sampleIdx = (realCount === count) ? i : Math.min(Math.round(xNorm * (realCount - 1)), realCount - 1);
-                const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
-                const letterDisplay = rawChar ? `${rawChar}` : `#${sampleIdx + 1}`;
-                const tipText = window.i18n
-                    ? window.i18n.t('distBarLetterTip', { char: `'${letterDisplay}'`, idx: sampleIdx + 1, axis: axisName, val: calculatedVal })
-                    : `Letter '${letterDisplay}' (#${sampleIdx + 1}): ${axisName} = ${calculatedVal}`;
-
-                item.dataset.index = i;
-                item.dataset.label = letterDisplay;
-                item.dataset.val = calculatedVal;
-                item.dataset.tip = tipText;
-                item.title = tipText;
-
-                if (this.hoveredDistIndex === i) {
-                    item.classList.add('is-hovered');
-                } else {
-                    item.classList.remove('is-hovered');
-                }
-
-                const innerChar = item.querySelector('.dist-bar-inner-char');
-                if (innerChar) innerChar.textContent = letterDisplay;
-                const innerVal = item.querySelector('.dist-bar-inner-val');
-                if (innerVal) innerVal.textContent = calculatedVal;
-
-                const fill = item.querySelector('.dist-bar-fill');
-                if (fill) {
-                    fill.style.height = `${heightPercent}%`;
-                    fill.style.background = cur.color;
-                }
-            });
-            if (this.hoveredDistIndex !== null && hoverReadout && existingItems[this.hoveredDistIndex]) {
-                hoverReadout.textContent = existingItems[this.hoveredDistIndex].dataset.tip || '';
-            }
-        } else {
-            // Count changed: rebuild DOM elements and attach listeners
+        if (existingItems.length !== count) {
+            // Count changed: rebuild DOM elements and attach hover listeners
             let html = '';
             for (let i = 0; i < count; i++) {
-                const xNorm = count > 1 ? i / (count - 1) : 0;
-                const yNorm = this.evaluateCurveAtFor(cur, xNorm);
-                const heightPercent = Math.max(4, Math.round(yNorm * 100));
-                const calculatedVal = Math.round(range.min + yNorm * (range.max - range.min));
-
-                const sampleIdx = (realCount === count) ? i : Math.min(Math.round(xNorm * (realCount - 1)), realCount - 1);
-                const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
-                const letterDisplay = rawChar ? `${rawChar}` : `#${sampleIdx + 1}`;
-                const tipText = window.i18n
-                    ? window.i18n.t('distBarLetterTip', { char: `'${letterDisplay}'`, idx: sampleIdx + 1, axis: axisName, val: calculatedVal })
-                    : `Letter '${letterDisplay}' (#${sampleIdx + 1}): ${axisName} = ${calculatedVal}`;
-
-                const isHoveredClass = (this.hoveredDistIndex === i) ? ' is-hovered' : '';
                 html += `
-                    <div class="dist-bar-item${isHoveredClass}" data-index="${i}" data-label="${letterDisplay}" data-val="${calculatedVal}" data-tip="${tipText}" title="${tipText}">
+                    <div class="dist-bar-item" data-index="${i}">
                         <div class="dist-bar-track">
-                            <div class="dist-bar-fill" style="height: ${heightPercent}%; background: ${cur.color}">
+                            <div class="dist-bar-fill">
                                 <div class="dist-bar-inner-content">
-                                    <span class="dist-bar-inner-char">${letterDisplay}</span>
-                                    <span class="dist-bar-inner-val">${calculatedVal}</span>
+                                    <span class="dist-bar-inner-char"></span>
+                                    <span class="dist-bar-inner-val"></span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 `;
             }
-
             barContainer.innerHTML = html;
+            existingItems = barContainer.querySelectorAll('.dist-bar-item');
 
-            barContainer.querySelectorAll('.dist-bar-item').forEach((item) => {
+            existingItems.forEach((item) => {
                 const idx = parseInt(item.dataset.index, 10);
                 item.addEventListener('mouseenter', () => {
                     this.hoveredDistIndex = idx;
@@ -4355,18 +4525,661 @@ class GraphMode {
                 });
             });
         }
+
+        existingItems.forEach((item, i) => {
+            const sampleIdx = this.getBarSampleIndex(i, count, realCount);
+            const yNorm = this.getLetterY(cur, sampleIdx, realCount);
+            const calculatedVal = Math.round(range.min + yNorm * (range.max - range.min));
+            const step = realCount > 1 ? 1 / (realCount - 1) : 0.5;
+            const tol = Math.min(0.04, step * 0.45);
+            const xTarget = realCount > 1 ? sampleIdx / (realCount - 1) : 0;
+            const isAnchor = cur.points.some((p) => Math.abs(p.x - xTarget) <= tol);
+
+            const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
+            const letterDisplay = rawChar ? `${rawChar}` : `#${sampleIdx + 1}`;
+            const tipText = window.i18n
+                ? window.i18n.t('distBarLetterTip', { char: `'${letterDisplay}'`, idx: sampleIdx + 1, axis: axisName, val: calculatedVal })
+                : `Letter '${letterDisplay}' (#${sampleIdx + 1}): ${axisName} = ${calculatedVal}`;
+
+            item.dataset.index = i;
+            item.dataset.sample = sampleIdx;
+            item.dataset.label = letterDisplay;
+            item.dataset.val = calculatedVal;
+            item.dataset.tip = tipText;
+            item.title = tipText;
+            item.classList.toggle('is-hovered', this.hoveredDistIndex === i);
+            item.classList.toggle('is-anchor-point', isAnchor);
+            item.classList.remove('is-override');
+
+            const innerChar = item.querySelector('.dist-bar-inner-char');
+            if (innerChar) innerChar.textContent = letterDisplay;
+            const innerVal = item.querySelector('.dist-bar-inner-val');
+            if (innerVal) innerVal.textContent = calculatedVal;
+
+            const fill = item.querySelector('.dist-bar-fill');
+            if (fill) {
+                // Exact proportional height: bar height == value on the axis range
+                fill.style.height = `${(yNorm * 100).toFixed(2)}%`;
+                fill.style.background = cur.color;
+            }
+        });
+
+        if (this.hoveredDistIndex !== null && hoverReadout && existingItems[this.hoveredDistIndex]) {
+            hoverReadout.textContent = existingItems[this.hoveredDistIndex].dataset.tip || '';
+        }
+    }
+
+    // ---- Per-letter & curve deformation helpers ----
+    getBarSampleIndex(i, count, realCount) {
+        if (realCount === count) {
+            return i;
+        }
+        const xNorm = count > 1 ? i / (count - 1) : 0;
+        return Math.min(Math.round(xNorm * (realCount - 1)), realCount - 1);
+    }
+
+    // Exact normalized value (0..1) directly evaluated from the curve.
+    // The curve IS the single source of truth - no disconnected overrides!
+    getLetterY(cur, i, n) {
+        if (!cur) {
+            return 0;
+        }
+        const x = n > 1 ? i / (n - 1) : 0;
+        return this.evaluateCurveAtFor(cur, x);
+    }
+
+    // Auto-smooth Bézier handles around an anchor index to maintain C1 tangent continuity
+    autoSmoothPointHandles(cur, idx) {
+        if (!cur || !cur.points || idx < 0 || idx >= cur.points.length) {
+            return;
+        }
+        const pts = cur.points;
+        const n = pts.length;
+        const p = pts[idx];
+        if (p.straight) {
+            return;
+        }
+
+        if (idx < n - 1) {
+            const next = pts[idx + 1];
+            const dx = (next.x - p.x) / 3;
+            let slope = (next.y - p.y) / Math.max(1e-5, next.x - p.x);
+            if (idx > 0) {
+                const prev = pts[idx - 1];
+                const prevSlope = (p.y - prev.y) / Math.max(1e-5, p.x - prev.x);
+                slope = (slope + prevSlope) / 2;
+            }
+            if (!p.brokenHandles) {
+                p.hasNoCpOut = false;
+                p.cpOut = {
+                    x: Math.round((p.x + dx) * 1000) / 1000,
+                    y: Math.round(Math.max(0, Math.min(1, p.y + slope * dx)) * 1000) / 1000
+                };
+            }
+        }
+        if (idx > 0) {
+            const prev = pts[idx - 1];
+            const dx = (p.x - prev.x) / 3;
+            let slope = (p.y - prev.y) / Math.max(1e-5, p.x - prev.x);
+            if (idx < n - 1) {
+                const next = pts[idx + 1];
+                const nextSlope = (next.y - p.y) / Math.max(1e-5, next.x - p.x);
+                slope = (slope + nextSlope) / 2;
+            }
+            if (!p.brokenHandles) {
+                p.hasNoCpIn = false;
+                p.cpIn = {
+                    x: Math.round((p.x - dx) * 1000) / 1000,
+                    y: Math.round(Math.max(0, Math.min(1, p.y - slope * dx)) * 1000) / 1000
+                };
+            }
+        }
+    }
+
+    // Find the closest anchor point for this letter, or insert one on the curve if none exists
+    getOrInsertAnchorForLetter(cur, letterIdx) {
+        if (!cur || !cur.points || cur.points.length === 0) {
+            return 0;
+        }
+        const n = cur.points.length;
+        const totalLetters = Math.max(1, this.itemCount || 16);
+        const xTarget = totalLetters > 1 ? letterIdx / (totalLetters - 1) : 0;
+
+        if (letterIdx === 0) {
+            cur.points[0].x = 0;
+            return 0;
+        }
+        if (letterIdx === totalLetters - 1) {
+            cur.points[n - 1].x = 1;
+            return n - 1;
+        }
+
+        const step = 1 / (totalLetters - 1);
+        const threshold = Math.min(0.04, step * 0.45);
+
+        // Check if an anchor already exists close to this letter's x
+        let bestIdx = -1;
+        let bestDist = 999;
+        for (let i = 0; i < n; i++) {
+            const d = Math.abs(cur.points[i].x - xTarget);
+            if (d <= threshold && d < bestDist) {
+                bestDist = d;
+                bestIdx = i;
+            }
+        }
+
+        if (bestIdx >= 0) {
+            return bestIdx;
+        }
+
+        // Insert new anchor point directly on the curve at (xTarget, currentCurveY)
+        const currentY = this.evaluateCurveAtFor(cur, xTarget);
+        const newPt = {
+            x: Math.round(xTarget * 1000) / 1000,
+            y: Math.round(currentY * 1000) / 1000,
+            brokenHandles: false
+        };
+        cur.points.push(newPt);
+        cur.points.sort((a, b) => a.x - b.x);
+
+        const newIdx = cur.points.indexOf(newPt);
+        this.autoSmoothPointHandles(cur, newIdx - 1);
+        this.autoSmoothPointHandles(cur, newIdx);
+        this.autoSmoothPointHandles(cur, newIdx + 1);
+
+        return newIdx;
+    }
+
+    // Deform the curve so that at letterIdx, the curve has the new height
+    deformCurveAtLetter(cur, letterIdx, newY, anchorIdx) {
+        if (!cur || !cur.points) {
+            return;
+        }
+        const aIdx = (anchorIdx !== undefined && anchorIdx >= 0 && anchorIdx < cur.points.length)
+            ? anchorIdx
+            : this.getOrInsertAnchorForLetter(cur, letterIdx);
+
+        const pt = cur.points[aIdx];
+        if (!pt) {
+            return;
+        }
+
+        const clampedY = Math.max(0, Math.min(1, Math.round(newY * 1000) / 1000));
+        pt.y = clampedY;
+        pt.straight = false;
+
+        // Smooth handles for this point and adjacent points
+        this.autoSmoothPointHandles(cur, aIdx - 1);
+        this.autoSmoothPointHandles(cur, aIdx);
+        this.autoSmoothPointHandles(cur, aIdx + 1);
+
+        cur.preset = 'custom';
+        this.markCurveDirty(cur);
+        this.syncPointInspector();
+        this.renderPointChips();
+        this.redraw();
+        this.emitDistribution();
+    }
+
+    // Delete an anchor point associated with a letter (smooths the curve between neighbors)
+    deleteAnchorForLetter(cur, letterIdx) {
+        if (!cur || !cur.points || cur.points.length <= 2) {
+            return;
+        }
+        const totalLetters = Math.max(1, this.itemCount || 16);
+        if (letterIdx === 0 || letterIdx === totalLetters - 1) {
+            return;
+        }
+        const xTarget = letterIdx / (totalLetters - 1);
+        const step = 1 / (totalLetters - 1);
+        const threshold = Math.min(0.04, step * 0.45);
+
+        let bestIdx = -1;
+        let bestDist = 999;
+        for (let i = 1; i < cur.points.length - 1; i++) {
+            const d = Math.abs(cur.points[i].x - xTarget);
+            if (d <= threshold && d < bestDist) {
+                bestDist = d;
+                bestIdx = i;
+            }
+        }
+        if (bestIdx > 0 && bestIdx < cur.points.length - 1) {
+            this.recordHistoryState();
+            this.deletePointAt(bestIdx);
+        }
+    }
+
+    // Reset active curve to a clean smooth line/curve
+    resetActiveCurve() {
+        const cur = this.getActiveCurve();
+        if (!cur) {
+            return;
+        }
+        this.recordHistoryState();
+        cur.preset = 'linear';
+        cur.points = [
+            { x: 0.0, y: 0.0, cpOut: { x: 0.33, y: 0.33 } },
+            { x: 1.0, y: 1.0, cpIn: { x: 0.67, y: 0.67 } }
+        ];
+        this.ensurePointHandles(cur);
+        this.renderPointChips();
+        this.syncPointInspector();
+        this.redraw();
+        this.emitDistribution();
+    }
+
+    setupLetterEditing() {
+        const barContainer = this.container.querySelector('#distribution-bars');
+        const chk = this.container.querySelector('#chk-show-dist-points');
+        const btnReset = this.container.querySelector('#btn-reset-overrides');
+        const canvas = this.canvas;
+        if (!barContainer || !canvas) {
+            return;
+        }
+
+        if (btnReset) {
+            btnReset.title = window.i18n && window.i18n.currentLang === 'en' ? 'Reset curve' : 'Վերականգնել կորը';
+            btnReset.addEventListener('click', () => this.resetActiveCurve());
+        }
+        if (chk) {
+            chk.checked = Boolean(this.showDistPoints);
+            chk.addEventListener('change', () => {
+                this.showDistPoints = chk.checked;
+                this.redraw();
+            });
+        }
+
+        // --- Drag bars vertically to deform the curve directly at that letter ---
+        let barDrag = null;
+        barContainer.addEventListener('pointerdown', (e) => {
+            const item = e.target.closest('.dist-bar-item');
+            if (!item || e.button !== 0) {
+                return;
+            }
+            const cur = this.getActiveCurve();
+            if (!cur) {
+                return;
+            }
+            const sampleIdx = parseInt(item.dataset.sample, 10);
+            const track = item.querySelector('.dist-bar-track');
+            const rect = track.getBoundingClientRect();
+
+            this.recordHistoryState();
+            const anchorIdx = this.getOrInsertAnchorForLetter(cur, sampleIdx);
+            barDrag = { sample: sampleIdx, anchorIdx, rect };
+            try { barContainer.setPointerCapture(e.pointerId); } catch (err) {}
+            e.preventDefault();
+            const newY = 1 - (e.clientY - rect.top) / rect.height;
+            this.deformCurveAtLetter(cur, sampleIdx, newY, anchorIdx);
+        });
+
+        barContainer.addEventListener('pointermove', (e) => {
+            if (!barDrag) {
+                return;
+            }
+            const cur = this.getActiveCurve();
+            if (!cur) {
+                return;
+            }
+            const newY = 1 - (e.clientY - barDrag.rect.top) / barDrag.rect.height;
+            this.deformCurveAtLetter(cur, barDrag.sample, newY, barDrag.anchorIdx);
+        });
+
+        const endBar = (e) => {
+            if (barDrag) {
+                try { barContainer.releasePointerCapture(e.pointerId); } catch (err) {}
+                barDrag = null;
+            }
+        };
+        barContainer.addEventListener('pointerup', endBar);
+        barContainer.addEventListener('pointercancel', endBar);
+
+        barContainer.addEventListener('dblclick', (e) => {
+            const item = e.target.closest('.dist-bar-item');
+            const cur = this.getActiveCurve();
+            if (item && cur) {
+                this.deleteAnchorForLetter(cur, parseInt(item.dataset.sample, 10));
+            }
+        });
+
+        // --- Drag distribution points on the curve (directly deforms the curve!) ---
+        const hitDistPoint = (e) => {
+            if (!this.showDistPoints) {
+                return null;
+            }
+            const cur = this.getActiveCurve();
+            if (!cur) {
+                return null;
+            }
+            const r = canvas.getBoundingClientRect();
+            const px = (e.clientX - r.left) * (this.width / r.width);
+            const py = (e.clientY - r.top) * (this.height / r.height);
+            const n = Math.max(1, this.itemCount || 16);
+            if (n > 128) {
+                return null;
+            }
+            let best = null;
+            let bestD = 10;
+            for (let i = 0; i < n; i++) {
+                const pix = this.normToPixel({ x: n > 1 ? i / (n - 1) : 0, y: this.getLetterY(cur, i, n) });
+                const d = Math.hypot(px - pix.x, py - pix.y);
+                if (d <= bestD) {
+                    bestD = d;
+                    best = i;
+                }
+            }
+            return best;
+        };
+
+        let ptDrag = null;
+        canvas.addEventListener('pointerdown', (e) => {
+            if (e.button !== 0) {
+                return;
+            }
+            const idx = hitDistPoint(e);
+            if (idx === null) {
+                return;
+            }
+            const cur = this.getActiveCurve();
+            if (!cur) {
+                return;
+            }
+            e.stopImmediatePropagation();
+            e.preventDefault();
+
+            this.recordHistoryState();
+            const anchorIdx = this.getOrInsertAnchorForLetter(cur, idx);
+            ptDrag = { idx, anchorIdx };
+            try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+            this.hoveredDistIndex = idx;
+
+            const r = canvas.getBoundingClientRect();
+            const py = (e.clientY - r.top) * (this.height / r.height);
+            const y = 1 - (py - this.padding) / (this.height - this.padding * 2);
+            this.deformCurveAtLetter(cur, idx, y, anchorIdx);
+        }, true);
+
+        canvas.addEventListener('pointermove', (e) => {
+            if (ptDrag) {
+                e.stopImmediatePropagation();
+                const cur = this.getActiveCurve();
+                if (!cur) {
+                    return;
+                }
+                const r = canvas.getBoundingClientRect();
+                const py = (e.clientY - r.top) * (this.height / r.height);
+                const y = 1 - (py - this.padding) / (this.height - this.padding * 2);
+                this.deformCurveAtLetter(cur, ptDrag.idx, y, ptDrag.anchorIdx);
+            } else if (this.showDistPoints) {
+                const hit = hitDistPoint(e);
+                canvas.style.cursor = hit !== null ? 'ns-resize' : '';
+                if (hit !== this.hoveredDistIndex) {
+                    this.hoveredDistIndex = hit;
+                    this.redraw();
+                }
+            }
+        }, true);
+
+        const endPt = (e) => {
+            if (ptDrag) {
+                e.stopImmediatePropagation();
+                try { canvas.releasePointerCapture(e.pointerId); } catch (err) {}
+                ptDrag = null;
+            }
+        };
+        canvas.addEventListener('pointerup', endPt, true);
+        canvas.addEventListener('pointercancel', endPt, true);
+
+        canvas.addEventListener('dblclick', (e) => {
+            const idx = hitDistPoint(e);
+            const cur = this.getActiveCurve();
+            if (idx !== null && cur) {
+                e.stopImmediatePropagation();
+                this.deleteAnchorForLetter(cur, idx);
+            }
+        }, true);
+    }
+
+    drawDistributionPoints(ctx, cur, pad, plotW, plotH, h) {
+        const n = Math.max(1, this.itemCount || 16);
+        if (n > 128) {
+            return;
+        }
+        ctx.save();
+        const step = n > 1 ? 1 / (n - 1) : 0.5;
+        const threshold = Math.min(0.04, step * 0.45);
+        const greenColor = '#10b981';
+
+        for (let i = 0; i < n; i++) {
+            const x = n > 1 ? i / (n - 1) : 0;
+            const y = this.evaluateCurveAtFor(cur, x);
+            const px = pad + x * plotW;
+            const py = h - pad - y * plotH;
+
+            const isAnchor = cur.points.some((p) => Math.abs(p.x - x) <= threshold);
+            const isHovered = this.hoveredDistIndex === i;
+
+            ctx.beginPath();
+            const radius = isHovered ? 5.5 : (isAnchor ? 4.2 : 3.2);
+            ctx.arc(px, py, radius, 0, Math.PI * 2);
+
+            if (isHovered) {
+                ctx.fillStyle = '#ffffff';
+                ctx.strokeStyle = greenColor;
+                ctx.lineWidth = 2.5;
+            } else if (isAnchor) {
+                ctx.fillStyle = greenColor;
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2.0;
+            } else {
+                ctx.fillStyle = greenColor;
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.2;
+            }
+            ctx.fill();
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    showCurvesHelp(initialTopic = 'canvas') {
+        const en = window.i18n && window.i18n.currentLang === 'en';
+
+        const topics = en ? {
+            canvas: {
+                tab: 'Canvas',
+                title: 'Curves Canvas',
+                rows: [
+                    ['Add point', 'Double-click on the curve'],
+                    ['Delete point', 'Double-click on a point / Delete / Backspace'],
+                    ['Move point or handle', 'Drag with mouse'],
+                    ['Break / smooth handle', 'Double-click the handle knob'],
+                    ['Unlink handle while dragging', 'Alt + Drag handle'],
+                    ['Remove handles', 'Alt + Right-click'],
+                    ['Add to selection', 'Shift + Click'],
+                    ['Lock axis while dragging', 'Shift + Drag'],
+                    ['Box / lasso select', 'Drag on empty area / Alt + Drag'],
+                    ['Undo / Redo', 'Ctrl + Z / Ctrl + Y (Ctrl + Shift + Z)'],
+                    ['Show distribution points', 'Checkbox under canvas; drag green point or bar to shape curve directly'],
+                    ['Reset anchor on curve', 'Double-click the point or its bar to remove anchor'],
+                    ['Reset entire curve', '↺ button in distribution header']
+                ]
+            },
+            curves: {
+                tab: 'Curves',
+                title: 'Curve Layers',
+                rows: [
+                    ['Add curve layer', 'Select axis from dropdown and click "+ Add Curve"'],
+                    ['Activate curve', 'Click on curve pill to make it active for editing'],
+                    ['Show / hide curve', 'Click eye icon on curve pill to toggle visibility'],
+                    ['Remove curve', 'Click "×" on curve pill to delete layer']
+                ]
+            },
+            toolbar: {
+                tab: 'Toolbar',
+                title: 'Axis Settings',
+                rows: [
+                    ['Active Curve Axis', 'Change font axis (wght, wdth, opsz, etc.) bound to active curve'],
+                    ['Map Across', 'Choose Characters (per-glyph) or Selected Items (per-object)']
+                ]
+            },
+            points: {
+                tab: 'Points',
+                title: 'Points Control',
+                rows: [
+                    ['Select point', 'Click point chip or click point directly on canvas'],
+                    ['Exact coordinates', 'Edit numeric X and Y inputs (0.0 to 1.0) for precision'],
+                    ['Link / unlink handles', 'Toggle handle symmetry button (Linked / Broken)'],
+                    ['Delete point', 'Delete button or Delete / Backspace key'],
+                    ['Point history', 'Undo / Redo buttons for point edits']
+                ]
+            },
+            presets: {
+                tab: 'Presets',
+                title: 'Presets & Folders',
+                rows: [
+                    ['Save preset', 'Click "+ Create Preset", enter name and target folder'],
+                    ['Create folder', 'Click "+ New Folder", enter folder name'],
+                    ['Move presets between folders', 'Drag and drop preset chip onto any folder header'],
+                    ['Filter by folder', 'Click folder chips at the top (All, Basic, Curves, etc.)'],
+                    ['Export / Import', 'Save or load presets via JSON file'],
+                    ['Delete preset / folder', 'Click "×" icon']
+                ]
+            }
+        } : {
+            canvas: {
+                tab: 'Կտավ',
+                title: 'Կորերի Կտավ',
+                rows: [
+                    ['Ավելացնել կետ', 'Կրկնակի կտտոց կորի վրա'],
+                    ['Ջնջել կետ', 'Կրկնակի կտտոց կետի վրա / Delete / Backspace'],
+                    ['Տեղափոխել կետը կամ լծակը', 'Քաշել մկնիկով'],
+                    ['Կոտրել / սահունացնել լծակը', 'Կրկնակի կտտոց լծակի գնդիկի վրա'],
+                    ['Ապակապել լծակը քաշելիս', 'Alt + Քաշել լծակը'],
+                    ['Վերացնել լծակները', 'Alt + Աջ կտտոց'],
+                    ['Ավելացնել ընտրությանը', 'Shift + Կտտոց'],
+                    ['Կողպել առանցքը քաշելիս', 'Shift + Քաշել'],
+                    ['Ընտրել շրջանակով / լասսոյով', 'Քաշել դատարկ տեղում / Alt + Քաշել'],
+                    ['Հետարկել / Վերարկել', 'Ctrl + Z / Ctrl + Y (Ctrl + Shift + Z)'],
+                    ['Ցուցադրել բաշխիչ կետերը', 'Նշատուփ կտավի տակ. կանաչ կետը կամ սյունը քաշելով անմիջապես փոխվում է կորի տեսքը'],
+                    ['Վերականգնել կետը կորի վրա', 'Կրկնակի կտտոց կետի կամ սյան վրա՝ կետը կորից հեռացնելու համար'],
+                    ['Վերականգնել ամբողջ կորը', '↺ կոճակ բաշխման հեդրում']
+                ]
+            },
+            curves: {
+                tab: 'Շերտեր',
+                title: 'Կորերի Շերտեր',
+                rows: [
+                    ['Ավելացնել նոր կոր', 'Ընտրել առանցքը ցանկից և սեղմել «+ Ավելացնել Կոր»'],
+                    ['Ակտիվացնել կորը', 'Կտտացնել համապատասխան կորի կոճակին (Pill)'],
+                    ['Թաքցնել / ցուցադրել կորը', 'Կտտացնել աչքի պատկերակին'],
+                    ['Հեռացնել կորը', 'Կտտացնել «×» կոճակին կորի վրա']
+                ]
+            },
+            toolbar: {
+                tab: 'Կարգավորումներ',
+                title: 'Առանցքների Կարգավորումներ',
+                rows: [
+                    ['Ակտիվ կորի առանցք', 'Փոխում է ընտրված կորի կապը տառատեսակի առանցքի հետ (wght, wdth, opsz, և այլն)'],
+                    ['Բաշխման թիրախ', '«Տառեր»՝ բաշխել յուրաքանչյուր տառի վրա, «Առարկաներ»՝ ընտրված տարրերի վրա']
+                ]
+            },
+            points: {
+                tab: 'Կետեր',
+                title: 'Կետերի Կառավարում',
+                rows: [
+                    ['Ընտրել կետ', 'Կտտացնել կետի կոճակին (Chip) կամ անմիջապես կտավի վրա'],
+                    ['Ճշգրիտ կոորդինատներ', 'Մուտքագրել X և Y թվային արժեքները (0.0 - 1.0)'],
+                    ['Կապակցված լծակներ', 'Միացնել / անջատել լծակների սիմետրիան («Կապված» կոճակ)'],
+                    ['Ջնջել կետը', '«Ջնջել» կոճակ կամ Delete / Backspace'],
+                    ['Կետի պատմություն', 'Undo / Redo կոճակներով հետարկել կամ վերականգնել']
+                ]
+            },
+            presets: {
+                tab: 'Պանակներ',
+                title: 'Կաղապարներ և Պանակներ',
+                rows: [
+                    ['Պահպանել կաղապար', 'Սեղմել «+ Ստեղծել Կաղապար», մուտքագրել անունը և ընտրել պանակը'],
+                    ['Ստեղծել պանակ', 'Սեղմել «+ Նոր Պանակ», գրել անունը և պահպանել'],
+                    ['Տեղափոխել կաղապարներ', 'Քաշել և գցել (Drag & Drop) ցանկացած կաղապար պանակների մեջ'],
+                    ['Ֆիլտրել ըստ պանակի', 'Կտտացնել վերևի պանակների կոճակներին (Բոլորը, Հիմնական, և այլն)'],
+                    ['Արտահանել / Ներմուծել', 'Export / Import կոճակներով պահպանել կամ բեռնել JSON ֆայլ'],
+                    ['Ջնջել կաղապար կամ պանակ', 'Կտտացնել «×» կոճակին']
+                ]
+            }
+        };
+
+        const modalTitle = en ? 'Features & shortcuts' : 'Հնարավորություններ և ստեղներ';
+        const startKey = topics[initialTopic] ? initialTopic : 'canvas';
+
+        const old = document.getElementById('curves-help-overlay');
+        if (old) {
+            old.remove();
+        }
+        const ov = document.createElement('div');
+        ov.id = 'curves-help-overlay';
+        ov.className = 'app-modal-overlay';
+
+        const tabKeys = ['canvas', 'curves', 'toolbar', 'points', 'presets'];
+        const tabsHtml = tabKeys.map((k) => `
+            <button type="button" class="help-tab-btn ${k === startKey ? 'is-active' : ''}" data-topic="${k}">${topics[k].tab}</button>
+        `).join('');
+
+        const renderListHtml = (topicKey) => {
+            const topic = topics[topicKey] || topics.canvas;
+            return `
+                <div class="help-topic-heading" style="font-size: 11.5px; font-weight: 700; margin-bottom: 8px; color: var(--text-main);">${topic.title}</div>
+                <ul class="curves-help-list">
+                    ${topic.rows.map((r) => `<li><span class="help-what">${r[0]}</span><kbd class="help-key">${r[1]}</kbd></li>`).join('')}
+                </ul>
+            `;
+        };
+
+        ov.innerHTML = `
+            <div class="app-modal-dialog curves-help-dialog">
+                <div class="app-modal-header">
+                    <span class="app-modal-title">${modalTitle}</span>
+                    <button type="button" class="app-modal-close-btn"><i class="hd-icon hd-icon-close"></i></button>
+                </div>
+                <div class="help-dialog-tabs">${tabsHtml}</div>
+                <div class="app-modal-body" id="help-dialog-body">
+                    ${renderListHtml(startKey)}
+                </div>
+            </div>`;
+
+        document.body.appendChild(ov);
+
+        const listContainer = ov.querySelector('#help-dialog-body');
+        ov.querySelectorAll('.help-tab-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                ov.querySelectorAll('.help-tab-btn').forEach((b) => b.classList.remove('is-active'));
+                btn.classList.add('is-active');
+                if (listContainer) {
+                    listContainer.innerHTML = renderListHtml(btn.dataset.topic);
+                }
+            });
+        });
+
+        const close = () => {
+            ov.classList.remove('is-open');
+            setTimeout(() => ov.remove(), 260);
+        };
+        ov.addEventListener('click', (e) => {
+            if (e.target === ov) close();
+        });
+        ov.querySelector('.app-modal-close-btn').addEventListener('click', close);
+        requestAnimationFrame(() => ov.classList.add('is-open'));
     }
 
     emitDistribution() {
         const count = Math.max(2, Math.min(1000, this.itemCount || 16));
         const activeCur = this.getActiveCurve();
 
-        // Multi-curve payload: evaluates each enabled curve along its own axis
+        // Multi-curve payload: one exact value per letter (curve value or per-letter override)
         const curvesPayload = this.curves.filter((c) => c.enabled).map((c) => {
             const evaluatedValues = [];
             for (let i = 0; i < count; i++) {
-                const x = count > 1 ? i / (count - 1) : 0;
-                evaluatedValues.push(this.evaluateCurveAtFor(c, x));
+                evaluatedValues.push(this.getLetterY(c, i, count));
             }
             const range = this.getAxisRange(c.axisId);
             return {
