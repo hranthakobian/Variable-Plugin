@@ -4188,16 +4188,43 @@ body.light-theme .update-toast-title,
 /* =========================================
    Per-letter editing, help popup, folder drag & drop
    ========================================= */
+.btn-panel-help,
 .btn-curves-help {
     font-weight: 700;
-    font-size: 11px;
     width: 20px;
     height: 20px;
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    line-height: 1;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    cursor: pointer;
+    overflow: hidden;
+    vertical-align: middle;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-panel-help:hover,
+.btn-curves-help:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background-color: var(--bg-hover);
+}
+
+.armenian-qm {
+    display: inline-block;
+    font-size: 19px;
+    font-weight: 800;
+    line-height: 20px;
+    height: 20px;
+    width: 20px;
+    text-align: center;
+    transform: translateY(4px) scale(1.35);
+    pointer-events: none;
+    user-select: none;
 }
 
 .dist-points-toggle {
@@ -4286,11 +4313,44 @@ body.light-theme .update-toast-title,
     color: var(--text-muted);
 }
 
-/* Folder header: icon + name on one line, centered in middle of header, collapse arrow hidden */
+.help-dialog-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+}
+
+.help-tab-btn {
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.help-tab-btn:hover {
+    color: var(--text-main);
+    border-color: var(--border-hover);
+    background: var(--bg-hover);
+}
+
+.help-tab-btn.is-active {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-subtle);
+}
+
+/* Folder header: icon + name on one line, left aligned, collapse arrow hidden */
 .custom-folder-group-header {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     position: relative;
     padding: 5px 8px;
     cursor: pointer;
@@ -4300,7 +4360,7 @@ body.light-theme .update-toast-title,
 .custom-folder-header-left {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     width: 100%;
     min-height: 24px;
 }
@@ -4308,7 +4368,7 @@ body.light-theme .update-toast-title,
 .custom-folder-group-title {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 8px;
     white-space: nowrap;
     line-height: 1;

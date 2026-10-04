@@ -1,5 +1,5 @@
-﻿// Folder icon
-const FOLDER_ICON_SVG = '<svg width="22" height="18" viewBox="0 0 104 85" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; flex-shrink: 0;"><path d="M4 4L4 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M28 4L28 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M16 4L16 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M40 11L40 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M76 18L76 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M64 18L64 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M100 18L100 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M52 18L52 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M88 18L88 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path></svg>';
+// Folder icon
+const FOLDER_ICON_SVG = '<svg width="11" height="9" viewBox="0 0 104 85" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; flex-shrink: 0;"><path d="M4 4L4 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M28 4L28 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M16 4L16 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M40 11L40 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M76 18L76 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M64 18L64 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M100 18L100 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M52 18L52 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M88 18L88 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path></svg>';
 
 /**
  * Graph Studio Mode (Dedicated Multi-Point Spline Studio)
@@ -462,6 +462,8 @@ class GraphMode {
         const layout = this.getSectionsLayout();
         const isCollapsed = (id) => Boolean(layout.collapsed && layout.collapsed[id]);
         const isVisible = (id) => layout.visibility[id] !== false;
+        const helpTitle = i18n && i18n.currentLang === 'en' ? 'Features & shortcuts' : 'Հնարավորություններ և ստեղներ';
+        const helpBtn = (topic) => `<button type="button" class="btn-card-ctrl btn-panel-help" data-topic="${topic}" title="${helpTitle}"><span class="armenian-qm">՞</span></button>`;
 
         this.container.innerHTML = `
             <div class="graph-mode-panel no-collapse-transition">
@@ -474,7 +476,7 @@ class GraphMode {
                             <span class="card-title">${i18n ? i18n.t('panelCurves') : 'Curve Layers'}</span>
                         </div>
                         <div class="card-header-right">
-                            <button type="button" class="btn-card-ctrl btn-curves-help" id="btn-curves-help" title="${i18n && i18n.currentLang === 'en' ? 'Features & shortcuts' : 'Հնարավորություններ և ստեղներ'}">?</button>
+                            ${helpBtn('curves')}
                             <button type="button" class="btn-card-ctrl btn-card-up" data-card="curves" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}"><i class="hd-icon hd-icon-arrow-up"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-down" data-card="curves" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}"><i class="hd-icon hd-icon-arrow-bottom"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-close" data-card="curves" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}"><i class="hd-icon hd-icon-close"></i></button>
@@ -505,6 +507,7 @@ class GraphMode {
                             <span class="card-title">${i18n ? i18n.t('panelToolbar') : 'Axis Settings'}</span>
                         </div>
                         <div class="card-header-right">
+                            ${helpBtn('toolbar')}
                             <button type="button" class="btn-card-ctrl btn-card-up" data-card="toolbar" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}"><i class="hd-icon hd-icon-arrow-up"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-down" data-card="toolbar" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}"><i class="hd-icon hd-icon-arrow-bottom"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-close" data-card="toolbar" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}"><i class="hd-icon hd-icon-close"></i></button>
@@ -536,6 +539,7 @@ class GraphMode {
                             <span class="card-title">${i18n ? i18n.t('panelCanvas') : 'Spline Canvas'}</span>
                         </div>
                         <div class="card-header-right">
+                            ${helpBtn('canvas')}
                             <button type="button" class="btn-card-ctrl btn-card-up" data-card="canvas" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}"><i class="hd-icon hd-icon-arrow-up"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-down" data-card="canvas" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}"><i class="hd-icon hd-icon-arrow-bottom"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-close" data-card="canvas" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}"><i class="hd-icon hd-icon-close"></i></button>
@@ -577,6 +581,7 @@ class GraphMode {
                             <span class="card-title">${i18n ? i18n.t('panelPoints') : 'Points Control'}</span>
                         </div>
                         <div class="card-header-right">
+                            ${helpBtn('points')}
                             <button type="button" class="btn-card-ctrl btn-card-up" data-card="points" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}"><i class="hd-icon hd-icon-arrow-up"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-down" data-card="points" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}"><i class="hd-icon hd-icon-arrow-bottom"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-close" data-card="points" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}"><i class="hd-icon hd-icon-close"></i></button>
@@ -630,6 +635,7 @@ class GraphMode {
                             <span class="card-title">${i18n ? i18n.t('panelPresets') : 'Presets & Folders'}</span>
                         </div>
                         <div class="card-header-right">
+                            ${helpBtn('presets')}
                             <button type="button" class="btn-card-ctrl btn-card-up" data-card="presets" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}"><i class="hd-icon hd-icon-arrow-up"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-down" data-card="presets" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}"><i class="hd-icon hd-icon-arrow-bottom"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-close" data-card="presets" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}"><i class="hd-icon hd-icon-close"></i></button>
@@ -2441,25 +2447,39 @@ class GraphMode {
             const customPresets = this.getCustomPresets();
             const customFolders = this.getCustomFolders();
             const collapsedFolders = this.getCollapsedFolders();
+            const folderOverrides = this.getBuiltInFolderOverrides();
 
             const builtInFolders = [
-                { id: 'builtin', name: i18n ? i18n.t('folderBuiltIn') : 'Basic' },
-                { id: 'shapes', name: i18n ? i18n.t('folderShapes') : 'Curves' },
-                { id: 'dynamics', name: i18n ? i18n.t('folderDynamics') : 'Dynamics' }
+                { id: 'builtin', name: i18n ? i18n.t('folderBuiltIn') : 'Basic', isBuiltIn: true },
+                { id: 'shapes', name: i18n ? i18n.t('folderShapes') : 'Curves', isBuiltIn: true },
+                { id: 'dynamics', name: i18n ? i18n.t('folderDynamics') : 'Dynamics', isBuiltIn: true }
             ];
 
-            // Render Built-in folders if active filter matches
-            builtInFolders.forEach((folder) => {
-                if (this.activeFolderFilter !== 'all' && this.activeFolderFilter !== folder.id) {
-                    return;
-                }
+            const allFolders = [
+                ...builtInFolders,
+                ...customFolders
+            ];
 
+            const visibleFolders = this.activeFolderFilter === 'all'
+                ? allFolders
+                : allFolders.filter((f) => f.id === this.activeFolderFilter);
+
+            visibleFolders.forEach((folder) => {
                 const isCollapsed = collapsedFolders.includes(folder.id);
-                const folderOverrides = this.getBuiltInFolderOverrides();
-                const availablePresets = DEFAULT_PRESETS_DATA.filter((p) => {
+
+                // Find all built-ins in this folder
+                const folderBuiltIns = DEFAULT_PRESETS_DATA.filter((p) => {
                     const targetFolder = folderOverrides[p.id] || p.folder;
                     return targetFolder === folder.id && !deletedBuiltIns.includes(p.id);
                 });
+
+                // Find all custom presets in this folder
+                const folderCustoms = customPresets.filter((p) => {
+                    const targetFolder = p.folderId || 'general';
+                    return targetFolder === folder.id;
+                });
+
+                const totalPresetsCount = folderBuiltIns.length + folderCustoms.length;
 
                 const groupEl = document.createElement('div');
                 groupEl.className = `custom-folder-group ${isCollapsed ? 'is-collapsed' : ''}`;
@@ -2473,32 +2493,51 @@ class GraphMode {
 
                 const titleEl = document.createElement('span');
                 titleEl.className = 'custom-folder-group-title';
-                titleEl.innerHTML = `${FOLDER_ICON_SVG} <span>${folder.name} (${availablePresets.length})</span>`;
+                titleEl.innerHTML = `${FOLDER_ICON_SVG} <span>${folder.name} (${totalPresetsCount})</span>`;
                 titleEl.title = isCollapsed
                     ? (i18n ? i18n.t('expandFolderTitle') : 'Expand folder')
                     : (i18n ? i18n.t('collapseFolderTitle') : 'Collapse folder');
 
                 headerLeftEl.appendChild(titleEl);
                 headerEl.appendChild(headerLeftEl);
-                headerEl.addEventListener('click', () => {
+
+                // If user custom folder and not 'general', allow deleting folder
+                if (!folder.isBuiltIn && folder.id !== 'general') {
+                    const btnDelFolder = document.createElement('button');
+                    btnDelFolder.type = 'button';
+                    btnDelFolder.className = 'btn-del-folder';
+                    btnDelFolder.innerHTML = '<i class="hd-icon hd-icon-close"></i>';
+                    btnDelFolder.title = i18n ? i18n.t('deleteFolderTitle') : 'Delete folder';
+                    btnDelFolder.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.deleteCustomFolder(folder.id);
+                    });
+                    headerEl.appendChild(btnDelFolder);
+                }
+
+                headerEl.addEventListener('click', (e) => {
+                    if (e.target.closest('.btn-del-folder')) return;
                     this.toggleFolderCollapse(folder.id);
                 });
+
                 groupEl.appendChild(headerEl);
 
                 const itemsListEl = document.createElement('div');
                 itemsListEl.className = 'custom-folder-items-list';
 
-                if (availablePresets.length === 0) {
+                if (totalPresetsCount === 0) {
                     const emptyEl = document.createElement('span');
                     emptyEl.className = 'no-custom-presets-hint';
                     emptyEl.textContent = i18n ? i18n.t('noCustomPresets') : 'No presets in this folder';
                     itemsListEl.appendChild(emptyEl);
                 } else {
-                    availablePresets.forEach((p) => {
+                    // 1. Render built-in presets in this folder
+                    folderBuiltIns.forEach((p) => {
                         const item = document.createElement('div');
                         const isActive = cur && cur.preset === p.id;
                         item.className = `custom-preset-chip ${isActive ? 'active' : ''}`;
                         item.dataset.presetId = p.id;
+                        item.dataset.presetType = 'builtin';
 
                         const btnApply = document.createElement('button');
                         btnApply.type = 'button';
@@ -2524,76 +2563,14 @@ class GraphMode {
                         item.appendChild(btnDel);
                         itemsListEl.appendChild(item);
                     });
-                }
 
-                groupEl.appendChild(itemsListEl);
-                presetsListEl.appendChild(groupEl);
-            });
-
-            // Render Custom folders if active filter matches
-            const targetCustomFolders = this.activeFolderFilter === 'all'
-                ? customFolders
-                : customFolders.filter((f) => f.id === this.activeFolderFilter);
-
-            targetCustomFolders.forEach((folder) => {
-                const isCollapsed = collapsedFolders.includes(folder.id);
-                const folderPresets = customPresets.filter((p) => (p.folderId || 'general') === folder.id);
-
-                const groupEl = document.createElement('div');
-                groupEl.className = `custom-folder-group ${isCollapsed ? 'is-collapsed' : ''}`;
-                groupEl.dataset.dropFolder = folder.id;
-
-                const headerEl = document.createElement('div');
-                headerEl.className = 'custom-folder-group-header';
-
-                const headerLeftEl = document.createElement('div');
-                headerLeftEl.className = 'custom-folder-header-left';
-
-                const titleEl = document.createElement('span');
-                titleEl.className = 'custom-folder-group-title';
-                titleEl.innerHTML = `${FOLDER_ICON_SVG} <span>${folder.name} (${folderPresets.length})</span>`;
-                titleEl.title = isCollapsed
-                    ? (i18n ? i18n.t('expandFolderTitle') : 'Expand folder')
-                    : (i18n ? i18n.t('collapseFolderTitle') : 'Collapse folder');
-
-                headerLeftEl.appendChild(titleEl);
-                headerEl.appendChild(headerLeftEl);
-
-                // If user folder and not 'general', allow deleting folder
-                if (folder.id !== 'general') {
-                    const btnDelFolder = document.createElement('button');
-                    btnDelFolder.type = 'button';
-                    btnDelFolder.className = 'btn-del-folder';
-                    btnDelFolder.innerHTML = '<i class="hd-icon hd-icon-close"></i>';
-                    btnDelFolder.title = i18n ? i18n.t('deleteFolderTitle') : 'Delete folder';
-                    btnDelFolder.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        this.deleteCustomFolder(folder.id);
-                    });
-                    headerEl.appendChild(btnDelFolder);
-                }
-
-                headerEl.addEventListener('click', (e) => {
-                    if (e.target.closest('.btn-del-folder')) return;
-                    this.toggleFolderCollapse(folder.id);
-                });
-
-                groupEl.appendChild(headerEl);
-
-                const itemsListEl = document.createElement('div');
-                itemsListEl.className = 'custom-folder-items-list';
-
-                if (folderPresets.length === 0) {
-                    const emptyEl = document.createElement('span');
-                    emptyEl.className = 'no-custom-presets-hint';
-                    emptyEl.textContent = i18n ? i18n.t('noCustomPresets') : 'No presets in this folder';
-                    itemsListEl.appendChild(emptyEl);
-                } else {
-                    folderPresets.forEach((p) => {
+                    // 2. Render custom presets in this folder
+                    folderCustoms.forEach((p) => {
                         const item = document.createElement('div');
                         const isActive = cur && cur.preset === ('custom_' + p.id);
                         item.className = `custom-preset-chip ${isActive ? 'active' : ''}`;
                         item.dataset.presetId = p.id;
+                        item.dataset.presetType = 'custom';
 
                         const btnApply = document.createElement('button');
                         btnApply.type = 'button';
@@ -2635,6 +2612,7 @@ class GraphMode {
                     return;
                 }
                 const presetId = chip.dataset.presetId;
+                const presetType = chip.dataset.presetType;
                 const srcGroup = chip.closest('[data-drop-folder]');
                 const srcFolder = srcGroup ? srcGroup.dataset.dropFolder : 'general';
                 const startX = e.clientX;
@@ -2657,6 +2635,15 @@ class GraphMode {
 
                 const clearHighlight = () => {
                     listEl.querySelectorAll('.is-drop-target').forEach((g) => g.classList.remove('is-drop-target'));
+                };
+
+                const cleanupDrag = () => {
+                    clearHighlight();
+                    listEl.classList.remove('is-dragging-preset');
+                    chip.classList.remove('is-drag-source');
+                    if (ghost && ghost.parentNode) {
+                        ghost.remove();
+                    }
                 };
 
                 const onMove = (ev) => {
@@ -2697,8 +2684,6 @@ class GraphMode {
                     chip.addEventListener('click', swallow, { capture: true, once: true });
                     setTimeout(() => chip.removeEventListener('click', swallow, true), 0);
 
-                    clearHighlight();
-                    listEl.classList.remove('is-dragging-preset');
                     const target = findTarget(ev.clientX, ev.clientY);
                     const destFolder = target ? target.dataset.dropFolder : null;
                     const ghostRect = ghost.getBoundingClientRect();
@@ -2709,7 +2694,7 @@ class GraphMode {
                         listEl.querySelectorAll('.custom-preset-chip[data-preset-id]').forEach((c) => {
                             before[c.dataset.presetId] = c.getBoundingClientRect();
                         });
-                        const isBuiltIn = DEFAULT_PRESETS_DATA.some((x) => x.id === presetId);
+                        const isBuiltIn = presetType === 'builtin' || DEFAULT_PRESETS_DATA.some((x) => x.id === presetId);
                         if (isBuiltIn) {
                             const overrides = self.getBuiltInFolderOverrides();
                             overrides[presetId] = destFolder;
@@ -2729,7 +2714,7 @@ class GraphMode {
                             self.saveCollapsedFolders(collapsed);
                         }
                         self.renderCustomPresets();
-                        ghost.remove();
+                        cleanupDrag();
                         const newList = self.container.querySelector('#custom-presets-list');
                         if (newList) {
                             newList.querySelectorAll('.custom-preset-chip[data-preset-id]').forEach((c) => {
@@ -2759,8 +2744,7 @@ class GraphMode {
                             { duration: 220, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }
                         );
                         anim.onfinish = () => {
-                            ghost.remove();
-                            chip.classList.remove('is-drag-source');
+                            cleanupDrag();
                         };
                     }
                 };
@@ -3844,13 +3828,13 @@ class GraphMode {
         };
 
         this.setupLetterEditing();
-        const helpBtn = this.container.querySelector('#btn-curves-help');
-        if (helpBtn) {
+        this.container.querySelectorAll('.btn-panel-help, #btn-curves-help').forEach((helpBtn) => {
             helpBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                this.showCurvesHelp();
+                const topic = helpBtn.dataset.topic || 'canvas';
+                this.showCurvesHelp(topic);
             });
-        }
+        });
 
         this.canvas.addEventListener('pointerdown', onDown);
         this.canvas.addEventListener('pointermove', onMove);
@@ -4891,6 +4875,7 @@ class GraphMode {
         ctx.save();
         const step = n > 1 ? 1 / (n - 1) : 0.5;
         const threshold = Math.min(0.04, step * 0.45);
+        const greenColor = '#10b981';
 
         for (let i = 0; i < n; i++) {
             const x = n > 1 ? i / (n - 1) : 0;
@@ -4902,20 +4887,20 @@ class GraphMode {
             const isHovered = this.hoveredDistIndex === i;
 
             ctx.beginPath();
-            const radius = isHovered ? 5.5 : (isAnchor ? 4.2 : 3.0);
+            const radius = isHovered ? 5.5 : (isAnchor ? 4.2 : 3.2);
             ctx.arc(px, py, radius, 0, Math.PI * 2);
 
             if (isHovered) {
                 ctx.fillStyle = '#ffffff';
-                ctx.strokeStyle = cur.color;
+                ctx.strokeStyle = greenColor;
                 ctx.lineWidth = 2.5;
             } else if (isAnchor) {
-                ctx.fillStyle = cur.color;
+                ctx.fillStyle = greenColor;
                 ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 1.8;
+                ctx.lineWidth = 2.0;
             } else {
-                ctx.fillStyle = '#ffffff';
-                ctx.strokeStyle = cur.color;
+                ctx.fillStyle = greenColor;
+                ctx.strokeStyle = '#ffffff';
                 ctx.lineWidth = 1.2;
             }
             ctx.fill();
@@ -4924,42 +4909,135 @@ class GraphMode {
         ctx.restore();
     }
 
-    showCurvesHelp() {
+    showCurvesHelp(initialTopic = 'canvas') {
         const en = window.i18n && window.i18n.currentLang === 'en';
-        const rows = en ? [
-            ['Add point', 'Double-click on the curve'],
-            ['Delete point', 'Double-click on a point / Delete / Backspace'],
-            ['Move point or handle', 'Drag'],
-            ['Break / smooth handle', 'Double-click the handle knob'],
-            ['Unlink handle while dragging', 'Alt + Drag handle'],
-            ['Remove handles', 'Alt + Right-click'],
-            ['Add to selection', 'Shift + Click'],
-            ['Lock axis while dragging', 'Shift + Drag'],
-            ['Box / lasso select', 'Drag on empty area / Alt + Drag'],
-            ['Undo', 'Ctrl + Z'],
-            ['Redo', 'Ctrl + Y / Ctrl + Shift + Z'],
-            ['Show distribution points', 'Checkbox under canvas; drag any point or bar to shape the curve directly'],
-            ['Reset a point on the curve', 'Double-click the point or its bar to remove the anchor'],
-            ['Reset entire curve', '↺ button in distribution header'],
-            ['Move templates between folders', 'Drag and drop preset chip onto any folder']
-        ] : [
-            ['Ավելացնել կետ', 'Կրկնակի կտտոց կորի վրա'],
-            ['Ջնջել կետ', 'Կրկնակի կտտոց կետի վրա / Delete / Backspace'],
-            ['Տեղափոխել կետը կամ լծակը', 'Քաշել'],
-            ['Կոտրել / սահունացնել լծակը', 'Կրկնակի կտտոց լծակի վրա'],
-            ['Ապակապել լծակը քաշելիս', 'Alt + Քաշել լծակը'],
-            ['Վերացնել լծակները', 'Alt + Աջ կտտոց'],
-            ['Ավելացնել ընտրությանը', 'Shift + Կտտոց'],
-            ['Կողպել առանցքը քաշելիս', 'Shift + Քաշել'],
-            ['Ընտրել շրջանակով / լասսոյով', 'Քաշել դատարկ տեղում / Alt + Քաշել'],
-            ['Հետարկել', 'Ctrl + Z'],
-            ['Վերարկել', 'Ctrl + Y / Ctrl + Shift + Z'],
-            ['Ցուցադրել բաշխիչ կետերը', 'Նշատուփ կտավի տակ. կետը կամ սյունը քաշելով անմիջապես փոխվում է կորի տեսքը'],
-            ['Վերականգնել կետը կորի վրա', 'Կրկնակի կտտոց կետի կամ սյան վրա՝ կետը կորից հեռացնելու համար'],
-            ['Վերականգնել ամբողջ կորը', '↺ կոճակ բաշխման հեդրում'],
-            ['Տեղափոխել կաղապարները պանակներում', 'Քաշել և գցել կաղապարը ցանկացած պանակի մեջ']
-        ];
-        const title = en ? 'Curve panel: features & shortcuts' : 'Կորերի փեղկ՝ հնարավորություններ և ստեղներ';
+
+        const topics = en ? {
+            canvas: {
+                tab: 'Canvas',
+                title: 'Curves Canvas',
+                rows: [
+                    ['Add point', 'Double-click on the curve'],
+                    ['Delete point', 'Double-click on a point / Delete / Backspace'],
+                    ['Move point or handle', 'Drag with mouse'],
+                    ['Break / smooth handle', 'Double-click the handle knob'],
+                    ['Unlink handle while dragging', 'Alt + Drag handle'],
+                    ['Remove handles', 'Alt + Right-click'],
+                    ['Add to selection', 'Shift + Click'],
+                    ['Lock axis while dragging', 'Shift + Drag'],
+                    ['Box / lasso select', 'Drag on empty area / Alt + Drag'],
+                    ['Undo / Redo', 'Ctrl + Z / Ctrl + Y (Ctrl + Shift + Z)'],
+                    ['Show distribution points', 'Checkbox under canvas; drag green point or bar to shape curve directly'],
+                    ['Reset anchor on curve', 'Double-click the point or its bar to remove anchor'],
+                    ['Reset entire curve', '↺ button in distribution header']
+                ]
+            },
+            curves: {
+                tab: 'Curves',
+                title: 'Curve Layers',
+                rows: [
+                    ['Add curve layer', 'Select axis from dropdown and click "+ Add Curve"'],
+                    ['Activate curve', 'Click on curve pill to make it active for editing'],
+                    ['Show / hide curve', 'Click eye icon on curve pill to toggle visibility'],
+                    ['Remove curve', 'Click "×" on curve pill to delete layer']
+                ]
+            },
+            toolbar: {
+                tab: 'Toolbar',
+                title: 'Axis Settings',
+                rows: [
+                    ['Active Curve Axis', 'Change font axis (wght, wdth, opsz, etc.) bound to active curve'],
+                    ['Map Across', 'Choose Characters (per-glyph) or Selected Items (per-object)']
+                ]
+            },
+            points: {
+                tab: 'Points',
+                title: 'Points Control',
+                rows: [
+                    ['Select point', 'Click point chip or click point directly on canvas'],
+                    ['Exact coordinates', 'Edit numeric X and Y inputs (0.0 to 1.0) for precision'],
+                    ['Link / unlink handles', 'Toggle handle symmetry button (Linked / Broken)'],
+                    ['Delete point', 'Delete button or Delete / Backspace key'],
+                    ['Point history', 'Undo / Redo buttons for point edits']
+                ]
+            },
+            presets: {
+                tab: 'Presets',
+                title: 'Presets & Folders',
+                rows: [
+                    ['Save preset', 'Click "+ Create Preset", enter name and target folder'],
+                    ['Create folder', 'Click "+ New Folder", enter folder name'],
+                    ['Move presets between folders', 'Drag and drop preset chip onto any folder header'],
+                    ['Filter by folder', 'Click folder chips at the top (All, Basic, Curves, etc.)'],
+                    ['Export / Import', 'Save or load presets via JSON file'],
+                    ['Delete preset / folder', 'Click "×" icon']
+                ]
+            }
+        } : {
+            canvas: {
+                tab: 'Կտավ',
+                title: 'Կորերի Կտավ',
+                rows: [
+                    ['Ավելացնել կետ', 'Կրկնակի կտտոց կորի վրա'],
+                    ['Ջնջել կետ', 'Կրկնակի կտտոց կետի վրա / Delete / Backspace'],
+                    ['Տեղափոխել կետը կամ լծակը', 'Քաշել մկնիկով'],
+                    ['Կոտրել / սահունացնել լծակը', 'Կրկնակի կտտոց լծակի գնդիկի վրա'],
+                    ['Ապակապել լծակը քաշելիս', 'Alt + Քաշել լծակը'],
+                    ['Վերացնել լծակները', 'Alt + Աջ կտտոց'],
+                    ['Ավելացնել ընտրությանը', 'Shift + Կտտոց'],
+                    ['Կողպել առանցքը քաշելիս', 'Shift + Քաշել'],
+                    ['Ընտրել շրջանակով / լասսոյով', 'Քաշել դատարկ տեղում / Alt + Քաշել'],
+                    ['Հետարկել / Վերարկել', 'Ctrl + Z / Ctrl + Y (Ctrl + Shift + Z)'],
+                    ['Ցուցադրել բաշխիչ կետերը', 'Նշատուփ կտավի տակ. կանաչ կետը կամ սյունը քաշելով անմիջապես փոխվում է կորի տեսքը'],
+                    ['Վերականգնել կետը կորի վրա', 'Կրկնակի կտտոց կետի կամ սյան վրա՝ կետը կորից հեռացնելու համար'],
+                    ['Վերականգնել ամբողջ կորը', '↺ կոճակ բաշխման հեդրում']
+                ]
+            },
+            curves: {
+                tab: 'Շերտեր',
+                title: 'Կորերի Շերտեր',
+                rows: [
+                    ['Ավելացնել նոր կոր', 'Ընտրել առանցքը ցանկից և սեղմել «+ Ավելացնել Կոր»'],
+                    ['Ակտիվացնել կորը', 'Կտտացնել համապատասխան կորի կոճակին (Pill)'],
+                    ['Թաքցնել / ցուցադրել կորը', 'Կտտացնել աչքի պատկերակին'],
+                    ['Հեռացնել կորը', 'Կտտացնել «×» կոճակին կորի վրա']
+                ]
+            },
+            toolbar: {
+                tab: 'Կարգավորումներ',
+                title: 'Առանցքների Կարգավորումներ',
+                rows: [
+                    ['Ակտիվ կորի առանցք', 'Փոխում է ընտրված կորի կապը տառատեսակի առանցքի հետ (wght, wdth, opsz, և այլն)'],
+                    ['Բաշխման թիրախ', '«Տառեր»՝ բաշխել յուրաքանչյուր տառի վրա, «Առարկաներ»՝ ընտրված տարրերի վրա']
+                ]
+            },
+            points: {
+                tab: 'Կետեր',
+                title: 'Կետերի Կառավարում',
+                rows: [
+                    ['Ընտրել կետ', 'Կտտացնել կետի կոճակին (Chip) կամ անմիջապես կտավի վրա'],
+                    ['Ճշգրիտ կոորդինատներ', 'Մուտքագրել X և Y թվային արժեքները (0.0 - 1.0)'],
+                    ['Կապակցված լծակներ', 'Միացնել / անջատել լծակների սիմետրիան («Կապված» կոճակ)'],
+                    ['Ջնջել կետը', '«Ջնջել» կոճակ կամ Delete / Backspace'],
+                    ['Կետի պատմություն', 'Undo / Redo կոճակներով հետարկել կամ վերականգնել']
+                ]
+            },
+            presets: {
+                tab: 'Պանակներ',
+                title: 'Կաղապարներ և Պանակներ',
+                rows: [
+                    ['Պահպանել կաղապար', 'Սեղմել «+ Ստեղծել Կաղապար», մուտքագրել անունը և ընտրել պանակը'],
+                    ['Ստեղծել պանակ', 'Սեղմել «+ Նոր Պանակ», գրել անունը և պահպանել'],
+                    ['Տեղափոխել կաղապարներ', 'Քաշել և գցել (Drag & Drop) ցանկացած կաղապար պանակների մեջ'],
+                    ['Ֆիլտրել ըստ պանակի', 'Կտտացնել վերևի պանակների կոճակներին (Բոլորը, Հիմնական, և այլն)'],
+                    ['Արտահանել / Ներմուծել', 'Export / Import կոճակներով պահպանել կամ բեռնել JSON ֆայլ'],
+                    ['Ջնջել կաղապար կամ պանակ', 'Կտտացնել «×» կոճակին']
+                ]
+            }
+        };
+
+        const modalTitle = en ? 'Features & shortcuts' : 'Հնարավորություններ և ստեղներ';
+        const startKey = topics[initialTopic] ? initialTopic : 'canvas';
 
         const old = document.getElementById('curves-help-overlay');
         if (old) {
@@ -4968,19 +5046,47 @@ class GraphMode {
         const ov = document.createElement('div');
         ov.id = 'curves-help-overlay';
         ov.className = 'app-modal-overlay';
+
+        const tabKeys = ['canvas', 'curves', 'toolbar', 'points', 'presets'];
+        const tabsHtml = tabKeys.map((k) => `
+            <button type="button" class="help-tab-btn ${k === startKey ? 'is-active' : ''}" data-topic="${k}">${topics[k].tab}</button>
+        `).join('');
+
+        const renderListHtml = (topicKey) => {
+            const topic = topics[topicKey] || topics.canvas;
+            return `
+                <div class="help-topic-heading" style="font-size: 11.5px; font-weight: 700; margin-bottom: 8px; color: var(--text-main);">${topic.title}</div>
+                <ul class="curves-help-list">
+                    ${topic.rows.map((r) => `<li><span class="help-what">${r[0]}</span><kbd class="help-key">${r[1]}</kbd></li>`).join('')}
+                </ul>
+            `;
+        };
+
         ov.innerHTML = `
             <div class="app-modal-dialog curves-help-dialog">
                 <div class="app-modal-header">
-                    <span class="app-modal-title">${title}</span>
+                    <span class="app-modal-title">${modalTitle}</span>
                     <button type="button" class="app-modal-close-btn"><i class="hd-icon hd-icon-close"></i></button>
                 </div>
-                <div class="app-modal-body">
-                    <ul class="curves-help-list">
-                        ${rows.map((r) => `<li><span class="help-what">${r[0]}</span><kbd class="help-key">${r[1]}</kbd></li>`).join('')}
-                    </ul>
+                <div class="help-dialog-tabs">${tabsHtml}</div>
+                <div class="app-modal-body" id="help-dialog-body">
+                    ${renderListHtml(startKey)}
                 </div>
             </div>`;
+
         document.body.appendChild(ov);
+
+        const listContainer = ov.querySelector('#help-dialog-body');
+        ov.querySelectorAll('.help-tab-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                ov.querySelectorAll('.help-tab-btn').forEach((b) => b.classList.remove('is-active'));
+                btn.classList.add('is-active');
+                if (listContainer) {
+                    listContainer.innerHTML = renderListHtml(btn.dataset.topic);
+                }
+            });
+        });
+
         const close = () => {
             ov.classList.remove('is-open');
             setTimeout(() => ov.remove(), 260);
