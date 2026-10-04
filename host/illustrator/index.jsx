@@ -1001,6 +1001,89 @@ var VariableFontPlugin = {
         return best;
     },
 
+    getFontWeight: function(cand) {
+        if (!cand) return 400;
+        var s = ((cand.style || '') + ' ' + (cand.name || '')).toLowerCase();
+        if (s.indexOf('extrablack') !== -1 || s.indexOf('extra black') !== -1 || s.indexOf('ultrablack') !== -1) return 950;
+        if (s.indexOf('black') !== -1 || s.indexOf('heavy') !== -1) return 900;
+        if (s.indexOf('extrabold') !== -1 || s.indexOf('extra bold') !== -1 || s.indexOf('ultrabold') !== -1) return 800;
+        if (s.indexOf('semibold') !== -1 || s.indexOf('semi bold') !== -1 || s.indexOf('demi') !== -1) return 600;
+        if (s.indexOf('bold') !== -1) return 700;
+        if (s.indexOf('medium') !== -1) return 500;
+        if (s.indexOf('book') !== -1) return 350;
+        if (s.indexOf('extralight') !== -1 || s.indexOf('extra light') !== -1 || s.indexOf('ultralight') !== -1) return 200;
+        if (s.indexOf('light') !== -1) return 300;
+        if (s.indexOf('thin') !== -1 || s.indexOf('hairline') !== -1) return 100;
+        return 400;
+    },
+
+    findBaseFontForWeight: function(family, targetWght, fontName, targetSlnt) {
+        var candidates = VariableFontPlugin.getFamilyFonts(family, fontName);
+        if (candidates.length === 0) return null;
+        if (candidates.length === 1) return candidates[0];
+
+        var targetItalic = (targetSlnt !== null && targetSlnt !== undefined && targetSlnt < -2);
+        var eligible = [];
+        for (var i = 0; i < candidates.length; i++) {
+            var cand = candidates[i];
+            var s = ((cand.style || '') + ' ' + (cand.name || '')).toLowerCase();
+            var isItalic = (s.indexOf('italic') !== -1 || s.indexOf('oblique') !== -1);
+            if (isItalic === targetItalic) {
+                eligible.push(cand);
+            }
+        }
+        if (eligible.length === 0) eligible = candidates;
+
+        // Prefer highest weight candidate that is <= targetWght
+        var bestUnder = null;
+        var maxUnderW = -1;
+        var bestOverall = eligible[0];
+        var minOverallDiff = 999999;
+
+        for (var j = 0; j < eligible.length; j++) {
+            var c = eligible[j];
+            var w = VariableFontPlugin.getFontWeight(c);
+            var diff = Math.abs(w - targetWght);
+            if (diff < minOverallDiff) {
+                minOverallDiff = diff;
+                bestOverall = c;
+            }
+            if (w <= targetWght && w > maxUnderW) {
+                maxUnderW = w;
+                bestUnder = c;
+            }
+        }
+        return bestUnder || bestOverall;
+    },
+
+    applySmoothWeight: function(charAttr, targetWght, family, fontName, targetSlnt) {
+        if (!charAttr || targetWght === undefined || targetWght === null) return;
+        var numWght = Number(targetWght);
+        var baseFont = VariableFontPlugin.findBaseFontForWeight(family, numWght, fontName, targetSlnt);
+        if (baseFont) {
+            try { charAttr.textFont = baseFont; } catch(eTf) {}
+        }
+        var baseW = baseFont ? VariableFontPlugin.getFontWeight(baseFont) : 400;
+        var diff = numWght - baseW;
+
+        if (diff > 2) {
+            var sz = 12;
+            try { sz = Number(charAttr.size || 12); } catch(eSz) {}
+            var strokeW = (diff / 300) * (sz * 0.055);
+            try {
+                if (charAttr.fillColor && charAttr.fillColor.typename !== 'NoColor') {
+                    charAttr.strokeColor = charAttr.fillColor;
+                }
+                charAttr.strokeWeight = Math.round(strokeW * 100) / 100;
+            } catch(eSt) {}
+        } else {
+            try {
+                charAttr.strokeWeight = 0;
+                charAttr.strokeColor = new NoColor();
+            } catch(eNoSt) {}
+        }
+    },
+
     applyParameters: function(jsonPayload) {
         try {
             if (!app.documents.length) {
@@ -1030,7 +1113,16 @@ var VariableFontPlugin = {
                     try { curFont = selectedTextRange.characters[0].characterAttributes.textFont; } catch(eCf2) {}
                 }
 
-                if (curFont && (params.wght !== undefined || params.wdth !== undefined || params.slnt !== undefined || params.opsz !== undefined)) {
+                if (curFont && params.wght !== undefined) {
+                    VariableFontPlugin.applySmoothWeight(selectedTextRange.characterAttributes, params.wght, curFont.family, curFont.name, params.slnt);
+                    try {
+                        var chs = selectedTextRange.characters;
+                        var chLen = chs.length;
+                        for (var ci = 0; ci < chLen; ci++) {
+                            VariableFontPlugin.applySmoothWeight(chs[ci].characterAttributes, params.wght, curFont.family, curFont.name, params.slnt);
+                        }
+                    } catch(eLoopChW) {}
+                } else if (curFont && (params.wdth !== undefined || params.slnt !== undefined || params.opsz !== undefined)) {
                     var targetF = VariableFontPlugin.findNearestFontInstance(curFont.family, params, curFont.name);
                     if (targetF) {
                         try { selectedTextRange.characterAttributes.textFont = targetF; } catch(eSetF) {}
@@ -1088,7 +1180,16 @@ var VariableFontPlugin = {
                         try { curFont = item.textRange.characters[0].characterAttributes.textFont; } catch(eCf4) {}
                     }
 
-                    if (curFont && (params.wght !== undefined || params.wdth !== undefined || params.slnt !== undefined || params.opsz !== undefined)) {
+                    if (curFont && params.wght !== undefined) {
+                        VariableFontPlugin.applySmoothWeight(item.textRange.characterAttributes, params.wght, curFont.family, curFont.name, params.slnt);
+                        try {
+                            var chs = item.textRange.characters;
+                            var chLen = chs.length;
+                            for (var ci = 0; ci < chLen; ci++) {
+                                VariableFontPlugin.applySmoothWeight(chs[ci].characterAttributes, params.wght, curFont.family, curFont.name, params.slnt);
+                            }
+                        } catch(eLoopTfW) {}
+                    } else if (curFont && (params.wdth !== undefined || params.slnt !== undefined || params.opsz !== undefined)) {
                         var targetF = VariableFontPlugin.findNearestFontInstance(curFont.family, params, curFont.name);
                         if (targetF) {
                             try { item.textRange.characterAttributes.textFont = targetF; } catch(eSetF2) {}
@@ -1220,7 +1321,9 @@ var VariableFontPlugin = {
                     var charFont = sampleFont;
                     try { charFont = charAttr.textFont || sampleFont; } catch(eCf) {}
 
-                    if (charFont && (p.wght !== undefined || p.wdth !== undefined || p.slnt !== undefined || p.opsz !== undefined)) {
+                    if (p.wght !== undefined) {
+                        VariableFontPlugin.applySmoothWeight(charAttr, p.wght, charFont ? charFont.family : famKey, charFont ? charFont.name : fontNameKey, p.slnt);
+                    } else if (charFont && (p.wdth !== undefined || p.slnt !== undefined || p.opsz !== undefined)) {
                         var targetF = VariableFontPlugin.findNearestFontInstance(charFont.family || famKey, p, charFont.name || fontNameKey);
                         if (targetF) {
                             try { charAttr.textFont = targetF; } catch(eSetTf) {}
@@ -1285,15 +1388,25 @@ var VariableFontPlugin = {
                             }
 
                             if (curF) {
-                                var targetF = VariableFontPlugin.findNearestFontInstance(curF.family, p, curF.name);
-                                if (targetF && ca) {
-                                    try { ca.textFont = targetF; } catch(eSetTf3) {}
+                                if (p.wght !== undefined && ca) {
+                                    VariableFontPlugin.applySmoothWeight(ca, p.wght, curF.family, curF.name, p.slnt);
                                     try {
                                         var chs = tr.characters;
                                         for (var ci = 0; ci < chs.length; ci++) {
-                                            try { chs[ci].characterAttributes.textFont = targetF; } catch(eChF3) {}
+                                            VariableFontPlugin.applySmoothWeight(chs[ci].characterAttributes, p.wght, curF.family, curF.name, p.slnt);
                                         }
-                                    } catch(eLoopCh3) {}
+                                    } catch(eLoopW3) {}
+                                } else if (p.wdth !== undefined || p.slnt !== undefined || p.opsz !== undefined) {
+                                    var targetF = VariableFontPlugin.findNearestFontInstance(curF.family, p, curF.name);
+                                    if (targetF && ca) {
+                                        try { ca.textFont = targetF; } catch(eSetTf3) {}
+                                        try {
+                                            var chs = tr.characters;
+                                            for (var ci = 0; ci < chs.length; ci++) {
+                                                try { chs[ci].characterAttributes.textFont = targetF; } catch(eChF3) {}
+                                            }
+                                        } catch(eLoopCh3) {}
+                                    }
                                 }
                                 var map = VariableFontPlugin.getFamilyAxisMapping(curF.family);
                                 if (p.wdth !== undefined && ca) {

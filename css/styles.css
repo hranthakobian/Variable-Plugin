@@ -4285,30 +4285,70 @@ body.light-theme .update-toast-title,
     color: var(--text-muted);
 }
 
-/* Folder header: icon + name on one line, vertically centered */
+/* Folder header: icon + name on one line, centered in middle of header, collapse arrow hidden */
 .custom-folder-group-header {
+    display: flex;
     align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 5px 8px;
+    cursor: pointer;
+    user-select: none;
 }
 
 .custom-folder-header-left {
-    flex: 1;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
+    width: 100%;
     min-height: 24px;
 }
 
 .custom-folder-group-title {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    justify-content: center;
+    gap: 8px;
     white-space: nowrap;
     line-height: 1;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.custom-folder-group-title svg {
+    flex-shrink: 0;
+}
+
+.btn-folder-collapse {
+    display: none !important;
+}
+
+.btn-del-folder {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 2px 4px;
+    color: var(--text-muted);
+    border-radius: 3px;
+}
+
+.btn-del-folder:hover {
+    color: #ef4444;
 }
 
 .folder-chip {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     white-space: nowrap;
+}
+
+.folder-chip svg {
+    flex-shrink: 0;
 }
 
 .custom-preset-chip[data-preset-id] {

@@ -1,3 +1,6 @@
+﻿// Folder icon
+const FOLDER_ICON_SVG = '<svg width="22" height="18" viewBox="0 0 104 85" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; flex-shrink: 0;"><path d="M4 4L4 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M28 4L28 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M16 4L16 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M40 11L40 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M76 18L76 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M64 18L64 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M100 18L100 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M52 18L52 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M88 18L88 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path></svg>';
+
 /**
  * Graph Studio Mode (Dedicated Multi-Point Spline Studio)
  * Interactive HTML5 Canvas multi-curve spline editor that maps non-linear value
@@ -471,6 +474,7 @@ class GraphMode {
                             <span class="card-title">${i18n ? i18n.t('panelCurves') : 'Curve Layers'}</span>
                         </div>
                         <div class="card-header-right">
+                            <button type="button" class="btn-card-ctrl btn-curves-help" id="btn-curves-help" title="${i18n && i18n.currentLang === 'en' ? 'Features & shortcuts' : 'Հնարավորություններ և ստեղներ'}">?</button>
                             <button type="button" class="btn-card-ctrl btn-card-up" data-card="curves" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}"><i class="hd-icon hd-icon-arrow-up"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-down" data-card="curves" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}"><i class="hd-icon hd-icon-arrow-bottom"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-close" data-card="curves" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}"><i class="hd-icon hd-icon-close"></i></button>
@@ -547,10 +551,15 @@ class GraphMode {
                                 <span class="ann-x-end">${i18n ? i18n.t('annEnd') : 'End [N]'}</span>
                             </div>
                         </div>
+                        <label class="dist-points-toggle">
+                            <input type="checkbox" id="chk-show-dist-points">
+                            <span>${i18n && i18n.currentLang === 'en' ? 'Show distribution points on curve' : 'Ցուցադրել բաշխիչ կետերը կորի վրա'}</span>
+                        </label>
                         <div class="distribution-preview-wrap">
                             <div class="preview-header">
                                 <span id="preview-axis-label" class="preview-axis-label">${i18n ? i18n.t('charDistribution') : 'Տառերի բաշխում'}</span>
                                 <span id="preview-hover-readout" class="preview-hover-readout"></span>
+                                <button type="button" id="btn-reset-overrides" class="btn-reset-overrides" title="${i18n && i18n.currentLang === 'en' ? 'Reset all per-letter edits' : 'Վերականգնել տառերի բոլոր փոփոխությունները'}">&#8634;</button>
                                 <span id="preview-sample-count">16</span>
                             </div>
                             <div id="distribution-bars" class="distribution-bars"></div>
@@ -2007,6 +2016,21 @@ class GraphMode {
     // =========================================
     // Preset Folders & Custom Presets Management
     // =========================================
+    getBuiltInFolderOverrides() {
+        try {
+            const raw = localStorage.getItem('vf_builtin_folder_overrides');
+            return raw ? JSON.parse(raw) : {};
+        } catch (e) {
+            return {};
+        }
+    }
+
+    saveBuiltInFolderOverrides(map) {
+        try {
+            localStorage.setItem('vf_builtin_folder_overrides', JSON.stringify(map));
+        } catch (e) {}
+    }
+
     getCustomFolders() {
         try {
             const raw = localStorage.getItem('vf_custom_graph_folders');
@@ -2367,7 +2391,7 @@ class GraphMode {
             const builtInChip = document.createElement('button');
             builtInChip.type = 'button';
             builtInChip.className = `folder-chip ${this.activeFolderFilter === 'builtin' ? 'active' : ''}`;
-            builtInChip.innerHTML = `<i class="hd-icon hd-icon-hamburger-menu"></i> ${i18n ? i18n.t('folderBuiltIn') : 'Basic'}`;
+            builtInChip.innerHTML = `${FOLDER_ICON_SVG} ${i18n ? i18n.t('folderBuiltIn') : 'Basic'}`;
             builtInChip.addEventListener('click', () => {
                 this.activeFolderFilter = 'builtin';
                 this.renderCustomPresets();
@@ -2377,7 +2401,7 @@ class GraphMode {
             const shapesChip = document.createElement('button');
             shapesChip.type = 'button';
             shapesChip.className = `folder-chip ${this.activeFolderFilter === 'shapes' ? 'active' : ''}`;
-            shapesChip.innerHTML = `<i class="hd-icon hd-icon-hamburger-menu"></i> ${i18n ? i18n.t('folderShapes') : 'Curves'}`;
+            shapesChip.innerHTML = `${FOLDER_ICON_SVG} ${i18n ? i18n.t('folderShapes') : 'Curves'}`;
             shapesChip.addEventListener('click', () => {
                 this.activeFolderFilter = 'shapes';
                 this.renderCustomPresets();
@@ -2387,7 +2411,7 @@ class GraphMode {
             const dynamicsChip = document.createElement('button');
             dynamicsChip.type = 'button';
             dynamicsChip.className = `folder-chip ${this.activeFolderFilter === 'dynamics' ? 'active' : ''}`;
-            dynamicsChip.innerHTML = `<i class="hd-icon hd-icon-hamburger-menu"></i> ${i18n ? i18n.t('folderDynamics') : 'Dynamics'}`;
+            dynamicsChip.innerHTML = `${FOLDER_ICON_SVG} ${i18n ? i18n.t('folderDynamics') : 'Dynamics'}`;
             dynamicsChip.addEventListener('click', () => {
                 this.activeFolderFilter = 'dynamics';
                 this.renderCustomPresets();
@@ -2400,7 +2424,7 @@ class GraphMode {
                 const fChip = document.createElement('button');
                 fChip.type = 'button';
                 fChip.className = `folder-chip ${this.activeFolderFilter === f.id ? 'active' : ''}`;
-                fChip.innerHTML = `<i class="hd-icon hd-icon-hamburger-menu"></i> ${f.name}`;
+                fChip.innerHTML = `${FOLDER_ICON_SVG} ${f.name}`;
                 fChip.addEventListener('click', () => {
                     this.activeFolderFilter = f.id;
                     this.renderCustomPresets();
@@ -2431,10 +2455,15 @@ class GraphMode {
                 }
 
                 const isCollapsed = collapsedFolders.includes(folder.id);
-                const availablePresets = DEFAULT_PRESETS_DATA.filter((p) => p.folder === folder.id && !deletedBuiltIns.includes(p.id));
+                const folderOverrides = this.getBuiltInFolderOverrides();
+                const availablePresets = DEFAULT_PRESETS_DATA.filter((p) => {
+                    const targetFolder = folderOverrides[p.id] || p.folder;
+                    return targetFolder === folder.id && !deletedBuiltIns.includes(p.id);
+                });
 
                 const groupEl = document.createElement('div');
                 groupEl.className = `custom-folder-group ${isCollapsed ? 'is-collapsed' : ''}`;
+                groupEl.dataset.dropFolder = folder.id;
 
                 const headerEl = document.createElement('div');
                 headerEl.className = 'custom-folder-group-header';
@@ -2442,32 +2471,18 @@ class GraphMode {
                 const headerLeftEl = document.createElement('div');
                 headerLeftEl.className = 'custom-folder-header-left';
 
-                const btnCollapseFolder = document.createElement('button');
-                btnCollapseFolder.type = 'button';
-                btnCollapseFolder.className = 'btn-folder-collapse';
-                btnCollapseFolder.innerHTML = isCollapsed ? '<i class="hd-icon hd-icon-chevrolt-arrow-right"></i>' : '<i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i>';
-                btnCollapseFolder.title = isCollapsed
-                    ? (i18n ? i18n.t('expandFolderTitle') : 'Expand folder')
-                    : (i18n ? i18n.t('collapseFolderTitle') : 'Collapse folder');
-                btnCollapseFolder.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.toggleFolderCollapse(folder.id);
-                });
-
                 const titleEl = document.createElement('span');
                 titleEl.className = 'custom-folder-group-title';
-                titleEl.innerHTML = `<i class="hd-icon hd-icon-hamburger-menu"></i> ${folder.name} (${availablePresets.length})`;
-                titleEl.style.cursor = 'pointer';
+                titleEl.innerHTML = `${FOLDER_ICON_SVG} <span>${folder.name} (${availablePresets.length})</span>`;
                 titleEl.title = isCollapsed
                     ? (i18n ? i18n.t('expandFolderTitle') : 'Expand folder')
                     : (i18n ? i18n.t('collapseFolderTitle') : 'Collapse folder');
-                titleEl.addEventListener('click', () => {
-                    this.toggleFolderCollapse(folder.id);
-                });
 
-                headerLeftEl.appendChild(btnCollapseFolder);
                 headerLeftEl.appendChild(titleEl);
                 headerEl.appendChild(headerLeftEl);
+                headerEl.addEventListener('click', () => {
+                    this.toggleFolderCollapse(folder.id);
+                });
                 groupEl.appendChild(headerEl);
 
                 const itemsListEl = document.createElement('div');
@@ -2483,6 +2498,7 @@ class GraphMode {
                         const item = document.createElement('div');
                         const isActive = cur && cur.preset === p.id;
                         item.className = `custom-preset-chip ${isActive ? 'active' : ''}`;
+                        item.dataset.presetId = p.id;
 
                         const btnApply = document.createElement('button');
                         btnApply.type = 'button';
@@ -2525,6 +2541,7 @@ class GraphMode {
 
                 const groupEl = document.createElement('div');
                 groupEl.className = `custom-folder-group ${isCollapsed ? 'is-collapsed' : ''}`;
+                groupEl.dataset.dropFolder = folder.id;
 
                 const headerEl = document.createElement('div');
                 headerEl.className = 'custom-folder-group-header';
@@ -2532,30 +2549,13 @@ class GraphMode {
                 const headerLeftEl = document.createElement('div');
                 headerLeftEl.className = 'custom-folder-header-left';
 
-                const btnCollapseFolder = document.createElement('button');
-                btnCollapseFolder.type = 'button';
-                btnCollapseFolder.className = 'btn-folder-collapse';
-                btnCollapseFolder.innerHTML = isCollapsed ? '<i class="hd-icon hd-icon-chevrolt-arrow-right"></i>' : '<i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i>';
-                btnCollapseFolder.title = isCollapsed
-                    ? (i18n ? i18n.t('expandFolderTitle') : 'Expand folder')
-                    : (i18n ? i18n.t('collapseFolderTitle') : 'Collapse folder');
-                btnCollapseFolder.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.toggleFolderCollapse(folder.id);
-                });
-
                 const titleEl = document.createElement('span');
                 titleEl.className = 'custom-folder-group-title';
-                titleEl.innerHTML = `<i class="hd-icon hd-icon-hamburger-menu"></i> ${folder.name} (${folderPresets.length})`;
-                titleEl.style.cursor = 'pointer';
+                titleEl.innerHTML = `${FOLDER_ICON_SVG} <span>${folder.name} (${folderPresets.length})</span>`;
                 titleEl.title = isCollapsed
                     ? (i18n ? i18n.t('expandFolderTitle') : 'Expand folder')
                     : (i18n ? i18n.t('collapseFolderTitle') : 'Collapse folder');
-                titleEl.addEventListener('click', () => {
-                    this.toggleFolderCollapse(folder.id);
-                });
 
-                headerLeftEl.appendChild(btnCollapseFolder);
                 headerLeftEl.appendChild(titleEl);
                 headerEl.appendChild(headerLeftEl);
 
@@ -2573,6 +2573,11 @@ class GraphMode {
                     headerEl.appendChild(btnDelFolder);
                 }
 
+                headerEl.addEventListener('click', (e) => {
+                    if (e.target.closest('.btn-del-folder')) return;
+                    this.toggleFolderCollapse(folder.id);
+                });
+
                 groupEl.appendChild(headerEl);
 
                 const itemsListEl = document.createElement('div');
@@ -2588,6 +2593,7 @@ class GraphMode {
                         const item = document.createElement('div');
                         const isActive = cur && cur.preset === ('custom_' + p.id);
                         item.className = `custom-preset-chip ${isActive ? 'active' : ''}`;
+                        item.dataset.presetId = p.id;
 
                         const btnApply = document.createElement('button');
                         btnApply.type = 'button';
@@ -2617,9 +2623,154 @@ class GraphMode {
                 groupEl.appendChild(itemsListEl);
                 presetsListEl.appendChild(groupEl);
             });
+            this.setupPresetDragAndDrop(presetsListEl);
         }
     }
 
+    setupPresetDragAndDrop(listEl) {
+        const self = this;
+        listEl.querySelectorAll('.custom-preset-chip[data-preset-id]').forEach((chip) => {
+            chip.addEventListener('pointerdown', (e) => {
+                if (e.button !== 0 || e.target.closest('.btn-del-custom-preset')) {
+                    return;
+                }
+                const presetId = chip.dataset.presetId;
+                const srcGroup = chip.closest('[data-drop-folder]');
+                const srcFolder = srcGroup ? srcGroup.dataset.dropFolder : 'general';
+                const startX = e.clientX;
+                const startY = e.clientY;
+                let dragging = false;
+                let ghost = null;
+                let originRect = null;
+                let lastTarget = null;
+
+                const findTarget = (x, y) => {
+                    const els = document.elementsFromPoint(x, y);
+                    for (let k = 0; k < els.length; k++) {
+                        const g = els[k].closest ? els[k].closest('[data-drop-folder]') : null;
+                        if (g && listEl.contains(g)) {
+                            return g;
+                        }
+                    }
+                    return null;
+                };
+
+                const clearHighlight = () => {
+                    listEl.querySelectorAll('.is-drop-target').forEach((g) => g.classList.remove('is-drop-target'));
+                };
+
+                const onMove = (ev) => {
+                    if (!dragging) {
+                        if (Math.hypot(ev.clientX - startX, ev.clientY - startY) < 5) {
+                            return;
+                        }
+                        dragging = true;
+                        originRect = chip.getBoundingClientRect();
+                        ghost = chip.cloneNode(true);
+                        ghost.classList.add('preset-drag-ghost');
+                        ghost.style.cssText = `position:fixed;left:${originRect.left}px;top:${originRect.top}px;width:${originRect.width}px;height:${originRect.height}px;margin:0;z-index:10000;pointer-events:none;`;
+                        document.body.appendChild(ghost);
+                        chip.classList.add('is-drag-source');
+                        listEl.classList.add('is-dragging-preset');
+                    }
+                    ev.preventDefault();
+                    ghost.style.transform = `translate(${ev.clientX - startX}px, ${ev.clientY - startY}px) scale(1.06)`;
+                    const target = findTarget(ev.clientX, ev.clientY);
+                    if (target !== lastTarget) {
+                        clearHighlight();
+                        if (target && target.dataset.dropFolder !== srcFolder) {
+                            target.classList.add('is-drop-target');
+                        }
+                        lastTarget = target;
+                    }
+                };
+
+                const onUp = (ev) => {
+                    document.removeEventListener('pointermove', onMove, true);
+                    document.removeEventListener('pointerup', onUp, true);
+                    document.removeEventListener('pointercancel', onUp, true);
+                    if (!dragging) {
+                        return;
+                    }
+                    // swallow the click that follows a drag
+                    const swallow = (ce) => { ce.stopPropagation(); ce.preventDefault(); };
+                    chip.addEventListener('click', swallow, { capture: true, once: true });
+                    setTimeout(() => chip.removeEventListener('click', swallow, true), 0);
+
+                    clearHighlight();
+                    listEl.classList.remove('is-dragging-preset');
+                    const target = findTarget(ev.clientX, ev.clientY);
+                    const destFolder = target ? target.dataset.dropFolder : null;
+                    const ghostRect = ghost.getBoundingClientRect();
+
+                    if (destFolder && destFolder !== srcFolder) {
+                        // FLIP: remember positions, move, re-render, animate from old positions
+                        const before = {};
+                        listEl.querySelectorAll('.custom-preset-chip[data-preset-id]').forEach((c) => {
+                            before[c.dataset.presetId] = c.getBoundingClientRect();
+                        });
+                        const isBuiltIn = DEFAULT_PRESETS_DATA.some((x) => x.id === presetId);
+                        if (isBuiltIn) {
+                            const overrides = self.getBuiltInFolderOverrides();
+                            overrides[presetId] = destFolder;
+                            self.saveBuiltInFolderOverrides(overrides);
+                        } else {
+                            const presets = self.getCustomPresets();
+                            const p = presets.find((x) => String(x.id) === String(presetId));
+                            if (p) {
+                                p.folderId = destFolder;
+                                self.saveCustomPresetsList(presets);
+                            }
+                        }
+                        const collapsed = self.getCollapsedFolders();
+                        const ci = collapsed.indexOf(destFolder);
+                        if (ci !== -1) {
+                            collapsed.splice(ci, 1);
+                            self.saveCollapsedFolders(collapsed);
+                        }
+                        self.renderCustomPresets();
+                        ghost.remove();
+                        const newList = self.container.querySelector('#custom-presets-list');
+                        if (newList) {
+                            newList.querySelectorAll('.custom-preset-chip[data-preset-id]').forEach((c) => {
+                                const id = c.dataset.presetId;
+                                const nr = c.getBoundingClientRect();
+                                const from = (String(id) === String(presetId)) ? ghostRect : before[id];
+                                if (!from) {
+                                    return;
+                                }
+                                const dx = from.left - nr.left;
+                                const dy = from.top - nr.top;
+                                if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
+                                    return;
+                                }
+                                c.animate(
+                                    [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }],
+                                    { duration: 320, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }
+                                );
+                            });
+                        }
+                    } else {
+                        // Snap back smoothly
+                        const dx = originRect.left - ghostRect.left;
+                        const dy = originRect.top - ghostRect.top;
+                        const anim = ghost.animate(
+                            [{ transform: ghost.style.transform }, { transform: 'translate(0, 0) scale(1)' }],
+                            { duration: 220, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }
+                        );
+                        anim.onfinish = () => {
+                            ghost.remove();
+                            chip.classList.remove('is-drag-source');
+                        };
+                    }
+                };
+
+                document.addEventListener('pointermove', onMove, true);
+                document.addEventListener('pointerup', onUp, true);
+                document.addEventListener('pointercancel', onUp, true);
+            });
+        });
+    }
     getAxisRange(axisId) {
         if (this.availableAxes && this.availableAxes.length > 0) {
             const found = this.availableAxes.find((a) => a.id === axisId);
@@ -3692,6 +3843,15 @@ class GraphMode {
             handleCanvasDoubleClick(pos, e);
         };
 
+        this.setupLetterEditing();
+        const helpBtn = this.container.querySelector('#btn-curves-help');
+        if (helpBtn) {
+            helpBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.showCurvesHelp();
+            });
+        }
+
         this.canvas.addEventListener('pointerdown', onDown);
         this.canvas.addEventListener('pointermove', onMove);
         this.canvas.addEventListener('pointerup', onUp);
@@ -4036,11 +4196,12 @@ class GraphMode {
             // 5. Draw Distribution Hover Projection Lines & Floating Value Badge
             if (this.hoveredDistIndex !== null) {
                 const realCount = Math.max(1, this.itemCount || 16);
-                const count = Math.max(2, Math.min(48, realCount));
+                const count = Math.max(2, Math.min(128, realCount));
                 if (this.hoveredDistIndex >= 0 && this.hoveredDistIndex < count) {
                     const i = this.hoveredDistIndex;
-                    const xNorm = count > 1 ? i / (count - 1) : 0;
-                    const yNorm = this.evaluateCurveAtFor(activeCur, xNorm);
+                    const sampleIdx = this.getBarSampleIndex(i, count, realCount);
+                    const xNorm = realCount > 1 ? sampleIdx / (realCount - 1) : 0;
+                    const yNorm = this.getLetterY(activeCur, sampleIdx, realCount);
 
                     const pixX = pad + xNorm * plotW;
                     const pixY = h - pad - yNorm * plotH;
@@ -4054,7 +4215,6 @@ class GraphMode {
                     const axisName = window.i18n ? window.i18n.getAxisName(activeCur.axisId, rawAxisName) : rawAxisName;
                     const range = this.getAxisRange(activeCur.axisId);
                     const calculatedVal = Math.round(range.min + yNorm * (range.max - range.min));
-                    const sampleIdx = (realCount === count) ? i : Math.min(Math.round(xNorm * (realCount - 1)), realCount - 1);
                     const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
                     const letterDisplay = rawChar ? `'${rawChar}'` : `#${sampleIdx + 1}`;
 
@@ -4202,6 +4362,13 @@ class GraphMode {
             }
         }
 
+        if (this.showDistPoints) {
+            const dpCur = this.getActiveCurve();
+            if (dpCur) {
+                this.drawDistributionPoints(ctx, dpCur, pad, plotW, plotH, h);
+            }
+        }
+
         this.updateDistributionPreview();
     }
 
@@ -4233,7 +4400,7 @@ class GraphMode {
 
         barContainer.classList.remove('has-limit-warning');
         const realCount = Math.max(1, this.itemCount || 16);
-        const count = Math.max(2, Math.min(48, realCount));
+        const count = Math.max(2, Math.min(128, realCount));
         barContainer.classList.toggle('is-thin', count > 20);
         barContainer.classList.toggle('dist-bars-dense', count > 36);
         barContainer.classList.toggle('dist-bars-ultra', count > 44);
@@ -4257,83 +4424,29 @@ class GraphMode {
         }
 
         const hoverReadout = this.container.querySelector('#preview-hover-readout');
-        const existingItems = barContainer.querySelectorAll('.dist-bar-item');
+        let existingItems = barContainer.querySelectorAll('.dist-bar-item');
 
-        if (existingItems.length === count) {
-            // Update existing DOM elements without recreation to preserve hover interactions
-            existingItems.forEach((item, i) => {
-                const xNorm = count > 1 ? i / (count - 1) : 0;
-                const yNorm = this.evaluateCurveAtFor(cur, xNorm);
-                const heightPercent = Math.max(4, Math.round(yNorm * 100));
-                const calculatedVal = Math.round(range.min + yNorm * (range.max - range.min));
-
-                const sampleIdx = (realCount === count) ? i : Math.min(Math.round(xNorm * (realCount - 1)), realCount - 1);
-                const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
-                const letterDisplay = rawChar ? `${rawChar}` : `#${sampleIdx + 1}`;
-                const tipText = window.i18n
-                    ? window.i18n.t('distBarLetterTip', { char: `'${letterDisplay}'`, idx: sampleIdx + 1, axis: axisName, val: calculatedVal })
-                    : `Letter '${letterDisplay}' (#${sampleIdx + 1}): ${axisName} = ${calculatedVal}`;
-
-                item.dataset.index = i;
-                item.dataset.label = letterDisplay;
-                item.dataset.val = calculatedVal;
-                item.dataset.tip = tipText;
-                item.title = tipText;
-
-                if (this.hoveredDistIndex === i) {
-                    item.classList.add('is-hovered');
-                } else {
-                    item.classList.remove('is-hovered');
-                }
-
-                const innerChar = item.querySelector('.dist-bar-inner-char');
-                if (innerChar) innerChar.textContent = letterDisplay;
-                const innerVal = item.querySelector('.dist-bar-inner-val');
-                if (innerVal) innerVal.textContent = calculatedVal;
-
-                const fill = item.querySelector('.dist-bar-fill');
-                if (fill) {
-                    fill.style.height = `${heightPercent}%`;
-                    fill.style.background = cur.color;
-                }
-            });
-            if (this.hoveredDistIndex !== null && hoverReadout && existingItems[this.hoveredDistIndex]) {
-                hoverReadout.textContent = existingItems[this.hoveredDistIndex].dataset.tip || '';
-            }
-        } else {
-            // Count changed: rebuild DOM elements and attach listeners
+        if (existingItems.length !== count) {
+            // Count changed: rebuild DOM elements and attach hover listeners
             let html = '';
             for (let i = 0; i < count; i++) {
-                const xNorm = count > 1 ? i / (count - 1) : 0;
-                const yNorm = this.evaluateCurveAtFor(cur, xNorm);
-                const heightPercent = Math.max(4, Math.round(yNorm * 100));
-                const calculatedVal = Math.round(range.min + yNorm * (range.max - range.min));
-
-                const sampleIdx = (realCount === count) ? i : Math.min(Math.round(xNorm * (realCount - 1)), realCount - 1);
-                const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
-                const letterDisplay = rawChar ? `${rawChar}` : `#${sampleIdx + 1}`;
-                const tipText = window.i18n
-                    ? window.i18n.t('distBarLetterTip', { char: `'${letterDisplay}'`, idx: sampleIdx + 1, axis: axisName, val: calculatedVal })
-                    : `Letter '${letterDisplay}' (#${sampleIdx + 1}): ${axisName} = ${calculatedVal}`;
-
-                const isHoveredClass = (this.hoveredDistIndex === i) ? ' is-hovered' : '';
                 html += `
-                    <div class="dist-bar-item${isHoveredClass}" data-index="${i}" data-label="${letterDisplay}" data-val="${calculatedVal}" data-tip="${tipText}" title="${tipText}">
+                    <div class="dist-bar-item" data-index="${i}">
                         <div class="dist-bar-track">
-                            <div class="dist-bar-fill" style="height: ${heightPercent}%; background: ${cur.color}">
+                            <div class="dist-bar-fill">
                                 <div class="dist-bar-inner-content">
-                                    <span class="dist-bar-inner-char">${letterDisplay}</span>
-                                    <span class="dist-bar-inner-val">${calculatedVal}</span>
+                                    <span class="dist-bar-inner-char"></span>
+                                    <span class="dist-bar-inner-val"></span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 `;
             }
-
             barContainer.innerHTML = html;
+            existingItems = barContainer.querySelectorAll('.dist-bar-item');
 
-            barContainer.querySelectorAll('.dist-bar-item').forEach((item) => {
+            existingItems.forEach((item) => {
                 const idx = parseInt(item.dataset.index, 10);
                 item.addEventListener('mouseenter', () => {
                     this.hoveredDistIndex = idx;
@@ -4355,18 +4468,330 @@ class GraphMode {
                 });
             });
         }
+
+        existingItems.forEach((item, i) => {
+            const sampleIdx = this.getBarSampleIndex(i, count, realCount);
+            const yNorm = this.getLetterY(cur, sampleIdx, realCount);
+            const calculatedVal = Math.round(range.min + yNorm * (range.max - range.min));
+            const isOverride = Boolean(cur.overrides && cur.overrides[sampleIdx] !== undefined);
+
+            const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
+            const letterDisplay = rawChar ? `${rawChar}` : `#${sampleIdx + 1}`;
+            const tipText = window.i18n
+                ? window.i18n.t('distBarLetterTip', { char: `'${letterDisplay}'`, idx: sampleIdx + 1, axis: axisName, val: calculatedVal })
+                : `Letter '${letterDisplay}' (#${sampleIdx + 1}): ${axisName} = ${calculatedVal}`;
+
+            item.dataset.index = i;
+            item.dataset.sample = sampleIdx;
+            item.dataset.label = letterDisplay;
+            item.dataset.val = calculatedVal;
+            item.dataset.tip = tipText;
+            item.title = tipText;
+            item.classList.toggle('is-hovered', this.hoveredDistIndex === i);
+            item.classList.toggle('is-override', isOverride);
+
+            const innerChar = item.querySelector('.dist-bar-inner-char');
+            if (innerChar) innerChar.textContent = letterDisplay;
+            const innerVal = item.querySelector('.dist-bar-inner-val');
+            if (innerVal) innerVal.textContent = calculatedVal;
+
+            const fill = item.querySelector('.dist-bar-fill');
+            if (fill) {
+                // Exact proportional height: bar height == value on the axis range
+                fill.style.height = `${(yNorm * 100).toFixed(2)}%`;
+                fill.style.background = cur.color;
+            }
+        });
+
+        if (this.hoveredDistIndex !== null && hoverReadout && existingItems[this.hoveredDistIndex]) {
+            hoverReadout.textContent = existingItems[this.hoveredDistIndex].dataset.tip || '';
+        }
+    }
+
+    // ---- Per-letter distribution helpers ----
+    getBarSampleIndex(i, count, realCount) {
+        if (realCount === count) {
+            return i;
+        }
+        const xNorm = count > 1 ? i / (count - 1) : 0;
+        return Math.min(Math.round(xNorm * (realCount - 1)), realCount - 1);
+    }
+
+    // Exact normalized value (0..1) for letter index i out of n letters.
+    getLetterY(cur, i, n) {
+        if (cur && cur.overrides && cur.overrides[i] !== undefined && i < this.itemCount) {
+            return cur.overrides[i];
+        }
+        const x = n > 1 ? i / (n - 1) : 0;
+        return this.evaluateCurveAtFor(cur, x);
+    }
+
+    setLetterOverride(letterIdx, yNorm, silent) {
+        const cur = this.getActiveCurve();
+        if (!cur) {
+            return;
+        }
+        if (!cur.overrides) {
+            cur.overrides = {};
+        }
+        cur.overrides[letterIdx] = Math.max(0, Math.min(1, Math.round(yNorm * 1000) / 1000));
+        this.updateDistributionPreview();
+        this.redraw();
+        if (!silent) {
+            this.emitDistribution();
+        }
+    }
+
+    clearLetterOverride(letterIdx) {
+        const cur = this.getActiveCurve();
+        if (cur && cur.overrides && cur.overrides[letterIdx] !== undefined) {
+            delete cur.overrides[letterIdx];
+            this.updateDistributionPreview();
+            this.redraw();
+            this.emitDistribution();
+        }
+    }
+
+    clearAllOverrides() {
+        const cur = this.getActiveCurve();
+        if (cur && cur.overrides && Object.keys(cur.overrides).length) {
+            cur.overrides = {};
+            this.updateDistributionPreview();
+            this.redraw();
+            this.emitDistribution();
+        }
+    }
+
+    setupLetterEditing() {
+        const barContainer = this.container.querySelector('#distribution-bars');
+        const chk = this.container.querySelector('#chk-show-dist-points');
+        const btnReset = this.container.querySelector('#btn-reset-overrides');
+        const canvas = this.canvas;
+        if (!barContainer || !canvas) {
+            return;
+        }
+
+        if (btnReset) {
+            btnReset.addEventListener('click', () => this.clearAllOverrides());
+        }
+        if (chk) {
+            chk.checked = Boolean(this.showDistPoints);
+            chk.addEventListener('change', () => {
+                this.showDistPoints = chk.checked;
+                this.redraw();
+            });
+        }
+
+        // --- Drag bars vertically to set the letter's own value ---
+        let barDrag = null;
+        barContainer.addEventListener('pointerdown', (e) => {
+            const item = e.target.closest('.dist-bar-item');
+            if (!item || e.button !== 0) {
+                return;
+            }
+            const track = item.querySelector('.dist-bar-track');
+            const rect = track.getBoundingClientRect();
+            barDrag = { sample: parseInt(item.dataset.sample, 10), rect };
+            try { barContainer.setPointerCapture(e.pointerId); } catch (err) {}
+            e.preventDefault();
+            this.setLetterOverride(barDrag.sample, 1 - (e.clientY - rect.top) / rect.height);
+        });
+        barContainer.addEventListener('pointermove', (e) => {
+            if (!barDrag) {
+                return;
+            }
+            this.setLetterOverride(barDrag.sample, 1 - (e.clientY - barDrag.rect.top) / barDrag.rect.height);
+        });
+        const endBar = (e) => {
+            if (barDrag) {
+                try { barContainer.releasePointerCapture(e.pointerId); } catch (err) {}
+                barDrag = null;
+            }
+        };
+        barContainer.addEventListener('pointerup', endBar);
+        barContainer.addEventListener('pointercancel', endBar);
+        barContainer.addEventListener('dblclick', (e) => {
+            const item = e.target.closest('.dist-bar-item');
+            if (item) {
+                this.clearLetterOverride(parseInt(item.dataset.sample, 10));
+            }
+        });
+
+        // --- Drag distribution points on the curve (capture phase: runs before curve editing) ---
+        const hitDistPoint = (e) => {
+            if (!this.showDistPoints) {
+                return null;
+            }
+            const cur = this.getActiveCurve();
+            if (!cur) {
+                return null;
+            }
+            const r = canvas.getBoundingClientRect();
+            const px = (e.clientX - r.left) * (this.width / r.width);
+            const py = (e.clientY - r.top) * (this.height / r.height);
+            const n = Math.max(1, this.itemCount || 16);
+            if (n > 128) {
+                return null;
+            }
+            let best = null;
+            let bestD = 9;
+            for (let i = 0; i < n; i++) {
+                const pix = this.normToPixel({ x: n > 1 ? i / (n - 1) : 0, y: this.getLetterY(cur, i, n) });
+                const d = Math.hypot(px - pix.x, py - pix.y);
+                if (d <= bestD) {
+                    bestD = d;
+                    best = i;
+                }
+            }
+            return best;
+        };
+
+        let ptDrag = null;
+        canvas.addEventListener('pointerdown', (e) => {
+            if (e.button !== 0) {
+                return;
+            }
+            const idx = hitDistPoint(e);
+            if (idx === null) {
+                return;
+            }
+            e.stopImmediatePropagation();
+            e.preventDefault();
+            ptDrag = { idx };
+            try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+            this.hoveredDistIndex = null;
+        }, true);
+        canvas.addEventListener('pointermove', (e) => {
+            if (ptDrag) {
+                e.stopImmediatePropagation();
+                const r = canvas.getBoundingClientRect();
+                const py = (e.clientY - r.top) * (this.height / r.height);
+                const y = 1 - (py - this.padding) / (this.height - this.padding * 2);
+                this.setLetterOverride(ptDrag.idx, y);
+            } else if (this.showDistPoints) {
+                canvas.style.cursor = hitDistPoint(e) !== null ? 'ns-resize' : '';
+            }
+        }, true);
+        const endPt = (e) => {
+            if (ptDrag) {
+                e.stopImmediatePropagation();
+                try { canvas.releasePointerCapture(e.pointerId); } catch (err) {}
+                ptDrag = null;
+            }
+        };
+        canvas.addEventListener('pointerup', endPt, true);
+        canvas.addEventListener('pointercancel', endPt, true);
+        canvas.addEventListener('dblclick', (e) => {
+            const idx = hitDistPoint(e);
+            if (idx !== null) {
+                e.stopImmediatePropagation();
+                this.clearLetterOverride(idx);
+            }
+        }, true);
+    }
+
+    drawDistributionPoints(ctx, cur, pad, plotW, plotH, h) {
+        const n = Math.max(1, this.itemCount || 16);
+        if (n > 128) {
+            return;
+        }
+        ctx.save();
+        for (let i = 0; i < n; i++) {
+            const x = n > 1 ? i / (n - 1) : 0;
+            const y = this.getLetterY(cur, i, n);
+            const isOv = Boolean(cur.overrides && cur.overrides[i] !== undefined);
+            const px = pad + x * plotW;
+            const py = h - pad - y * plotH;
+            ctx.beginPath();
+            ctx.arc(px, py, isOv ? 4.2 : 3.2, 0, Math.PI * 2);
+            ctx.fillStyle = isOv ? '#ffffff' : cur.color;
+            ctx.strokeStyle = isOv ? cur.color : 'rgba(255,255,255,0.85)';
+            ctx.lineWidth = isOv ? 2 : 1.2;
+            ctx.fill();
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    showCurvesHelp() {
+        const en = window.i18n && window.i18n.currentLang === 'en';
+        const rows = en ? [
+            ['Add point', 'Double-click on the curve'],
+            ['Delete point', 'Double-click on a point / Delete / Backspace'],
+            ['Move point or handle', 'Drag'],
+            ['Break / smooth handle', 'Double-click the handle knob'],
+            ['Unlink handle while dragging', 'Alt + Drag handle'],
+            ['Remove handles', 'Alt + Right-click'],
+            ['Add to selection', 'Shift + Click'],
+            ['Lock axis while dragging', 'Shift + Drag'],
+            ['Box / lasso select', 'Drag on empty area / Alt + Drag'],
+            ['Undo', 'Ctrl + Z'],
+            ['Redo', 'Ctrl + Y / Ctrl + Shift + Z'],
+            ['Show distribution points', 'Checkbox under the canvas; drag a dot up/down to change that letter'],
+            ['Set a single letter value', 'Drag its bar in the distribution bars'],
+            ['Reset a letter to the curve', 'Double-click its bar or its dot'],
+            ['Reset all letter edits', '↺ button in distribution header'],
+            ['Move templates between folders', 'Drag and drop preset chip onto any folder']
+        ] : [
+            ['Ավելացնել կետ', 'Կրկնակի կտտոց կորի վրա'],
+            ['Ջնջել կետ', 'Կրկնակի կտտոց կետի վրա / Delete / Backspace'],
+            ['Տեղափոխել կետը կամ լծակը', 'Քաշել'],
+            ['Կոտրել / սահունացնել լծակը', 'Կրկնակի կտտոց լծակի վրա'],
+            ['Ապակապել լծակը քաշելիս', 'Alt + Քաշել լծակը'],
+            ['Վերացնել լծակները', 'Alt + Աջ կտտոց'],
+            ['Ավելացնել ընտրությանը', 'Shift + Կտտոց'],
+            ['Կողպել առանցքը քաշելիս', 'Shift + Քաշել'],
+            ['Ընտրել շրջանակով / լասսոյով', 'Քաշել դատարկ տեղում / Alt + Քաշել'],
+            ['Հետարկել', 'Ctrl + Z'],
+            ['Վերարկել', 'Ctrl + Y / Ctrl + Shift + Z'],
+            ['Ցուցադրել բաշխիչ կետերը', 'Նշատուփ կտավի տակ. կետը վեր/վար քաշելով փոխվում է այդ տառը'],
+            ['Փոխել առանձին տառի միավորը', 'Քաշել նրա սյունը բաշխման սյուների մեջ'],
+            ['Վերադարձնել տառը կորին', 'Կրկնակի կտտոց սյան կամ կետի վրա'],
+            ['Վերականգնել բոլոր տառերը', '↺ կոճակ բաշխման հեդրում'],
+            ['Տեղափոխել կաղապարները պանակներում', 'Քաշել և գցել կաղապարը ցանկացած պանակի մեջ']
+        ];
+        const title = en ? 'Curve panel: features & shortcuts' : 'Կորերի փեղկ՝ հնարավորություններ և ստեղներ';
+
+        const old = document.getElementById('curves-help-overlay');
+        if (old) {
+            old.remove();
+        }
+        const ov = document.createElement('div');
+        ov.id = 'curves-help-overlay';
+        ov.className = 'app-modal-overlay';
+        ov.innerHTML = `
+            <div class="app-modal-dialog curves-help-dialog">
+                <div class="app-modal-header">
+                    <span class="app-modal-title">${title}</span>
+                    <button type="button" class="app-modal-close-btn"><i class="hd-icon hd-icon-close"></i></button>
+                </div>
+                <div class="app-modal-body">
+                    <ul class="curves-help-list">
+                        ${rows.map((r) => `<li><span class="help-what">${r[0]}</span><kbd class="help-key">${r[1]}</kbd></li>`).join('')}
+                    </ul>
+                </div>
+            </div>`;
+        document.body.appendChild(ov);
+        const close = () => {
+            ov.classList.remove('is-open');
+            setTimeout(() => ov.remove(), 260);
+        };
+        ov.addEventListener('click', (e) => {
+            if (e.target === ov) close();
+        });
+        ov.querySelector('.app-modal-close-btn').addEventListener('click', close);
+        requestAnimationFrame(() => ov.classList.add('is-open'));
     }
 
     emitDistribution() {
         const count = Math.max(2, Math.min(1000, this.itemCount || 16));
         const activeCur = this.getActiveCurve();
 
-        // Multi-curve payload: evaluates each enabled curve along its own axis
+        // Multi-curve payload: one exact value per letter (curve value or per-letter override)
         const curvesPayload = this.curves.filter((c) => c.enabled).map((c) => {
             const evaluatedValues = [];
             for (let i = 0; i < count; i++) {
-                const x = count > 1 ? i / (count - 1) : 0;
-                evaluatedValues.push(this.evaluateCurveAtFor(c, x));
+                evaluatedValues.push(this.getLetterY(c, i, count));
             }
             const range = this.getAxisRange(c.axisId);
             return {

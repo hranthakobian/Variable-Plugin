@@ -1,4 +1,4 @@
-// Folder icon
+﻿// Folder icon
 const FOLDER_ICON_SVG = '<svg width="22" height="18" viewBox="0 0 104 85" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; flex-shrink: 0;"><path d="M4 4L4 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M28 4L28 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M16 4L16 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M40 11L40 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M76 18L76 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M64 18L64 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M100 18L100 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M52 18L52 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path><path d="M88 18L88 81" stroke="currentColor" stroke-width="8" stroke-linecap="round"></path></svg>';
 
 /**
@@ -2016,6 +2016,21 @@ class GraphMode {
     // =========================================
     // Preset Folders & Custom Presets Management
     // =========================================
+    getBuiltInFolderOverrides() {
+        try {
+            const raw = localStorage.getItem('vf_builtin_folder_overrides');
+            return raw ? JSON.parse(raw) : {};
+        } catch (e) {
+            return {};
+        }
+    }
+
+    saveBuiltInFolderOverrides(map) {
+        try {
+            localStorage.setItem('vf_builtin_folder_overrides', JSON.stringify(map));
+        } catch (e) {}
+    }
+
     getCustomFolders() {
         try {
             const raw = localStorage.getItem('vf_custom_graph_folders');
@@ -2440,10 +2455,15 @@ class GraphMode {
                 }
 
                 const isCollapsed = collapsedFolders.includes(folder.id);
-                const availablePresets = DEFAULT_PRESETS_DATA.filter((p) => p.folder === folder.id && !deletedBuiltIns.includes(p.id));
+                const folderOverrides = this.getBuiltInFolderOverrides();
+                const availablePresets = DEFAULT_PRESETS_DATA.filter((p) => {
+                    const targetFolder = folderOverrides[p.id] || p.folder;
+                    return targetFolder === folder.id && !deletedBuiltIns.includes(p.id);
+                });
 
                 const groupEl = document.createElement('div');
                 groupEl.className = `custom-folder-group ${isCollapsed ? 'is-collapsed' : ''}`;
+                groupEl.dataset.dropFolder = folder.id;
 
                 const headerEl = document.createElement('div');
                 headerEl.className = 'custom-folder-group-header';
@@ -2451,32 +2471,18 @@ class GraphMode {
                 const headerLeftEl = document.createElement('div');
                 headerLeftEl.className = 'custom-folder-header-left';
 
-                const btnCollapseFolder = document.createElement('button');
-                btnCollapseFolder.type = 'button';
-                btnCollapseFolder.className = 'btn-folder-collapse';
-                btnCollapseFolder.innerHTML = isCollapsed ? '<i class="hd-icon hd-icon-chevrolt-arrow-right"></i>' : '<i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i>';
-                btnCollapseFolder.title = isCollapsed
-                    ? (i18n ? i18n.t('expandFolderTitle') : 'Expand folder')
-                    : (i18n ? i18n.t('collapseFolderTitle') : 'Collapse folder');
-                btnCollapseFolder.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.toggleFolderCollapse(folder.id);
-                });
-
                 const titleEl = document.createElement('span');
                 titleEl.className = 'custom-folder-group-title';
-                titleEl.innerHTML = `${FOLDER_ICON_SVG} ${folder.name} (${availablePresets.length})`;
-                titleEl.style.cursor = 'pointer';
+                titleEl.innerHTML = `${FOLDER_ICON_SVG} <span>${folder.name} (${availablePresets.length})</span>`;
                 titleEl.title = isCollapsed
                     ? (i18n ? i18n.t('expandFolderTitle') : 'Expand folder')
                     : (i18n ? i18n.t('collapseFolderTitle') : 'Collapse folder');
-                titleEl.addEventListener('click', () => {
-                    this.toggleFolderCollapse(folder.id);
-                });
 
-                headerLeftEl.appendChild(btnCollapseFolder);
                 headerLeftEl.appendChild(titleEl);
                 headerEl.appendChild(headerLeftEl);
+                headerEl.addEventListener('click', () => {
+                    this.toggleFolderCollapse(folder.id);
+                });
                 groupEl.appendChild(headerEl);
 
                 const itemsListEl = document.createElement('div');
@@ -2492,6 +2498,7 @@ class GraphMode {
                         const item = document.createElement('div');
                         const isActive = cur && cur.preset === p.id;
                         item.className = `custom-preset-chip ${isActive ? 'active' : ''}`;
+                        item.dataset.presetId = p.id;
 
                         const btnApply = document.createElement('button');
                         btnApply.type = 'button';
@@ -2542,30 +2549,13 @@ class GraphMode {
                 const headerLeftEl = document.createElement('div');
                 headerLeftEl.className = 'custom-folder-header-left';
 
-                const btnCollapseFolder = document.createElement('button');
-                btnCollapseFolder.type = 'button';
-                btnCollapseFolder.className = 'btn-folder-collapse';
-                btnCollapseFolder.innerHTML = isCollapsed ? '<i class="hd-icon hd-icon-chevrolt-arrow-right"></i>' : '<i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i>';
-                btnCollapseFolder.title = isCollapsed
-                    ? (i18n ? i18n.t('expandFolderTitle') : 'Expand folder')
-                    : (i18n ? i18n.t('collapseFolderTitle') : 'Collapse folder');
-                btnCollapseFolder.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.toggleFolderCollapse(folder.id);
-                });
-
                 const titleEl = document.createElement('span');
                 titleEl.className = 'custom-folder-group-title';
-                titleEl.innerHTML = `${FOLDER_ICON_SVG} ${folder.name} (${folderPresets.length})`;
-                titleEl.style.cursor = 'pointer';
+                titleEl.innerHTML = `${FOLDER_ICON_SVG} <span>${folder.name} (${folderPresets.length})</span>`;
                 titleEl.title = isCollapsed
                     ? (i18n ? i18n.t('expandFolderTitle') : 'Expand folder')
                     : (i18n ? i18n.t('collapseFolderTitle') : 'Collapse folder');
-                titleEl.addEventListener('click', () => {
-                    this.toggleFolderCollapse(folder.id);
-                });
 
-                headerLeftEl.appendChild(btnCollapseFolder);
                 headerLeftEl.appendChild(titleEl);
                 headerEl.appendChild(headerLeftEl);
 
@@ -2582,6 +2572,11 @@ class GraphMode {
                     });
                     headerEl.appendChild(btnDelFolder);
                 }
+
+                headerEl.addEventListener('click', (e) => {
+                    if (e.target.closest('.btn-del-folder')) return;
+                    this.toggleFolderCollapse(folder.id);
+                });
 
                 groupEl.appendChild(headerEl);
 
@@ -2714,11 +2709,18 @@ class GraphMode {
                         listEl.querySelectorAll('.custom-preset-chip[data-preset-id]').forEach((c) => {
                             before[c.dataset.presetId] = c.getBoundingClientRect();
                         });
-                        const presets = self.getCustomPresets();
-                        const p = presets.find((x) => String(x.id) === String(presetId));
-                        if (p) {
-                            p.folderId = destFolder;
-                            self.saveCustomPresetsList(presets);
+                        const isBuiltIn = DEFAULT_PRESETS_DATA.some((x) => x.id === presetId);
+                        if (isBuiltIn) {
+                            const overrides = self.getBuiltInFolderOverrides();
+                            overrides[presetId] = destFolder;
+                            self.saveBuiltInFolderOverrides(overrides);
+                        } else {
+                            const presets = self.getCustomPresets();
+                            const p = presets.find((x) => String(x.id) === String(presetId));
+                            if (p) {
+                                p.folderId = destFolder;
+                                self.saveCustomPresetsList(presets);
+                            }
                         }
                         const collapsed = self.getCollapsedFolders();
                         const ci = collapsed.indexOf(destFolder);
@@ -4194,7 +4196,7 @@ class GraphMode {
             // 5. Draw Distribution Hover Projection Lines & Floating Value Badge
             if (this.hoveredDistIndex !== null) {
                 const realCount = Math.max(1, this.itemCount || 16);
-                const count = Math.max(2, Math.min(48, realCount));
+                const count = Math.max(2, Math.min(128, realCount));
                 if (this.hoveredDistIndex >= 0 && this.hoveredDistIndex < count) {
                     const i = this.hoveredDistIndex;
                     const sampleIdx = this.getBarSampleIndex(i, count, realCount);
@@ -4398,7 +4400,7 @@ class GraphMode {
 
         barContainer.classList.remove('has-limit-warning');
         const realCount = Math.max(1, this.itemCount || 16);
-        const count = Math.max(2, Math.min(48, realCount));
+        const count = Math.max(2, Math.min(128, realCount));
         barContainer.classList.toggle('is-thin', count > 20);
         barContainer.classList.toggle('dist-bars-dense', count > 36);
         barContainer.classList.toggle('dist-bars-ultra', count > 44);
@@ -4727,7 +4729,9 @@ class GraphMode {
             ['Redo', 'Ctrl + Y / Ctrl + Shift + Z'],
             ['Show distribution points', 'Checkbox under the canvas; drag a dot up/down to change that letter'],
             ['Set a single letter value', 'Drag its bar in the distribution bars'],
-            ['Reset a letter to the curve', 'Double-click its bar or its dot']
+            ['Reset a letter to the curve', 'Double-click its bar or its dot'],
+            ['Reset all letter edits', '↺ button in distribution header'],
+            ['Move templates between folders', 'Drag and drop preset chip onto any folder']
         ] : [
             ['Ավելացնել կետ', 'Կրկնակի կտտոց կորի վրա'],
             ['Ջնջել կետ', 'Կրկնակի կտտոց կետի վրա / Delete / Backspace'],
@@ -4742,7 +4746,9 @@ class GraphMode {
             ['Վերարկել', 'Ctrl + Y / Ctrl + Shift + Z'],
             ['Ցուցադրել բաշխիչ կետերը', 'Նշատուփ կտավի տակ. կետը վեր/վար քաշելով փոխվում է այդ տառը'],
             ['Փոխել առանձին տառի միավորը', 'Քաշել նրա սյունը բաշխման սյուների մեջ'],
-            ['Վերադարձնել տառը կորին', 'Կրկնակի կտտոց սյան կամ կետի վրա']
+            ['Վերադարձնել տառը կորին', 'Կրկնակի կտտոց սյան կամ կետի վրա'],
+            ['Վերականգնել բոլոր տառերը', '↺ կոճակ բաշխման հեդրում'],
+            ['Տեղափոխել կաղապարները պանակներում', 'Քաշել և գցել կաղապարը ցանկացած պանակի մեջ']
         ];
         const title = en ? 'Curve panel: features & shortcuts' : 'Կորերի փեղկ՝ հնարավորություններ և ստեղներ';
 
