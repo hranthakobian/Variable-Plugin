@@ -4,6 +4,14 @@
  * Follows K&R / 1TBS brace formatting.
  */
 
+@font-face {
+    font-family: 'HDesign';
+    src: url('https://api.hakobian.am/libs/v1/fonts/hdesign.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 :root {
     /* Dark Theme Defaults */
     --bg-app: #1e1e1e;
@@ -43,7 +51,7 @@
     --box-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.35);
     --box-shadow-popover: 0 8px 24px rgba(0, 0, 0, 0.65);
 
-    --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-ui: 'HDesign', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --font-mono: "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
 }
 
@@ -3273,7 +3281,6 @@ body.has-no-selection .btn-window-menu {
 .doc-text-frame-card:hover {
     background: var(--bg-hover);
     border-color: var(--accent-blue);
-    transform: translateY(-1px);
     box-shadow: var(--box-shadow-card);
 }
 

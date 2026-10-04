@@ -456,20 +456,24 @@ class GraphMode {
 
     renderUI() {
         const i18n = window.i18n;
+        const layout = this.getSectionsLayout();
+        const isCollapsed = (id) => Boolean(layout.collapsed && layout.collapsed[id]);
+        const isVisible = (id) => layout.visibility[id] !== false;
+
         this.container.innerHTML = `
-            <div class="graph-mode-panel">
+            <div class="graph-mode-panel no-collapse-transition">
                 <!-- 1. Curve Layers Card -->
-                <div class="graph-modular-card" data-card-id="curves">
+                <div class="graph-modular-card ${isCollapsed('curves') ? 'is-collapsed' : ''}" data-card-id="curves" style="${isVisible('curves') ? '' : 'display:none;'}">
                     <div class="graph-modular-card-header">
                         <div class="card-header-left">
-                            <div class="card-drag-handle" data-card="curves" draggable="true" title="${i18n ? i18n.t('dragToReorder') : 'Drag to reorder'}">⠿</div>
-                            <button type="button" class="btn-card-ctrl btn-card-collapse" data-card="curves" data-action="collapse" title="${i18n ? i18n.t('collapsePanelTitle') : 'Collapse'}">▾</button>
+                            <div class="card-drag-handle" data-card="curves" draggable="true" title="${i18n ? i18n.t('dragToReorder') : 'Drag to reorder'}"><i class="hd-icon hd-icon-hamburger-menu"></i></div>
+                            <button type="button" class="btn-card-ctrl btn-card-collapse" data-card="curves" data-action="collapse" title="${isCollapsed('curves') ? (i18n ? i18n.t('expandPanelTitle') : 'Expand panel') : (i18n ? i18n.t('collapsePanelTitle') : 'Collapse')}"><i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i></button>
                             <span class="card-title">${i18n ? i18n.t('panelCurves') : 'Curve Layers'}</span>
                         </div>
                         <div class="card-header-right">
-                            <button type="button" class="btn-card-ctrl btn-card-up" data-card="curves" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}">▲</button>
-                            <button type="button" class="btn-card-ctrl btn-card-down" data-card="curves" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}">▼</button>
-                            <button type="button" class="btn-card-ctrl btn-card-close" data-card="curves" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}">✕</button>
+                            <button type="button" class="btn-card-ctrl btn-card-up" data-card="curves" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}"><i class="hd-icon hd-icon-arrow-up"></i></button>
+                            <button type="button" class="btn-card-ctrl btn-card-down" data-card="curves" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}"><i class="hd-icon hd-icon-arrow-bottom"></i></button>
+                            <button type="button" class="btn-card-ctrl btn-card-close" data-card="curves" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}"><i class="hd-icon hd-icon-close"></i></button>
                         </div>
                     </div>
                     <div class="graph-modular-card-body">
@@ -479,7 +483,7 @@ class GraphMode {
                                 <div class="add-curve-control-group">
                                     <select id="add-curve-axis-select" class="add-curve-axis-select" title="${i18n ? i18n.t('selectAxisToAdd') : 'Select axis...'}"></select>
                                     <button type="button" class="btn-add-curve" id="btn-add-curve" title="${i18n ? i18n.t('addCurveTitle') : 'Add another curve to this canvas'}">
-                                        ${i18n ? i18n.t('addCurveBtn') : '+ Add Curve'}
+                                        <i class="hd-icon hd-icon-plus"></i> ${i18n ? i18n.t('addCurveBtn') : 'Add Curve'}
                                     </button>
                                 </div>
                             </div>
@@ -489,17 +493,17 @@ class GraphMode {
                 </div>
 
                 <!-- 2. Active Curve Settings Toolbar Card -->
-                <div class="graph-modular-card" data-card-id="toolbar">
+                <div class="graph-modular-card ${isCollapsed('toolbar') ? 'is-collapsed' : ''}" data-card-id="toolbar" style="${isVisible('toolbar') ? '' : 'display:none;'}">
                     <div class="graph-modular-card-header">
                         <div class="card-header-left">
-                            <div class="card-drag-handle" data-card="toolbar" draggable="true" title="${i18n ? i18n.t('dragToReorder') : 'Drag to reorder'}">⠿</div>
-                            <button type="button" class="btn-card-ctrl btn-card-collapse" data-card="toolbar" data-action="collapse" title="${i18n ? i18n.t('collapsePanelTitle') : 'Collapse'}">▾</button>
+                            <div class="card-drag-handle" data-card="toolbar" draggable="true" title="${i18n ? i18n.t('dragToReorder') : 'Drag to reorder'}"><i class="hd-icon hd-icon-hamburger-menu"></i></div>
+                            <button type="button" class="btn-card-ctrl btn-card-collapse" data-card="toolbar" data-action="collapse" title="${isCollapsed('toolbar') ? (i18n ? i18n.t('expandPanelTitle') : 'Expand panel') : (i18n ? i18n.t('collapsePanelTitle') : 'Collapse')}"><i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i></button>
                             <span class="card-title">${i18n ? i18n.t('panelToolbar') : 'Axis Settings'}</span>
                         </div>
                         <div class="card-header-right">
-                            <button type="button" class="btn-card-ctrl btn-card-up" data-card="toolbar" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}">▲</button>
-                            <button type="button" class="btn-card-ctrl btn-card-down" data-card="toolbar" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}">▼</button>
-                            <button type="button" class="btn-card-ctrl btn-card-close" data-card="toolbar" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}">✕</button>
+                            <button type="button" class="btn-card-ctrl btn-card-up" data-card="toolbar" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}"><i class="hd-icon hd-icon-arrow-up"></i></button>
+                            <button type="button" class="btn-card-ctrl btn-card-down" data-card="toolbar" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}"><i class="hd-icon hd-icon-arrow-bottom"></i></button>
+                            <button type="button" class="btn-card-ctrl btn-card-close" data-card="toolbar" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}"><i class="hd-icon hd-icon-close"></i></button>
                         </div>
                     </div>
                     <div class="graph-modular-card-body">
@@ -520,17 +524,17 @@ class GraphMode {
                 </div>
 
                 <!-- 3. Spline Canvas Card -->
-                <div class="graph-modular-card" data-card-id="canvas">
+                <div class="graph-modular-card ${isCollapsed('canvas') ? 'is-collapsed' : ''}" data-card-id="canvas" style="${isVisible('canvas') ? '' : 'display:none;'}">
                     <div class="graph-modular-card-header">
                         <div class="card-header-left">
-                            <div class="card-drag-handle" data-card="canvas" draggable="true" title="${i18n ? i18n.t('dragToReorder') : 'Drag to reorder'}">⠿</div>
-                            <button type="button" class="btn-card-ctrl btn-card-collapse" data-card="canvas" data-action="collapse" title="${i18n ? i18n.t('collapsePanelTitle') : 'Collapse'}">▾</button>
+                            <div class="card-drag-handle" data-card="canvas" draggable="true" title="${i18n ? i18n.t('dragToReorder') : 'Drag to reorder'}"><i class="hd-icon hd-icon-hamburger-menu"></i></div>
+                            <button type="button" class="btn-card-ctrl btn-card-collapse" data-card="canvas" data-action="collapse" title="${isCollapsed('canvas') ? (i18n ? i18n.t('expandPanelTitle') : 'Expand panel') : (i18n ? i18n.t('collapsePanelTitle') : 'Collapse')}"><i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i></button>
                             <span class="card-title">${i18n ? i18n.t('panelCanvas') : 'Spline Canvas'}</span>
                         </div>
                         <div class="card-header-right">
-                            <button type="button" class="btn-card-ctrl btn-card-up" data-card="canvas" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}">▲</button>
-                            <button type="button" class="btn-card-ctrl btn-card-down" data-card="canvas" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}">▼</button>
-                            <button type="button" class="btn-card-ctrl btn-card-close" data-card="canvas" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}">✕</button>
+                            <button type="button" class="btn-card-ctrl btn-card-up" data-card="canvas" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}"><i class="hd-icon hd-icon-arrow-up"></i></button>
+                            <button type="button" class="btn-card-ctrl btn-card-down" data-card="canvas" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}"><i class="hd-icon hd-icon-arrow-bottom"></i></button>
+                            <button type="button" class="btn-card-ctrl btn-card-close" data-card="canvas" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}"><i class="hd-icon hd-icon-close"></i></button>
                         </div>
                     </div>
                     <div class="graph-modular-card-body">
@@ -556,17 +560,17 @@ class GraphMode {
                 </div>
 
                 <!-- 4. Points Control Toolbar Card -->
-                <div class="graph-modular-card" data-card-id="points">
+                <div class="graph-modular-card ${isCollapsed('points') ? 'is-collapsed' : ''}" data-card-id="points" style="${isVisible('points') ? '' : 'display:none;'}">
                     <div class="graph-modular-card-header">
                         <div class="card-header-left">
-                            <div class="card-drag-handle" data-card="points" draggable="true" title="${i18n ? i18n.t('dragToReorder') : 'Drag to reorder'}">⠿</div>
-                            <button type="button" class="btn-card-ctrl btn-card-collapse" data-card="points" data-action="collapse" title="${i18n ? i18n.t('collapsePanelTitle') : 'Collapse'}">▾</button>
+                            <div class="card-drag-handle" data-card="points" draggable="true" title="${i18n ? i18n.t('dragToReorder') : 'Drag to reorder'}"><i class="hd-icon hd-icon-hamburger-menu"></i></div>
+                            <button type="button" class="btn-card-ctrl btn-card-collapse" data-card="points" data-action="collapse" title="${isCollapsed('points') ? (i18n ? i18n.t('expandPanelTitle') : 'Expand panel') : (i18n ? i18n.t('collapsePanelTitle') : 'Collapse')}"><i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i></button>
                             <span class="card-title">${i18n ? i18n.t('panelPoints') : 'Points Control'}</span>
                         </div>
                         <div class="card-header-right">
-                            <button type="button" class="btn-card-ctrl btn-card-up" data-card="points" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}">▲</button>
-                            <button type="button" class="btn-card-ctrl btn-card-down" data-card="points" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}">▼</button>
-                            <button type="button" class="btn-card-ctrl btn-card-close" data-card="points" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}">✕</button>
+                            <button type="button" class="btn-card-ctrl btn-card-up" data-card="points" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}"><i class="hd-icon hd-icon-arrow-up"></i></button>
+                            <button type="button" class="btn-card-ctrl btn-card-down" data-card="points" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}"><i class="hd-icon hd-icon-arrow-bottom"></i></button>
+                            <button type="button" class="btn-card-ctrl btn-card-close" data-card="points" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}"><i class="hd-icon hd-icon-close"></i></button>
                         </div>
                     </div>
                     <div class="graph-modular-card-body">
@@ -574,10 +578,10 @@ class GraphMode {
                             <div class="point-selector-wrap">
                                 <span class="point-toolbar-label">${i18n ? i18n.t('pointsLabel') : 'Points:'}</span>
                                 <div class="point-chips-list" id="point-chips-list"></div>
-                                <button type="button" class="btn-add-point" id="btn-add-point" title="${i18n ? i18n.t('addPointTitle') : 'Add intermediate point'}">${i18n ? i18n.t('addPointBtn') : '+ Add Point'}</button>
+                                <button type="button" class="btn-add-point" id="btn-add-point" title="${i18n ? i18n.t('addPointTitle') : 'Add intermediate point'}"><i class="hd-icon hd-icon-plus"></i> ${i18n ? i18n.t('addPointBtn') : 'Add Point'}</button>
                                 <div class="point-undo-redo-group">
-                                    <button type="button" class="btn-point-history" id="btn-undo-point" title="${i18n ? i18n.t('undoPointTitle') : 'Undo point changes (Ctrl+Z)'}" disabled>${i18n ? i18n.t('undoPointBtn') : '↶ Undo'}</button>
-                                    <button type="button" class="btn-point-history" id="btn-redo-point" title="${i18n ? i18n.t('redoPointTitle') : 'Redo point changes (Ctrl+Y / Ctrl+Shift+Z)'}" disabled>${i18n ? i18n.t('redoPointBtn') : '↷ Redo'}</button>
+                                    <button type="button" class="btn-point-history" id="btn-undo-point" title="${i18n ? i18n.t('undoPointTitle') : 'Undo point changes (Ctrl+Z)'}" disabled><i class="hd-icon hd-icon-undo-arrow"></i> ${i18n ? i18n.t('undoPointBtn') : 'Undo'}</button>
+                                    <button type="button" class="btn-point-history" id="btn-redo-point" title="${i18n ? i18n.t('redoPointTitle') : 'Redo point changes (Ctrl+Y / Ctrl+Shift+Z)'}" disabled><i class="hd-icon hd-icon-redo-arrow"></i> ${i18n ? i18n.t('redoPointBtn') : 'Redo'}</button>
                                 </div>
                             </div>
                             <div class="point-details-row">
@@ -595,10 +599,10 @@ class GraphMode {
                                 <div class="point-actions-group">
                                     <span class="point-actions-label">${i18n ? i18n.t('pointActionsLabel') : 'Actions:'}</span>
                                     <button type="button" class="btn-toggle-link-handles is-linked" id="btn-toggle-link-handles" title="${i18n ? i18n.t('toggleLinkHandlesTitle') : 'Toggle linked / unlinked handles'}">
-                                        <span class="link-handles-icon">🔗</span>
+                                        <span class="link-handles-icon"><i class="hd-icon hd-icon-locked"></i></span>
                                         <span class="link-handles-text">${i18n ? i18n.t('pointLinked') : 'Linked'}</span>
                                     </button>
-                                    <button type="button" class="btn-delete-point" id="btn-delete-point" title="${i18n ? i18n.t('delPointTitle') : 'Delete selected point'}">${i18n ? i18n.t('delPointBtn') : '✕ Delete'}</button>
+                                    <button type="button" class="btn-delete-point" id="btn-delete-point" title="${i18n ? i18n.t('delPointTitle') : 'Delete selected point'}"><i class="hd-icon hd-icon-trash"></i> ${i18n ? i18n.t('delPointBtn') : 'Delete'}</button>
                                 </div>
                             </div>
                             <div class="point-instructions-hint">
@@ -609,17 +613,17 @@ class GraphMode {
                 </div>
 
                 <!-- 5. Presets & Folders Card -->
-                <div class="graph-modular-card" data-card-id="presets">
+                <div class="graph-modular-card ${isCollapsed('presets') ? 'is-collapsed' : ''}" data-card-id="presets" style="${isVisible('presets') ? '' : 'display:none;'}">
                     <div class="graph-modular-card-header">
                         <div class="card-header-left">
-                            <div class="card-drag-handle" data-card="presets" draggable="true" title="${i18n ? i18n.t('dragToReorder') : 'Drag to reorder'}">⠿</div>
-                            <button type="button" class="btn-card-ctrl btn-card-collapse" data-card="presets" data-action="collapse" title="${i18n ? i18n.t('collapsePanelTitle') : 'Collapse'}">▾</button>
+                            <div class="card-drag-handle" data-card="presets" draggable="true" title="${i18n ? i18n.t('dragToReorder') : 'Drag to reorder'}"><i class="hd-icon hd-icon-hamburger-menu"></i></div>
+                            <button type="button" class="btn-card-ctrl btn-card-collapse" data-card="presets" data-action="collapse" title="${isCollapsed('presets') ? (i18n ? i18n.t('expandPanelTitle') : 'Expand panel') : (i18n ? i18n.t('collapsePanelTitle') : 'Collapse')}"><i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i></button>
                             <span class="card-title">${i18n ? i18n.t('panelPresets') : 'Presets & Folders'}</span>
                         </div>
                         <div class="card-header-right">
-                            <button type="button" class="btn-card-ctrl btn-card-up" data-card="presets" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}">▲</button>
-                            <button type="button" class="btn-card-ctrl btn-card-down" data-card="presets" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}">▼</button>
-                            <button type="button" class="btn-card-ctrl btn-card-close" data-card="presets" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}">✕</button>
+                            <button type="button" class="btn-card-ctrl btn-card-up" data-card="presets" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}"><i class="hd-icon hd-icon-arrow-up"></i></button>
+                            <button type="button" class="btn-card-ctrl btn-card-down" data-card="presets" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}"><i class="hd-icon hd-icon-arrow-bottom"></i></button>
+                            <button type="button" class="btn-card-ctrl btn-card-close" data-card="presets" data-action="close" title="${i18n ? i18n.t('closePanelTitle') : 'Close panel'}"><i class="hd-icon hd-icon-close"></i></button>
                         </div>
                     </div>
                     <div class="graph-modular-card-body">
@@ -628,13 +632,16 @@ class GraphMode {
                                 <span class="curve-presets-label">${i18n ? i18n.t('curvePresetsLabel') : 'Curve Presets (Active Curve):'}</span>
                                 <div class="preset-action-bar">
                                     <button type="button" class="btn-preset-action btn-create-preset" id="btn-create-preset" title="${i18n ? i18n.t('createPresetTitle') : 'Create preset'}">
-                                        ${i18n ? i18n.t('createPresetBtn') : '＋ Create Preset'}
+                                        <i class="hd-icon hd-icon-plus"></i> ${i18n ? i18n.t('createPresetBtn') : 'Create Preset'}
                                     </button>
                                     <button type="button" class="btn-preset-action btn-export-presets" id="btn-export-presets" title="${i18n ? i18n.t('exportPresetsTitle') : 'Export presets as JSON'}">
-                                        ${i18n ? i18n.t('exportPresetsBtn') : '⤓ Export'}
+                                        <i class="hd-icon hd-icon-download"></i> ${i18n ? i18n.t('exportPresetsBtn') : 'Export'}
                                     </button>
                                     <button type="button" class="btn-preset-action btn-import-presets" id="btn-import-presets" title="${i18n ? i18n.t('importPresetsTitle') : 'Import presets from JSON'}">
-                                        ${i18n ? i18n.t('importPresetsBtn') : '⤒ Import'}
+                                        <i class="hd-icon hd-icon-paste"></i> ${i18n ? i18n.t('importPresetsBtn') : 'Import'}
+                                    </button>
+                                    <button type="button" class="btn-preset-action btn-delete-all-presets" id="btn-delete-all-presets" title="${i18n ? i18n.t('deleteAllPresetsTitle') : 'Delete all presets'}">
+                                        <i class="hd-icon hd-icon-trash"></i> ${i18n ? i18n.t('deleteAllPresetsBtn') : 'Delete All'}
                                     </button>
                                     <input type="file" id="import-presets-file-input" accept=".json" style="display:none;" />
                                 </div>
@@ -659,7 +666,7 @@ class GraphMode {
                             <div class="preset-folders-nav-bar">
                                 <div class="folders-chips-list" id="folders-chips-list"></div>
                                 <button type="button" class="btn-new-folder" id="btn-new-folder" title="${i18n ? i18n.t('newFolderTitle') : 'Create new folder'}">
-                                    ${i18n ? i18n.t('newFolderBtn') : '＋ New Folder'}
+                                    <i class="hd-icon hd-icon-plus"></i> ${i18n ? i18n.t('newFolderBtn') : 'New Folder'}
                                 </button>
                             </div>
 
@@ -682,6 +689,14 @@ class GraphMode {
 
         this.canvas = this.container.querySelector('#bezier-canvas');
         this.ctx = this.canvas.getContext('2d');
+
+        const panel = this.container.querySelector('.graph-mode-panel');
+        if (panel) {
+            requestAnimationFrame(() => {
+                panel.classList.remove('no-collapse-transition');
+            });
+        }
+        this.applySectionsLayout();
     }
 
     setupCanvas() {
@@ -868,7 +883,7 @@ class GraphMode {
                     opt.selected = true;
                 } else if (isOccupied) {
                     const swapText = window.i18n ? window.i18n.t('swapAxes') : 'Swap';
-                    opt.textContent = `${dName} (${ax.id}) ⇄ [${swapText}]`;
+                    opt.textContent = `${dName} (${ax.id}) -> [${swapText}]`;
                 } else {
                     opt.textContent = `${dName} (${ax.id})`;
                 }
@@ -895,7 +910,7 @@ class GraphMode {
             btnEye.type = 'button';
             btnEye.className = 'pill-btn-toggle';
             btnEye.title = c.enabled ? (window.i18n ? window.i18n.t('disableCurve') : 'Disable curve') : (window.i18n ? window.i18n.t('enableCurve') : 'Enable curve');
-            btnEye.textContent = c.enabled ? '●' : '○';
+            btnEye.innerHTML = c.enabled ? '<i class="hd-icon hd-icon-eye"></i>' : '<i class="hd-icon hd-icon-close-eye"></i>';
             btnEye.addEventListener('click', (e) => {
                 e.stopPropagation();
                 c.enabled = !c.enabled;
@@ -918,7 +933,7 @@ class GraphMode {
             btnCopy.type = 'button';
             btnCopy.className = 'pill-btn-copy';
             btnCopy.title = window.i18n ? window.i18n.t('duplicateCurve') : 'Duplicate curve to another axis';
-            btnCopy.textContent = '⧉';
+            btnCopy.innerHTML = '<i class="hd-icon hd-icon-paste"></i>';
             btnCopy.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.duplicateCurve(c.id);
@@ -931,7 +946,7 @@ class GraphMode {
                 btnDel.type = 'button';
                 btnDel.className = 'pill-btn-del';
                 btnDel.title = window.i18n ? window.i18n.t('deleteCurve') : 'Delete curve';
-                btnDel.textContent = '✕';
+                btnDel.innerHTML = '<i class="hd-icon hd-icon-close"></i>';
                 btnDel.addEventListener('click', (e) => {
                     e.stopPropagation();
                     this.removeCurve(c.id);
@@ -1008,7 +1023,7 @@ class GraphMode {
             const isOccupied = otherUsedAxes.includes(ax.id);
             if (isOccupied) {
                 const swapText = window.i18n ? window.i18n.t('swapAxes') : 'Swap';
-                opt.textContent = `${displayName} (${ax.id}) ⇄ [${swapText}]`;
+                opt.textContent = `${displayName} (${ax.id}) -> [${swapText}]`;
             } else {
                 opt.textContent = `${displayName} (${ax.id})`;
             }
@@ -1082,17 +1097,17 @@ class GraphMode {
 
             if (isStraight) {
                 btnToggleLink.classList.add('is-straight');
-                btnToggleLink.innerHTML = `<span class="link-handles-icon">━</span> <span class="link-handles-text">${i18n ? i18n.t('pointStraight') : 'Straight'}</span>`;
+                btnToggleLink.innerHTML = `<span class="link-handles-icon"><i class="hd-icon hd-icon-undo-arrow"></i></span> <span class="link-handles-text">${i18n ? i18n.t('pointStraight') : 'Straight'}</span>`;
                 btnToggleLink.title = i18n ? i18n.t('pointStraight') : 'Straight segment (Click to restore smooth handles)';
                 btnToggleLink.disabled = false;
             } else if (isBroken) {
                 btnToggleLink.classList.add('is-unlinked');
-                btnToggleLink.innerHTML = `<span class="link-handles-icon">🔓</span> <span class="link-handles-text">${i18n ? i18n.t('pointUnlinked') : 'Unlinked'}</span>`;
+                btnToggleLink.innerHTML = `<span class="link-handles-icon"><i class="hd-icon hd-icon-unlocked"></i></span> <span class="link-handles-text">${i18n ? i18n.t('pointUnlinked') : 'Unlinked'}</span>`;
                 btnToggleLink.title = i18n ? i18n.t('toggleLinkHandlesTitle') : 'Unlinked handles (Click to link/smooth)';
                 btnToggleLink.disabled = false;
             } else {
                 btnToggleLink.classList.add('is-linked');
-                btnToggleLink.innerHTML = `<span class="link-handles-icon">🔗</span> <span class="link-handles-text">${i18n ? i18n.t('pointLinked') : 'Linked'}</span>`;
+                btnToggleLink.innerHTML = `<span class="link-handles-icon"><i class="hd-icon hd-icon-locked"></i></span> <span class="link-handles-text">${i18n ? i18n.t('pointLinked') : 'Linked'}</span>`;
                 btnToggleLink.title = i18n ? i18n.t('toggleLinkHandlesTitle') : 'Linked smooth handles (Click to unlink/break)';
                 btnToggleLink.disabled = false;
             }
@@ -1461,11 +1476,10 @@ class GraphMode {
                 const isCollapsed = Boolean(layout.collapsed && layout.collapsed[key]);
                 const body = card.querySelector('.graph-modular-card-body');
                 const btnCollapse = card.querySelector('.btn-card-collapse');
-                if (body) {
-                    body.style.display = isCollapsed ? 'none' : '';
-                }
                 if (btnCollapse) {
-                    btnCollapse.textContent = isCollapsed ? '▸' : '▾';
+                    if (!btnCollapse.querySelector('.hd-icon')) {
+                        btnCollapse.innerHTML = '<i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i>';
+                    }
                     btnCollapse.title = isCollapsed
                         ? (window.i18n ? window.i18n.t('expandPanelTitle') : 'Expand panel')
                         : (window.i18n ? window.i18n.t('collapsePanelTitle') : 'Collapse panel');
@@ -1520,17 +1534,182 @@ class GraphMode {
         }, 40);
     }
 
+    closeSectionWithFlightAnimation(cardId) {
+        const panel = this.container.querySelector('.graph-mode-panel');
+        const card = panel ? panel.querySelector(`.graph-modular-card[data-card-id="${cardId}"]`) : null;
+        const winBtn = document.getElementById('btn-window-menu');
+
+        if (!card) {
+            this.toggleSectionVisibility(cardId, false, false);
+            return;
+        }
+
+        // If "Փեղկեր" button is not visible or in DOM, fall back to direct hide
+        if (!winBtn || winBtn.offsetParent === null) {
+            this.toggleSectionVisibility(cardId, false, false);
+            return;
+        }
+
+        const cardRect = card.getBoundingClientRect();
+        const btnRect = winBtn.getBoundingClientRect();
+
+        const cardCenterX = cardRect.left + cardRect.width / 2;
+        const cardCenterY = cardRect.top + cardRect.height / 2;
+        const targetCenterX = btnRect.left + btnRect.width / 2;
+        const targetCenterY = btnRect.top + btnRect.height / 2;
+
+        const deltaX = targetCenterX - cardCenterX;
+        const deltaY = targetCenterY - cardCenterY;
+
+        // Create flying clone ghost
+        const ghost = document.createElement('div');
+        ghost.className = 'shutter-flying-particle';
+        ghost.style.left = `${cardRect.left}px`;
+        ghost.style.top = `${cardRect.top}px`;
+        ghost.style.width = `${cardRect.width}px`;
+        ghost.style.height = `${cardRect.height}px`;
+
+        ghost.innerHTML = card.innerHTML;
+        document.body.appendChild(ghost);
+
+        const flightDuration = 440;
+        const cubicEasing = 'cubic-bezier(0.22, 1, 0.36, 1)';
+
+        // Animate card out of layout smoothly with the same cubic curve
+        card.style.transition = `max-height ${flightDuration}ms ${cubicEasing}, margin ${flightDuration}ms ${cubicEasing}, opacity 260ms ${cubicEasing}, padding ${flightDuration}ms ${cubicEasing}`;
+        card.style.maxHeight = `${cardRect.height}px`;
+        card.style.overflow = 'hidden';
+        card.style.pointerEvents = 'none';
+
+        // Force reflow
+        void ghost.offsetWidth;
+        void card.offsetHeight;
+
+        requestAnimationFrame(() => {
+            ghost.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(0.025)`;
+            ghost.style.borderRadius = '50%';
+            ghost.style.opacity = '0.15';
+            ghost.style.background = 'var(--accent-blue, #0d99ff)';
+            ghost.style.borderColor = '#00d2ff';
+            ghost.style.boxShadow = '0 0 16px 4px rgba(13, 153, 255, 0.9), 0 0 6px #00d2ff';
+
+            card.style.maxHeight = '0px';
+            card.style.opacity = '0';
+            card.style.marginTop = '0px';
+            card.style.marginBottom = '0px';
+            card.style.paddingTop = '0px';
+            card.style.paddingBottom = '0px';
+            card.style.borderWidth = '0px';
+        });
+
+        setTimeout(() => {
+            ghost.remove();
+
+            card.style.transition = '';
+            card.style.maxHeight = '';
+            card.style.opacity = '';
+            card.style.marginTop = '';
+            card.style.marginBottom = '';
+            card.style.paddingTop = '';
+            card.style.paddingBottom = '';
+            card.style.borderWidth = '';
+            card.style.overflow = '';
+            card.style.pointerEvents = '';
+
+            this.toggleSectionVisibility(cardId, false, false);
+
+            winBtn.classList.remove('shutter-btn-pulse');
+            void winBtn.offsetWidth;
+            winBtn.classList.add('shutter-btn-pulse');
+            setTimeout(() => {
+                winBtn.classList.remove('shutter-btn-pulse');
+            }, 650);
+        }, flightDuration);
+    }
+
     toggleSectionCollapse(cardId) {
+        const panel = this.container.querySelector('.graph-mode-panel');
+        const card = panel ? panel.querySelector(`.graph-modular-card[data-card-id="${cardId}"]`) : null;
+        if (!card) {
+            return;
+        }
+
+        const body = card.querySelector('.graph-modular-card-body');
         const layout = this.getSectionsLayout();
         layout.collapsed = layout.collapsed || {};
-        layout.collapsed[cardId] = !layout.collapsed[cardId];
+        const willCollapse = !layout.collapsed[cardId];
+        layout.collapsed[cardId] = willCollapse;
         this.saveSectionsLayout(layout);
-        this.applySectionsLayout();
-        if (cardId === 'canvas' && !layout.collapsed[cardId]) {
+
+        const btnCollapse = card.querySelector('.btn-card-collapse');
+        if (btnCollapse) {
+            btnCollapse.title = willCollapse
+                ? (window.i18n ? window.i18n.t('expandPanelTitle') : 'Expand panel')
+                : (window.i18n ? window.i18n.t('collapsePanelTitle') : 'Collapse panel');
+        }
+
+        if (!body) {
+            this.applySectionsLayout();
+            return;
+        }
+
+        const cubicEasing = 'cubic-bezier(0.22, 1, 0.36, 1)';
+        const duration = 340; // ms: identical duration and cubic bezier for both collapse and expand
+
+        if (willCollapse) {
+            // Collapsing with cubic easing
+            const startHeight = body.scrollHeight;
+            body.style.maxHeight = `${startHeight}px`;
+            body.style.overflow = 'hidden';
+            void body.offsetHeight; // force reflow
+
+            body.style.transition = `max-height ${duration}ms ${cubicEasing}, opacity ${duration}ms ${cubicEasing}, padding-top ${duration}ms ${cubicEasing}, padding-bottom ${duration}ms ${cubicEasing}`;
+            body.style.maxHeight = '0px';
+            body.style.opacity = '0';
+            body.style.paddingTop = '0px';
+            body.style.paddingBottom = '0px';
+
+            card.classList.add('is-collapsed');
+
             setTimeout(() => {
-                this.setupCanvas();
-                this.redraw();
-            }, 60);
+                body.style.transition = '';
+                body.style.maxHeight = '';
+                body.style.opacity = '';
+                body.style.paddingTop = '';
+                body.style.paddingBottom = '';
+            }, duration + 20);
+        } else {
+            // Expanding with exact same cubic easing
+            card.classList.remove('is-collapsed');
+            body.style.display = 'block';
+            body.style.maxHeight = 'none';
+            body.style.opacity = '0';
+            body.style.paddingTop = '';
+            body.style.paddingBottom = '';
+            const targetHeight = body.scrollHeight;
+
+            body.style.maxHeight = '0px';
+            body.style.overflow = 'hidden';
+            void body.offsetHeight; // force reflow
+
+            body.style.transition = `max-height ${duration}ms ${cubicEasing}, opacity ${duration}ms ${cubicEasing}, padding-top ${duration}ms ${cubicEasing}, padding-bottom ${duration}ms ${cubicEasing}`;
+            body.style.maxHeight = `${targetHeight}px`;
+            body.style.opacity = '1';
+
+            setTimeout(() => {
+                body.style.transition = '';
+                body.style.maxHeight = '';
+                body.style.opacity = '';
+                body.style.overflow = '';
+                if (cardId === 'canvas') {
+                    this.setupCanvas();
+                    this.redraw();
+                }
+            }, duration + 20);
+        }
+
+        if (window.app && typeof window.app.updateWindowMenuItems === 'function') {
+            window.app.updateWindowMenuItems();
         }
     }
 
@@ -1653,16 +1832,98 @@ class GraphMode {
         this.applySectionsLayout();
     }
 
-    toggleSectionVisibility(cardId, isVisible) {
+    toggleSectionVisibility(cardId, isVisible, animated = true) {
+        const panel = this.container.querySelector('.graph-mode-panel');
+        const card = panel ? panel.querySelector(`.graph-modular-card[data-card-id="${cardId}"]`) : null;
         const layout = this.getSectionsLayout();
+
         layout.visibility[cardId] = Boolean(isVisible);
         this.saveSectionsLayout(layout);
-        this.applySectionsLayout();
-        if (cardId === 'canvas' && layout.visibility[cardId]) {
+
+        if (!card || !animated) {
+            this.applySectionsLayout();
+            if (cardId === 'canvas' && isVisible) {
+                setTimeout(() => {
+                    this.setupCanvas();
+                    this.redraw();
+                }, 60);
+            }
+            return;
+        }
+
+        const duration = 340;
+        const cubicEasing = 'cubic-bezier(0.22, 1, 0.36, 1)';
+
+        if (!isVisible) {
+            // Smoothly collapse out of layout without any button animation
+            const startHeight = card.offsetHeight;
+            card.style.maxHeight = `${startHeight}px`;
+            card.style.overflow = 'hidden';
+            card.style.pointerEvents = 'none';
+            void card.offsetHeight; // reflow
+
+            card.style.transition = `max-height ${duration}ms ${cubicEasing}, opacity ${Math.round(duration * 0.75)}ms ${cubicEasing}, margin-top ${duration}ms ${cubicEasing}, margin-bottom ${duration}ms ${cubicEasing}, padding-top ${duration}ms ${cubicEasing}, padding-bottom ${duration}ms ${cubicEasing}, border-width ${duration}ms ${cubicEasing}, transform ${duration}ms ${cubicEasing}`;
+
+            requestAnimationFrame(() => {
+                card.style.maxHeight = '0px';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.97)';
+                card.style.marginTop = '0px';
+                card.style.marginBottom = '0px';
+                card.style.paddingTop = '0px';
+                card.style.paddingBottom = '0px';
+                card.style.borderWidth = '0px';
+            });
+
             setTimeout(() => {
-                this.setupCanvas();
-                this.redraw();
-            }, 60);
+                card.style.display = 'none';
+                card.style.transition = '';
+                card.style.maxHeight = '';
+                card.style.opacity = '';
+                card.style.transform = '';
+                card.style.marginTop = '';
+                card.style.marginBottom = '';
+                card.style.paddingTop = '';
+                card.style.paddingBottom = '';
+                card.style.borderWidth = '';
+                card.style.overflow = '';
+                card.style.pointerEvents = '';
+                this.applySectionsLayout();
+            }, duration + 20);
+        } else {
+            // Smoothly reveal and expand back into layout
+            card.style.display = 'flex';
+            card.style.maxHeight = 'none';
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.97)';
+            card.style.pointerEvents = 'none';
+            const targetHeight = card.offsetHeight || card.scrollHeight;
+
+            card.style.maxHeight = '0px';
+            card.style.overflow = 'hidden';
+            void card.offsetHeight; // reflow
+
+            card.style.transition = `max-height ${duration}ms ${cubicEasing}, opacity ${duration}ms ${cubicEasing}, transform ${duration}ms ${cubicEasing}`;
+
+            requestAnimationFrame(() => {
+                card.style.maxHeight = `${targetHeight}px`;
+                card.style.opacity = '1';
+                card.style.transform = 'scale(1)';
+            });
+
+            setTimeout(() => {
+                card.style.transition = '';
+                card.style.maxHeight = '';
+                card.style.opacity = '';
+                card.style.transform = '';
+                card.style.overflow = '';
+                card.style.pointerEvents = '';
+                this.applySectionsLayout();
+                if (cardId === 'canvas') {
+                    this.setupCanvas();
+                    this.redraw();
+                }
+            }, duration + 20);
         }
     }
 
@@ -1712,7 +1973,12 @@ class GraphMode {
         btnCancel.textContent = cancelText || (window.i18n ? window.i18n.t('cancelBtn') : 'Cancel');
 
         const closeModal = () => {
-            overlay.style.display = 'none';
+            overlay.classList.remove('is-open');
+            setTimeout(() => {
+                if (!overlay.classList.contains('is-open')) {
+                    overlay.style.display = 'none';
+                }
+            }, 240);
             btnConfirm.onclick = null;
             btnCancel.onclick = null;
             btnClose.onclick = null;
@@ -1734,6 +2000,8 @@ class GraphMode {
         };
 
         overlay.style.display = 'flex';
+        void overlay.offsetWidth;
+        overlay.classList.add('is-open');
     }
 
     // =========================================
@@ -1966,6 +2234,39 @@ class GraphMode {
         });
     }
 
+    deleteAllPresets() {
+        const customPresets = this.getCustomPresets();
+        const deletedBuiltIns = this.getDeletedBuiltInPresets();
+        const allBuiltInsCount = DEFAULT_PRESETS_DATA.length;
+
+        // If there are no custom presets and all built-in presets are already deleted, nothing to delete
+        if ((!customPresets || customPresets.length === 0) && (deletedBuiltIns.length >= allBuiltInsCount)) {
+            return;
+        }
+
+        this.showConfirmModal({
+            title: window.i18n ? window.i18n.t('confirmDeleteAllPresetsTitle') : 'Delete All Presets',
+            message: window.i18n ? window.i18n.t('confirmDeleteAllPresetsMsg') : 'Are you sure you want to delete all presets? This action cannot be undone.',
+            confirmText: window.i18n ? window.i18n.t('confirmDeleteBtn') : 'Delete All',
+            onConfirm: () => {
+                // Clear custom presets
+                this.saveCustomPresetsList([]);
+
+                // Mark all built-ins as deleted
+                const allBuiltInIds = DEFAULT_PRESETS_DATA.map((p) => p.id);
+                this.saveDeletedBuiltInPresets(allBuiltInIds);
+
+                // Reset active curve preset state
+                const cur = this.getActiveCurve();
+                if (cur) {
+                    cur.preset = 'custom';
+                }
+
+                this.renderCustomPresets();
+            }
+        });
+    }
+
     downloadJSON(data, filename) {
         try {
             const jsonStr = JSON.stringify(data, null, 2);
@@ -2050,7 +2351,7 @@ class GraphMode {
         const presetsListEl = this.container.querySelector('#custom-presets-list');
         const i18n = window.i18n;
 
-        // 1. Render Folder Filter Navigation Bar (No emojis except 📁 for folders)
+        // 1. Render Folder Filter Navigation Bar
         if (chipsListEl) {
             chipsListEl.innerHTML = '';
             const allChip = document.createElement('button');
@@ -2066,7 +2367,7 @@ class GraphMode {
             const builtInChip = document.createElement('button');
             builtInChip.type = 'button';
             builtInChip.className = `folder-chip ${this.activeFolderFilter === 'builtin' ? 'active' : ''}`;
-            builtInChip.textContent = `📁 ${i18n ? i18n.t('folderBuiltIn') : 'Basic'}`;
+            builtInChip.innerHTML = `<i class="hd-icon hd-icon-hamburger-menu"></i> ${i18n ? i18n.t('folderBuiltIn') : 'Basic'}`;
             builtInChip.addEventListener('click', () => {
                 this.activeFolderFilter = 'builtin';
                 this.renderCustomPresets();
@@ -2076,7 +2377,7 @@ class GraphMode {
             const shapesChip = document.createElement('button');
             shapesChip.type = 'button';
             shapesChip.className = `folder-chip ${this.activeFolderFilter === 'shapes' ? 'active' : ''}`;
-            shapesChip.textContent = `📁 ${i18n ? i18n.t('folderShapes') : 'Curves'}`;
+            shapesChip.innerHTML = `<i class="hd-icon hd-icon-hamburger-menu"></i> ${i18n ? i18n.t('folderShapes') : 'Curves'}`;
             shapesChip.addEventListener('click', () => {
                 this.activeFolderFilter = 'shapes';
                 this.renderCustomPresets();
@@ -2086,7 +2387,7 @@ class GraphMode {
             const dynamicsChip = document.createElement('button');
             dynamicsChip.type = 'button';
             dynamicsChip.className = `folder-chip ${this.activeFolderFilter === 'dynamics' ? 'active' : ''}`;
-            dynamicsChip.textContent = `📁 ${i18n ? i18n.t('folderDynamics') : 'Dynamics'}`;
+            dynamicsChip.innerHTML = `<i class="hd-icon hd-icon-hamburger-menu"></i> ${i18n ? i18n.t('folderDynamics') : 'Dynamics'}`;
             dynamicsChip.addEventListener('click', () => {
                 this.activeFolderFilter = 'dynamics';
                 this.renderCustomPresets();
@@ -2099,7 +2400,7 @@ class GraphMode {
                 const fChip = document.createElement('button');
                 fChip.type = 'button';
                 fChip.className = `folder-chip ${this.activeFolderFilter === f.id ? 'active' : ''}`;
-                fChip.textContent = `📁 ${f.name}`;
+                fChip.innerHTML = `<i class="hd-icon hd-icon-hamburger-menu"></i> ${f.name}`;
                 fChip.addEventListener('click', () => {
                     this.activeFolderFilter = f.id;
                     this.renderCustomPresets();
@@ -2144,7 +2445,7 @@ class GraphMode {
                 const btnCollapseFolder = document.createElement('button');
                 btnCollapseFolder.type = 'button';
                 btnCollapseFolder.className = 'btn-folder-collapse';
-                btnCollapseFolder.textContent = isCollapsed ? '▸' : '▾';
+                btnCollapseFolder.innerHTML = isCollapsed ? '<i class="hd-icon hd-icon-chevrolt-arrow-right"></i>' : '<i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i>';
                 btnCollapseFolder.title = isCollapsed
                     ? (i18n ? i18n.t('expandFolderTitle') : 'Expand folder')
                     : (i18n ? i18n.t('collapseFolderTitle') : 'Collapse folder');
@@ -2155,7 +2456,7 @@ class GraphMode {
 
                 const titleEl = document.createElement('span');
                 titleEl.className = 'custom-folder-group-title';
-                titleEl.textContent = `📁 ${folder.name} (${availablePresets.length})`;
+                titleEl.innerHTML = `<i class="hd-icon hd-icon-hamburger-menu"></i> ${folder.name} (${availablePresets.length})`;
                 titleEl.style.cursor = 'pointer';
                 titleEl.title = isCollapsed
                     ? (i18n ? i18n.t('expandFolderTitle') : 'Expand folder')
@@ -2171,9 +2472,6 @@ class GraphMode {
 
                 const itemsListEl = document.createElement('div');
                 itemsListEl.className = 'custom-folder-items-list';
-                if (isCollapsed) {
-                    itemsListEl.style.display = 'none';
-                }
 
                 if (availablePresets.length === 0) {
                     const emptyEl = document.createElement('span');
@@ -2199,7 +2497,7 @@ class GraphMode {
                         const btnDel = document.createElement('button');
                         btnDel.type = 'button';
                         btnDel.className = 'btn-del-custom-preset';
-                        btnDel.textContent = '✕';
+                        btnDel.innerHTML = '<i class="hd-icon hd-icon-close"></i>';
                         btnDel.title = i18n ? i18n.t('deletePresetTitle') : 'Delete this preset';
                         btnDel.addEventListener('click', (e) => {
                             e.stopPropagation();
@@ -2237,7 +2535,7 @@ class GraphMode {
                 const btnCollapseFolder = document.createElement('button');
                 btnCollapseFolder.type = 'button';
                 btnCollapseFolder.className = 'btn-folder-collapse';
-                btnCollapseFolder.textContent = isCollapsed ? '▸' : '▾';
+                btnCollapseFolder.innerHTML = isCollapsed ? '<i class="hd-icon hd-icon-chevrolt-arrow-right"></i>' : '<i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i>';
                 btnCollapseFolder.title = isCollapsed
                     ? (i18n ? i18n.t('expandFolderTitle') : 'Expand folder')
                     : (i18n ? i18n.t('collapseFolderTitle') : 'Collapse folder');
@@ -2248,7 +2546,7 @@ class GraphMode {
 
                 const titleEl = document.createElement('span');
                 titleEl.className = 'custom-folder-group-title';
-                titleEl.textContent = `📁 ${folder.name} (${folderPresets.length})`;
+                titleEl.innerHTML = `<i class="hd-icon hd-icon-hamburger-menu"></i> ${folder.name} (${folderPresets.length})`;
                 titleEl.style.cursor = 'pointer';
                 titleEl.title = isCollapsed
                     ? (i18n ? i18n.t('expandFolderTitle') : 'Expand folder')
@@ -2266,7 +2564,7 @@ class GraphMode {
                     const btnDelFolder = document.createElement('button');
                     btnDelFolder.type = 'button';
                     btnDelFolder.className = 'btn-del-folder';
-                    btnDelFolder.textContent = '✕';
+                    btnDelFolder.innerHTML = '<i class="hd-icon hd-icon-close"></i>';
                     btnDelFolder.title = i18n ? i18n.t('deleteFolderTitle') : 'Delete folder';
                     btnDelFolder.addEventListener('click', (e) => {
                         e.stopPropagation();
@@ -2279,9 +2577,6 @@ class GraphMode {
 
                 const itemsListEl = document.createElement('div');
                 itemsListEl.className = 'custom-folder-items-list';
-                if (isCollapsed) {
-                    itemsListEl.style.display = 'none';
-                }
 
                 if (folderPresets.length === 0) {
                     const emptyEl = document.createElement('span');
@@ -2306,7 +2601,7 @@ class GraphMode {
                         const btnDel = document.createElement('button');
                         btnDel.type = 'button';
                         btnDel.className = 'btn-del-custom-preset';
-                        btnDel.textContent = '✕';
+                        btnDel.innerHTML = '<i class="hd-icon hd-icon-close"></i>';
                         btnDel.title = i18n ? i18n.t('deletePresetTitle') : 'Delete this preset';
                         btnDel.addEventListener('click', (e) => {
                             e.stopPropagation();
@@ -2382,8 +2677,12 @@ class GraphMode {
     }
 
     bindEvents() {
-        // Modular Cards Controls (▲ Up, ▼ Down, ✕ Close, ▾/▸ Collapse): Robust delegated listener
-        this.container.addEventListener('click', (e) => {
+        // Modular Cards Controls (Up, Down, Close, Collapse): Robust delegated listener
+        if (this._containerClickHandler) {
+            this.container.removeEventListener('click', this._containerClickHandler);
+            this._containerClickHandler = null;
+        }
+        this._containerClickHandler = (e) => {
             const btnCtrl = e.target.closest('.btn-card-ctrl');
             if (btnCtrl) {
                 e.stopPropagation();
@@ -2399,7 +2698,7 @@ class GraphMode {
                 } else if (action === 'down') {
                     this.moveSection(cardId, 1);
                 } else if (action === 'close') {
-                    this.toggleSectionVisibility(cardId, false);
+                    this.closeSectionWithFlightAnimation(cardId);
                 } else if (action === 'collapse') {
                     this.toggleSectionCollapse(cardId);
                 }
@@ -2414,7 +2713,8 @@ class GraphMode {
                     this.toggleSectionCollapse(card.dataset.cardId);
                 }
             }
-        });
+        };
+        this.container.addEventListener('click', this._containerClickHandler);
 
         // Folder Form Controls
         const btnNewFolder = this.container.querySelector('#btn-new-folder');
@@ -2491,6 +2791,7 @@ class GraphMode {
         const btnCreatePreset = this.container.querySelector('#btn-create-preset');
         const btnExportPresets = this.container.querySelector('#btn-export-presets');
         const btnImportPresets = this.container.querySelector('#btn-import-presets');
+        const btnDeleteAllPresets = this.container.querySelector('#btn-delete-all-presets');
         const importFileInput = this.container.querySelector('#import-presets-file-input');
 
         const presetCreateForm = this.container.querySelector('#preset-create-form');
@@ -2557,6 +2858,12 @@ class GraphMode {
                 if (file) {
                     this.importPresetsJSON(file);
                 }
+            });
+        }
+
+        if (btnDeleteAllPresets) {
+            btnDeleteAllPresets.addEventListener('click', () => {
+                this.deleteAllPresets();
             });
         }
 
@@ -3405,7 +3712,11 @@ class GraphMode {
         });
 
         // Keyboard shortcuts: Delete/Backspace to delete point, Ctrl+Z (Undo), Ctrl+Y / Ctrl+Shift+Z (Redo)
-        window.addEventListener('keydown', (e) => {
+        if (this._windowKeydownHandler) {
+            window.removeEventListener('keydown', this._windowKeydownHandler);
+            this._windowKeydownHandler = null;
+        }
+        this._windowKeydownHandler = (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                 return;
             }
@@ -3424,7 +3735,8 @@ class GraphMode {
                 this.redo();
                 return;
             }
-        });
+        };
+        window.addEventListener('keydown', this._windowKeydownHandler);
 
         if (this.resizeHandler) {
             window.removeEventListener('resize', this.resizeHandler);
@@ -3529,50 +3841,13 @@ class GraphMode {
             this.ensurePointHandles(activeCur);
             const pts = activeCur.points;
             const n = pts.length;
-
-            // Gradient fill under curve using exact cubic Bezier curves
-            const grad = ctx.createLinearGradient(0, pad, 0, h - pad);
-            grad.addColorStop(0, `${activeCur.color}30`); // 19% opacity
-            grad.addColorStop(1, 'rgba(0, 0, 0, 0.0)');
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            const p0Pix = this.normToPixel(pts[0]);
-            const pnPix = this.normToPixel(pts[n - 1]);
             const plotLeft = pad;
             const plotRight = w - pad;
+            const p0Pix = this.normToPixel(pts[0]);
+            const pnPix = this.normToPixel(pts[n - 1]);
 
-            ctx.moveTo(plotLeft, h - pad);
-            ctx.lineTo(plotLeft, p0Pix.y);
-            ctx.lineTo(p0Pix.x, p0Pix.y);
-
-            for (let i = 0; i < n - 1; i++) {
-                const a0 = pts[i];
-                const a1 = pts[i + 1];
-                const hasCp1 = Boolean(a0.cpOut && !a0.hasNoCpOut);
-                const hasCp2 = Boolean(a1.cpIn && !a1.hasNoCpIn);
-                const a1Pix = this.normToPixel(a1);
-
-                if (!hasCp1 && !hasCp2) {
-                    ctx.lineTo(a1Pix.x, a1Pix.y);
-                } else {
-                    const dx = (a1.x - a0.x) / 3;
-                    const dy = (a1.y - a0.y) / 3;
-                    const cp1 = (hasCp1 && a0.cpOut) ? a0.cpOut : { x: a0.x + dx, y: a0.y + dy };
-                    const cp2 = (hasCp2 && a1.cpIn) ? a1.cpIn : { x: a1.x - dx, y: a1.y - dy };
-                    const cp1Pix = this.normToPixel(cp1);
-                    const cp2Pix = this.normToPixel(cp2);
-                    ctx.bezierCurveTo(cp1Pix.x, cp1Pix.y, cp2Pix.x, cp2Pix.y, a1Pix.x, a1Pix.y);
-                }
-            }
-            ctx.lineTo(plotRight, pnPix.y);
-            ctx.lineTo(plotRight, h - pad);
-            ctx.closePath();
-            ctx.fill();
-
-            // Main curve line with glow using exact cubic Bezier or straight paths
+            // Main curve line (flat, crisp, no shadow or gradients)
             ctx.save();
-            ctx.shadowColor = activeCur.color;
-            ctx.shadowBlur = 8;
             ctx.strokeStyle = activeCur.color;
             ctx.lineWidth = 3.2;
             ctx.beginPath();
@@ -3760,7 +4035,8 @@ class GraphMode {
 
             // 5. Draw Distribution Hover Projection Lines & Floating Value Badge
             if (this.hoveredDistIndex !== null) {
-                const count = Math.max(2, Math.min(32, this.itemCount));
+                const realCount = Math.max(1, this.itemCount || 16);
+                const count = Math.max(2, Math.min(48, realCount));
                 if (this.hoveredDistIndex >= 0 && this.hoveredDistIndex < count) {
                     const i = this.hoveredDistIndex;
                     const xNorm = count > 1 ? i / (count - 1) : 0;
@@ -3778,8 +4054,9 @@ class GraphMode {
                     const axisName = window.i18n ? window.i18n.getAxisName(activeCur.axisId, rawAxisName) : rawAxisName;
                     const range = this.getAxisRange(activeCur.axisId);
                     const calculatedVal = Math.round(range.min + yNorm * (range.max - range.min));
-                    const rawChar = (this.textSnippet && this.textSnippet[i]) ? this.textSnippet[i] : null;
-                    const letterDisplay = rawChar ? `'${rawChar}'` : `#${i + 1}`;
+                    const sampleIdx = (realCount === count) ? i : Math.min(Math.round(xNorm * (realCount - 1)), realCount - 1);
+                    const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
+                    const letterDisplay = rawChar ? `'${rawChar}'` : `#${sampleIdx + 1}`;
 
                     ctx.save();
 
@@ -3852,11 +4129,11 @@ class GraphMode {
                         badgeY = Math.round(pixY + 10);
                     }
 
-                    // Shadow and badge pill
-                    ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
-                    ctx.shadowBlur = 8;
+                    // Flat badge pill (no shadow)
+                    ctx.shadowColor = 'transparent';
+                    ctx.shadowBlur = 0;
                     ctx.shadowOffsetX = 0;
-                    ctx.shadowOffsetY = 2;
+                    ctx.shadowOffsetY = 0;
                     ctx.fillStyle = '#161618';
                     ctx.strokeStyle = activeCur.color || '#38bdf8';
                     ctx.lineWidth = 1.2;
@@ -3954,11 +4231,17 @@ class GraphMode {
             axisLabel.textContent = headingText;
         }
 
-        const count = Math.max(2, Math.min(32, this.itemCount));
+        barContainer.classList.remove('has-limit-warning');
+        const realCount = Math.max(1, this.itemCount || 16);
+        const count = Math.max(2, Math.min(48, realCount));
+        barContainer.classList.toggle('is-thin', count > 20);
+        barContainer.classList.toggle('dist-bars-dense', count > 36);
+        barContainer.classList.toggle('dist-bars-ultra', count > 44);
+
         if (countLabel) {
             const countStr = this.distributionTarget === 'characters'
-                ? (window.i18n ? window.i18n.t('charactersCount', { count }) : `${count} characters`)
-                : (window.i18n ? window.i18n.t('itemsCount', { count }) : `${count} items`);
+                ? (window.i18n ? window.i18n.t('charactersCount', { count: realCount }) : `${realCount} characters`)
+                : (window.i18n ? window.i18n.t('itemsCount', { count: realCount }) : `${realCount} items`);
             countLabel.textContent = countStr;
         }
 
@@ -3969,7 +4252,7 @@ class GraphMode {
                     <span class="dist-footer-axis-name">${axisName}</span>
                     <span class="dist-footer-axis-tag">${cur.axisId}</span>
                 </div>
-                <div class="dist-footer-range">${range.min} ➔ ${range.max}</div>
+                <div class="dist-footer-range">${range.min} &rarr; ${range.max}</div>
             `;
         }
 
@@ -3984,11 +4267,12 @@ class GraphMode {
                 const heightPercent = Math.max(4, Math.round(yNorm * 100));
                 const calculatedVal = Math.round(range.min + yNorm * (range.max - range.min));
 
-                const rawChar = (this.textSnippet && this.textSnippet[i]) ? this.textSnippet[i] : null;
-                const letterDisplay = rawChar ? `${rawChar}` : `#${i + 1}`;
+                const sampleIdx = (realCount === count) ? i : Math.min(Math.round(xNorm * (realCount - 1)), realCount - 1);
+                const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
+                const letterDisplay = rawChar ? `${rawChar}` : `#${sampleIdx + 1}`;
                 const tipText = window.i18n
-                    ? window.i18n.t('distBarLetterTip', { char: `'${letterDisplay}'`, idx: i + 1, axis: axisName, val: calculatedVal })
-                    : `Letter '${letterDisplay}' (#${i + 1}): ${axisName} = ${calculatedVal}`;
+                    ? window.i18n.t('distBarLetterTip', { char: `'${letterDisplay}'`, idx: sampleIdx + 1, axis: axisName, val: calculatedVal })
+                    : `Letter '${letterDisplay}' (#${sampleIdx + 1}): ${axisName} = ${calculatedVal}`;
 
                 item.dataset.index = i;
                 item.dataset.label = letterDisplay;
@@ -4025,11 +4309,12 @@ class GraphMode {
                 const heightPercent = Math.max(4, Math.round(yNorm * 100));
                 const calculatedVal = Math.round(range.min + yNorm * (range.max - range.min));
 
-                const rawChar = (this.textSnippet && this.textSnippet[i]) ? this.textSnippet[i] : null;
-                const letterDisplay = rawChar ? `${rawChar}` : `#${i + 1}`;
+                const sampleIdx = (realCount === count) ? i : Math.min(Math.round(xNorm * (realCount - 1)), realCount - 1);
+                const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
+                const letterDisplay = rawChar ? `${rawChar}` : `#${sampleIdx + 1}`;
                 const tipText = window.i18n
-                    ? window.i18n.t('distBarLetterTip', { char: `'${letterDisplay}'`, idx: i + 1, axis: axisName, val: calculatedVal })
-                    : `Letter '${letterDisplay}' (#${i + 1}): ${axisName} = ${calculatedVal}`;
+                    ? window.i18n.t('distBarLetterTip', { char: `'${letterDisplay}'`, idx: sampleIdx + 1, axis: axisName, val: calculatedVal })
+                    : `Letter '${letterDisplay}' (#${sampleIdx + 1}): ${axisName} = ${calculatedVal}`;
 
                 const isHoveredClass = (this.hoveredDistIndex === i) ? ' is-hovered' : '';
                 html += `
@@ -4073,7 +4358,7 @@ class GraphMode {
     }
 
     emitDistribution() {
-        const count = Math.max(2, Math.min(64, this.itemCount));
+        const count = Math.max(2, Math.min(1000, this.itemCount || 16));
         const activeCur = this.getActiveCurve();
 
         // Multi-curve payload: evaluates each enabled curve along its own axis

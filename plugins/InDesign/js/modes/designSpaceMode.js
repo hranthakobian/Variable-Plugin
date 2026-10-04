@@ -76,8 +76,8 @@ class DesignSpaceMode {
                         <span class="ds-readout-val" id="ds-y-val">0</span>
                     </div>
                     <div class="ds-readout-actions">
-                        <button type="button" class="btn-reset-regular" id="btn-ds-regular" title="${t('snapRegularTitle', 'Snap to Regular Defaults (Weight 400, Width 100)')}">${t('snapRegular', '↺ Regular')}</button>
-                        <button type="button" class="btn-reset-center" id="btn-ds-center" title="${t('snapCenterTitle', 'Snap to Center (0.5, 0.5)')}">${t('snapCenter', '✛ Center')}</button>
+                        <button type="button" class="btn-reset-regular" id="btn-ds-regular" title="${t('snapRegularTitle', 'Snap to Regular Defaults (Weight 400, Width 100)')}"><i class="hd-icon hd-icon-undo-arrow"></i> ${t('snapRegular', 'Regular')}</button>
+                        <button type="button" class="btn-reset-center" id="btn-ds-center" title="${t('snapCenterTitle', 'Snap to Center (0.5, 0.5)')}"><i class="hd-icon hd-icon-plus"></i> ${t('snapCenter', 'Center')}</button>
                     </div>
                 </div>
             </div>
@@ -103,8 +103,8 @@ class DesignSpaceMode {
         const readoutH = readout ? readout.offsetHeight : 45;
         const gap = 16;
 
-        const availW = Math.max(160, panelWidth);
-        const availH = Math.max(160, panelHeight - toolbarH - readoutH - gap);
+        const availW = Math.max(60, panelWidth - 4);
+        const availH = Math.max(60, panelHeight - toolbarH - readoutH - gap);
 
         // 2D field MUST BE A SQUARE (քառակուսի): width === height
         const squareSize = Math.round(Math.min(availW, availH));
@@ -308,7 +308,19 @@ class DesignSpaceMode {
     }
 
     getAxisConfig(axisId) {
-        return this.availableAxes.find((a) => a.id === axisId) || {
+        const found = this.availableAxes.find((a) => a.id === axisId);
+        if (found) {
+            const def = found.default !== undefined ? found.default : (found.defaultVal !== undefined ? found.defaultVal : ((found.min + found.max) / 2));
+            return {
+                id: found.id,
+                name: found.name || found.id,
+                min: found.min !== undefined ? found.min : 0,
+                max: found.max !== undefined ? found.max : 100,
+                step: found.step !== undefined ? found.step : 1,
+                defaultVal: def
+            };
+        }
+        return {
             id: axisId,
             name: axisId,
             min: 0,
@@ -328,18 +340,23 @@ class DesignSpaceMode {
         const rangeX = xAxis.max - xAxis.min;
         const rangeY = yAxis.max - yAxis.min;
 
+        const normX = rangeX > 0 ? (valX - xAxis.min) / rangeX : 0.5;
+        const normY = rangeY > 0 ? (valY - yAxis.min) / rangeY : 0.5;
+
         this.nodePos = {
-            x: rangeX > 0 ? Math.max(0, Math.min(1, (valX - xAxis.min) / rangeX)) : 0.5,
-            y: rangeY > 0 ? Math.max(0, Math.min(1, (valY - yAxis.min) / rangeY)) : 0.5
+            x: Number.isFinite(normX) ? Math.max(0, Math.min(1, normX)) : 0.5,
+            y: Number.isFinite(normY) ? Math.max(0, Math.min(1, normY)) : 0.5
         };
     }
 
     normToPixel(pt) {
-        const plotW = this.width - this.padding * 2;
-        const plotH = this.height - this.padding * 2;
+        const plotW = Math.max(1, this.width - this.padding * 2);
+        const plotH = Math.max(1, this.height - this.padding * 2);
+        const px = Number.isFinite(pt && pt.x) ? pt.x : 0.5;
+        const py = Number.isFinite(pt && pt.y) ? pt.y : 0.5;
         return {
-            x: this.padding + pt.x * plotW,
-            y: this.height - this.padding - pt.y * plotH
+            x: this.padding + px * plotW,
+            y: this.height - this.padding - py * plotH
         };
     }
 

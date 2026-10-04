@@ -2678,7 +2678,11 @@ class GraphMode {
 
     bindEvents() {
         // Modular Cards Controls (Up, Down, Close, Collapse): Robust delegated listener
-        this.container.addEventListener('click', (e) => {
+        if (this._containerClickHandler) {
+            this.container.removeEventListener('click', this._containerClickHandler);
+            this._containerClickHandler = null;
+        }
+        this._containerClickHandler = (e) => {
             const btnCtrl = e.target.closest('.btn-card-ctrl');
             if (btnCtrl) {
                 e.stopPropagation();
@@ -2709,7 +2713,8 @@ class GraphMode {
                     this.toggleSectionCollapse(card.dataset.cardId);
                 }
             }
-        });
+        };
+        this.container.addEventListener('click', this._containerClickHandler);
 
         // Folder Form Controls
         const btnNewFolder = this.container.querySelector('#btn-new-folder');
@@ -3707,7 +3712,11 @@ class GraphMode {
         });
 
         // Keyboard shortcuts: Delete/Backspace to delete point, Ctrl+Z (Undo), Ctrl+Y / Ctrl+Shift+Z (Redo)
-        window.addEventListener('keydown', (e) => {
+        if (this._windowKeydownHandler) {
+            window.removeEventListener('keydown', this._windowKeydownHandler);
+            this._windowKeydownHandler = null;
+        }
+        this._windowKeydownHandler = (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                 return;
             }
@@ -3726,7 +3735,8 @@ class GraphMode {
                 this.redo();
                 return;
             }
-        });
+        };
+        window.addEventListener('keydown', this._windowKeydownHandler);
 
         if (this.resizeHandler) {
             window.removeEventListener('resize', this.resizeHandler);

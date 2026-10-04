@@ -616,8 +616,8 @@ class AppController {
             this.designSpaceMode.renderUI();
             this.designSpaceMode.setupCanvas();
             this.designSpaceMode.bindEvents();
-            this.designSpaceMode.syncAxes(info.axes || []);
             this.designSpaceMode.syncValues(info.currentValues);
+            this.designSpaceMode.syncAxes(info.axes || []);
             this.designSpaceMode.redraw();
         }
         this.redrawCanvases();
@@ -713,13 +713,16 @@ class AppController {
 
             if (showEmpty) {
                 container.style.display = 'none';
+                const listSig = JSON.stringify((textFrames || []).map((tf) => [tf.index, tf.snippet || tf.text || '', tf.fontName || '', Boolean(tf.isVariable), tf.charCount || 0]));
                 if (!existingCard) {
                     const card = document.createElement('div');
                     card.className = 'no-selection-card';
+                    card.dataset.signature = listSig;
                     card.innerHTML = this.buildNoSelectionHtml(textFrames);
                     pane.appendChild(card);
                     this.bindNoSelectionEvents(card);
-                } else {
+                } else if (existingCard.dataset.signature !== listSig) {
+                    existingCard.dataset.signature = listSig;
                     existingCard.innerHTML = this.buildNoSelectionHtml(textFrames);
                     this.bindNoSelectionEvents(existingCard);
                 }

@@ -3,6 +3,14 @@
  * Strict adherence to Figma Plugin UI Guidelines & Design Tokens
  */
 
+@font-face {
+    font-family: 'HDesign';
+    src: url('https://api.hakobian.am/libs/v1/fonts/hdesign.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 /* Figma Dark Theme Tokens */
 [data-theme="figma-dark"],
 body.figma-dark-mode {
@@ -43,7 +51,7 @@ body.figma-dark-mode {
     --box-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
     --box-shadow-popover: 0 4px 16px rgba(0, 0, 0, 0.5);
 
-    --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-ui: "HDesign", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-mono: "Roboto Mono", "SF Mono", Consolas, monospace;
 
     /* Figma Native Color Variables Fallback */
@@ -97,7 +105,7 @@ body.figma-light-mode {
     --box-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08);
     --box-shadow-popover: 0 4px 16px rgba(0, 0, 0, 0.15);
 
-    --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-ui: "HDesign", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
     --figma-color-bg: #ffffff;
     --figma-color-bg-hover: #f5f5f5;

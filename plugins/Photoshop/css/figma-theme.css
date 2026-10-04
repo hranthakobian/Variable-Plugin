@@ -3,6 +3,14 @@
  * Strict adherence to Figma Plugin UI Guidelines & Design Tokens
  */
 
+@font-face {
+    font-family: 'HDesign';
+    src: url('https://api.hakobian.am/libs/v1/fonts/hdesign.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 /* Figma Dark Theme Tokens */
 [data-theme="figma-dark"],
 body.figma-dark-mode {
@@ -43,7 +51,7 @@ body.figma-dark-mode {
     --box-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
     --box-shadow-popover: 0 4px 16px rgba(0, 0, 0, 0.5);
 
-    --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-ui: "HDesign", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-mono: "Roboto Mono", "SF Mono", Consolas, monospace;
 
     /* Figma Native Color Variables Fallback */
@@ -97,7 +105,7 @@ body.figma-light-mode {
     --box-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08);
     --box-shadow-popover: 0 4px 16px rgba(0, 0, 0, 0.15);
 
-    --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-ui: "HDesign", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
     --figma-color-bg: #ffffff;
     --figma-color-bg-hover: #f5f5f5;
@@ -148,8 +156,8 @@ body.figma-light-mode {
     padding: 5px 8px;
     font-size: 11px;
     font-weight: 500;
-    border-radius: 4px;
-    border: none;
+    border-radius: 9999px !important;
+    border: none !important;
     background: transparent;
     color: var(--text-muted);
     transition: all 0.15s ease;
@@ -164,7 +172,7 @@ body.figma-light-mode {
     background: var(--bg-app);
     color: var(--text-main);
     font-weight: 600;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: none;
 }
 
 /* Figma Inputs & Controls */
@@ -215,11 +223,18 @@ body.figma-light-mode {
     background: var(--accent-blue);
 }
 
-/* Figma Canvas Dot Grid Background */
+/* Figma Canvas Flat Background (No radial gradients, no shadows) */
 [data-theme^="figma"] canvas {
     background-color: var(--bg-canvas-wrap);
-    background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
-    background-size: 12px 12px;
+    background-image: none;
     border-radius: 6px;
     border: 1px solid var(--border-color);
+    box-shadow: none;
+}
+
+/* HD Icons Maximum Thickness (Weight 900 / Black) */
+.hd-icon,
+[class^="hd-icon-"],
+[class*=" hd-icon-"] {
+    font-weight: 900 !important;
 }

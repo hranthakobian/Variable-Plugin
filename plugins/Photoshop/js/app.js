@@ -59,6 +59,21 @@ class AppController {
         // Initial selection load
         await this.refreshSelection(true);
 
+        // Position animated sliding tab indicator and initialize active mode state
+        this.switchMode(this.activeMode);
+        window.addEventListener('resize', () => {
+            this.updateTabIndicator(this.activeMode);
+            this.redrawCanvases();
+        });
+
+        if (typeof ResizeObserver !== 'undefined') {
+            const containerObserver = new ResizeObserver(() => {
+                this.updateTabIndicator(this.activeMode);
+                this.redrawCanvases();
+            });
+            containerObserver.observe(document.body);
+        }
+
         // Start polling for selection changes in Illustrator
         this.startSelectionPolling();
     }
@@ -110,19 +125,37 @@ class AppController {
         const dropdown = document.getElementById('window-menu-dropdown');
         const btnReset = document.getElementById('btn-reset-layout');
 
+        const openDropdown = () => {
+            this.updateWindowMenuItems();
+            dropdown.style.display = 'flex';
+            void dropdown.offsetWidth; // force reflow for smooth transition
+            dropdown.classList.add('is-open');
+        };
+
+        const closeDropdown = () => {
+            dropdown.classList.remove('is-open');
+            setTimeout(() => {
+                if (!dropdown.classList.contains('is-open')) {
+                    dropdown.style.display = 'none';
+                }
+            }, 230);
+        };
+
         if (btnWindow && dropdown) {
             btnWindow.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const isHidden = (dropdown.style.display === 'none' || !dropdown.style.display);
-                dropdown.style.display = isHidden ? 'block' : 'none';
-                if (isHidden) {
-                    this.updateWindowMenuItems();
+                if (dropdown.classList.contains('is-open')) {
+                    closeDropdown();
+                } else {
+                    openDropdown();
                 }
             });
 
             document.addEventListener('click', (e) => {
                 if (!btnWindow.contains(e.target) && !dropdown.contains(e.target)) {
-                    dropdown.style.display = 'none';
+                    if (dropdown.classList.contains('is-open')) {
+                        closeDropdown();
+                    }
                 }
             });
         }
@@ -132,7 +165,7 @@ class AppController {
             btnRestartTour.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (dropdown) {
-                    dropdown.style.display = 'none';
+                    closeDropdown();
                 }
                 if (this.tourGuide) {
                     this.tourGuide.restartTour();
@@ -183,7 +216,7 @@ class AppController {
 
             chk.addEventListener('change', () => {
                 if (this.graphMode && typeof this.graphMode.toggleSectionVisibility === 'function') {
-                    this.graphMode.toggleSectionVisibility(panel.id, chk.checked);
+                    this.graphMode.toggleSectionVisibility(panel.id, chk.checked, true);
                 }
             });
 
@@ -198,19 +231,50 @@ class AppController {
     }
 
     bindInteractionGuards() {
-        // When user is actively dragging sliders, curves or 2D node, pause polling
-        window.addEventListener('mousedown', () => {
+        let guardTimer = null;
+        const resetInteraction = () => {
+            if (guardTimer) {
+                clearTimeout(guardTimer);
+                guardTimer = null;
+            }
+            guardTimer = setTimeout(() => {
+                this.isUserInteracting = false;
+                guardTimer = null;
+            }, 300);
+        };
+
+        const triggerInteraction = (duration = 600) => {
             this.isUserInteracting = true;
-        });
-        window.addEventListener('mouseup', () => {
-            this.isUserInteracting = false;
-        });
-        window.addEventListener('touchstart', () => {
-            this.isUserInteracting = true;
+            if (guardTimer) {
+                clearTimeout(guardTimer);
+            }
+            guardTimer = setTimeout(() => {
+                this.isUserInteracting = false;
+                guardTimer = null;
+            }, duration);
+        };
+
+        window.addEventListener('mouseup', resetInteraction);
+        window.addEventListener('pointerup', resetInteraction);
+        window.addEventListener('touchend', resetInteraction);
+        window.addEventListener('mouseleave', resetInteraction);
+        window.addEventListener('blur', resetInteraction);
+        window.addEventListener('focus', resetInteraction);
+
+        window.addEventListener('input', () => triggerInteraction(600), { passive: true });
+        window.addEventListener('touchmove', () => triggerInteraction(600), { passive: true });
+        window.addEventListener('pointerdown', () => triggerInteraction(600), { passive: true });
+        window.addEventListener('pointermove', (e) => {
+            if (e.buttons > 0) {
+                triggerInteraction(600);
+            }
         }, { passive: true });
-        window.addEventListener('touchend', () => {
-            this.isUserInteracting = false;
-        });
+        window.addEventListener('mousedown', () => triggerInteraction(600), { passive: true });
+        window.addEventListener('mousemove', (e) => {
+            if (e.buttons > 0) {
+                triggerInteraction(600);
+            }
+        }, { passive: true });
     }
 
     initModes() {
@@ -264,6 +328,30 @@ class AppController {
         }, 200);
     }
 
+    updateTabIndicator(modeName = this.activeMode) {
+        const nav = document.getElementById('mode-tabs');
+        const pill = document.getElementById('tab-indicator-pill');
+        const activeBtn = document.querySelector(`.tab-btn[data-mode="${modeName}"]`);
+        if (!nav || !pill || !activeBtn) {
+            return;
+        }
+
+        const navRect = nav.getBoundingClientRect();
+        const btnRect = activeBtn.getBoundingClientRect();
+
+        const left = btnRect.left - navRect.left;
+        const top = btnRect.top - navRect.top;
+        const width = btnRect.width;
+        const height = btnRect.height;
+
+        pill.style.left = `${left}px`;
+        pill.style.top = `${top}px`;
+        pill.style.width = `${width}px`;
+        pill.style.height = `${height}px`;
+
+        pill.className = `tab-indicator-pill mode-${modeName}`;
+    }
+
     switchMode(modeName) {
         this.activeMode = modeName;
 
@@ -271,9 +359,26 @@ class AppController {
             btn.classList.toggle('active', btn.dataset.mode === modeName);
         });
 
+        this.updateTabIndicator(modeName);
+
         document.getElementById('pane-slider').classList.toggle('active', modeName === 'slider');
         document.getElementById('pane-graph').classList.toggle('active', modeName === 'graph');
         document.getElementById('pane-design-space').classList.toggle('active', modeName === 'designSpace');
+
+        // Only show "Փեղկեր" button when in "Արվեստանոց" (graph) mode
+        const winBtn = document.getElementById('btn-window-menu');
+        const winDropdown = document.getElementById('window-menu-dropdown');
+        if (winBtn) {
+            if (modeName === 'graph') {
+                winBtn.style.display = 'inline-flex';
+            } else {
+                winBtn.style.display = 'none';
+                if (winDropdown) {
+                    winDropdown.classList.remove('is-open');
+                    winDropdown.style.display = 'none';
+                }
+            }
+        }
 
         const hasNoSel = !this.currentSelectionInfo || !this.currentSelectionInfo.hasSelection;
         if (hasNoSel) {
@@ -286,16 +391,21 @@ class AppController {
                 this.tourGuide.checkFirstTimeWelcome();
             }
             if (this.graphMode) {
+                this.graphMode.syncSelection(this.currentSelectionInfo);
                 requestAnimationFrame(() => {
                     this.graphMode.setupCanvas();
                     this.graphMode.redraw();
                 });
             }
         } else if (modeName === 'designSpace' && this.designSpaceMode) {
+            this.designSpaceMode.syncAxes(this.currentSelectionInfo.axes || []);
+            this.designSpaceMode.syncValues(this.currentSelectionInfo.currentValues);
             requestAnimationFrame(() => {
                 this.designSpaceMode.setupCanvas();
                 this.designSpaceMode.redraw();
             });
+        } else if (modeName === 'slider' && this.sliderMode) {
+            this.sliderMode.syncValues(this.currentSelectionInfo.currentValues);
         }
     }
 
@@ -329,7 +439,7 @@ class AppController {
             // Dismiss no-selection empty state and show tools when valid selection exists
             this.updateNoSelectionView(false);
 
-            const isNonVar = info.type === 'text' && (!info.isVariableFont || !info.axes || info.axes.length === 0);
+            const isNonVar = info.type === 'text' && (!info.axes || info.axes.length === 0);
             this.updateNonVariableWarning(isNonVar, info.fontName || info.fontFamily);
 
             if (isNonVar) {
@@ -389,6 +499,8 @@ class AppController {
             tabDs.textContent = window.i18n.t('tabDesignSpace');
         }
 
+        this.updateTabIndicator(this.activeMode);
+
         const btnSync = document.getElementById('btn-sync-selection');
         if (btnSync) {
             btnSync.title = window.i18n.t('syncTitle');
@@ -416,17 +528,17 @@ class AppController {
 
         const winHeading = document.getElementById('window-menu-heading');
         if (winHeading) {
-            winHeading.textContent = window.i18n.t('windowMenuTitle');
+            winHeading.textContent = window.i18n.t('windowMenuBtn');
         }
 
         const btnReset = document.getElementById('btn-reset-layout');
         if (btnReset) {
-            btnReset.textContent = `↺ ${window.i18n.t('resetLayoutBtn')}`;
+            btnReset.innerHTML = `<i class="hd-icon hd-icon-undo-arrow"></i> ${window.i18n.t('resetLayoutBtn')}`;
         }
 
         const btnRestartTour = document.getElementById('btn-restart-tour');
         if (btnRestartTour) {
-            btnRestartTour.textContent = `🎓 ${window.i18n.t('restartTourBtn')}`;
+            btnRestartTour.innerHTML = `<i class="hd-icon hd-icon-info"></i> ${window.i18n.t('restartTourBtn')}`;
         }
 
         if (this.tourGuide && typeof this.tourGuide.updateWelcomeTexts === 'function') {
@@ -440,10 +552,12 @@ class AppController {
                 this.updateNoSelectionView(true, this.currentSelectionInfo.documentTextFrames || []);
                 this.updateHeaderUI(this.currentSelectionInfo, false);
             } else {
-                const isNonVar = this.currentSelectionInfo.isVariableFont === false;
+                const isNonVar = this.currentSelectionInfo.type === 'text' && (!this.currentSelectionInfo.axes || this.currentSelectionInfo.axes.length === 0);
                 this.updateHeaderUI(this.currentSelectionInfo, isNonVar);
                 if (isNonVar) {
                     this.updateNonVariableWarning(true, this.currentSelectionInfo.fontName || this.currentSelectionInfo.fontFamily);
+                } else {
+                    this.updateNonVariableWarning(false);
                 }
             }
         }
@@ -451,67 +565,62 @@ class AppController {
 
     redrawCanvases() {
         try {
-            if (this.graphMode && typeof this.graphMode.redraw === 'function') {
-                this.graphMode.redraw();
+            if (this.graphMode) {
+                if (typeof this.graphMode.setupCanvas === 'function') {
+                    this.graphMode.setupCanvas();
+                }
+                if (typeof this.graphMode.redraw === 'function') {
+                    this.graphMode.redraw();
+                }
             }
-            if (this.designSpaceMode && typeof this.designSpaceMode.redraw === 'function') {
-                this.designSpaceMode.redraw();
+            if (this.designSpaceMode) {
+                if (typeof this.designSpaceMode.setupCanvas === 'function') {
+                    this.designSpaceMode.setupCanvas();
+                }
+                if (typeof this.designSpaceMode.redraw === 'function') {
+                    this.designSpaceMode.redraw();
+                }
             }
             if (this.sliderMode && typeof this.sliderMode.renderDynamicCurvePreview === 'function') {
                 this.sliderMode.renderDynamicCurvePreview();
             }
         } catch (e) {
-            console.warn('Canvas redraw on theme change error:', e);
+            console.warn('Canvas redraw error:', e);
         }
     }
 
     reRenderCurrentMode() {
-        this.redrawCanvases();
         const info = this.currentSelectionInfo;
         if (!info || !info.hasSelection) {
             this.updateNoSelectionView(true, info ? info.documentTextFrames : []);
             return;
         }
 
-        if (info.isVariableFont !== false) {
-            if (this.sliderMode) {
-                this.sliderMode.render();
-                this.sliderMode.syncValues(info.currentValues);
-            }
-            if (this.graphMode) {
-                this.graphMode.renderUI();
-                this.graphMode.setupCanvas();
-                this.graphMode.bindEvents();
-                this.graphMode.syncSelection(info);
-            }
-            if (this.designSpaceMode) {
-                this.designSpaceMode.renderUI();
-                this.designSpaceMode.setupCanvas();
-                this.designSpaceMode.bindEvents();
-                this.designSpaceMode.syncAxes(info.axes);
-                this.designSpaceMode.syncValues(info.currentValues);
-            }
-        } else {
-            if (this.sliderMode) {
-                this.sliderMode.render();
-            }
-            if (this.graphMode) {
-                this.graphMode.renderUI();
-                this.graphMode.setupCanvas();
-                this.graphMode.bindEvents();
-                this.graphMode.renderCurvePills();
-                this.graphMode.renderPointChips();
-                this.graphMode.syncPointInspector();
-                this.graphMode.renderCustomPresets();
-                this.graphMode.redraw();
-            }
-            if (this.designSpaceMode) {
-                this.designSpaceMode.renderUI();
-                this.designSpaceMode.setupCanvas();
-                this.designSpaceMode.bindEvents();
-                this.designSpaceMode.redraw();
-            }
+        if (this.sliderMode) {
+            this.sliderMode.render();
+            this.sliderMode.syncValues(info.currentValues);
         }
+        if (this.graphMode) {
+            this.graphMode.renderUI();
+            this.graphMode.setupCanvas();
+            this.graphMode.bindEvents();
+            this.graphMode.renderCurvePills();
+            this.graphMode.renderPointChips();
+            this.graphMode.syncPointInspector();
+            this.graphMode.renderCustomPresets();
+            this.graphMode.applySectionsLayout();
+            this.graphMode.syncSelection(info);
+            this.graphMode.redraw();
+        }
+        if (this.designSpaceMode) {
+            this.designSpaceMode.renderUI();
+            this.designSpaceMode.setupCanvas();
+            this.designSpaceMode.bindEvents();
+            this.designSpaceMode.syncValues(info.currentValues);
+            this.designSpaceMode.syncAxes(info.axes || []);
+            this.designSpaceMode.redraw();
+        }
+        this.redrawCanvases();
     }
 
     updateNonVariableWarning(isNonVariable, fontName) {
@@ -604,13 +713,16 @@ class AppController {
 
             if (showEmpty) {
                 container.style.display = 'none';
+                const listSig = JSON.stringify((textFrames || []).map((tf) => [tf.index, tf.snippet || tf.text || '', tf.fontName || '', Boolean(tf.isVariable), tf.charCount || 0]));
                 if (!existingCard) {
                     const card = document.createElement('div');
                     card.className = 'no-selection-card';
+                    card.dataset.signature = listSig;
                     card.innerHTML = this.buildNoSelectionHtml(textFrames);
                     pane.appendChild(card);
                     this.bindNoSelectionEvents(card);
-                } else {
+                } else if (existingCard.dataset.signature !== listSig) {
+                    existingCard.dataset.signature = listSig;
                     existingCard.innerHTML = this.buildNoSelectionHtml(textFrames);
                     this.bindNoSelectionEvents(existingCard);
                 }
@@ -717,12 +829,21 @@ class AppController {
             return;
         }
 
-        dot.className = 'status-dot';
         if (info.type === 'text') {
-            nameLabel.textContent = info.fontName || info.fontFamily || (i18n ? i18n.t('varFont') : 'Variable Font');
+            const isStatic = info.isVariableFont === false;
+            if (isStatic) {
+                dot.className = 'status-dot warning';
+                const staticNotice = i18n ? i18n.t('staticFontTag') : 'Static';
+                const fName = info.fontName || info.fontFamily || (i18n ? i18n.t('staticFont') : 'Static Font');
+                nameLabel.textContent = `${fName} (${staticNotice})`;
+            } else {
+                dot.className = 'status-dot';
+                nameLabel.textContent = info.fontName || info.fontFamily || (i18n ? i18n.t('varFont') : 'Variable Font');
+            }
             const count = info.charCount || 1;
             metaLabel.textContent = i18n ? i18n.t('charsSelected', { count }) : `${count} Character(s) Selected`;
         } else {
+            dot.className = 'status-dot';
             nameLabel.textContent = i18n ? i18n.t('vectorObjects') : 'Dynamic Vector Object(s)';
             const count = info.totalSelected || 1;
             metaLabel.textContent = i18n ? i18n.t('itemsSelected', { count }) : `${count} Item(s) Selected`;
@@ -750,11 +871,13 @@ class AppController {
      * High-performance real-time update dispatcher with trailing throttle
      */
     scheduleParameterUpdate(params) {
+        this.isUserInteracting = true;
         this.pendingParameterUpdate = Object.assign(this.pendingParameterUpdate || {}, params);
         this.requestFlush();
     }
 
     scheduleCurveUpdate(distConfig) {
+        this.isUserInteracting = true;
         this.pendingCurveUpdate = distConfig;
         this.requestFlush();
     }
