@@ -3999,14 +3999,14 @@ button,
     background: linear-gradient(135deg, rgba(38, 38, 38, 0.96), rgba(26, 26, 26, 0.98));
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(13, 153, 255, 0.45);
+    border: none;
     border-radius: 12px;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55), 0 0 20px rgba(13, 153, 255, 0.22);
+    box-shadow: none;
     box-sizing: border-box;
     transform: translateY(calc(100% + 32px)) scale(0.92);
     opacity: 0;
     pointer-events: none;
-    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .update-toast-notification.is-visible {
@@ -4018,8 +4018,8 @@ button,
 body.light-theme .update-toast-notification,
 [data-theme="light"] .update-toast-notification {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.97), rgba(245, 245, 245, 0.99));
-    border-color: rgba(13, 153, 255, 0.45);
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16), 0 0 20px rgba(13, 153, 255, 0.18);
+    border: none;
+    box-shadow: none;
 }
 
 .update-toast-content {
@@ -4037,24 +4037,22 @@ body.light-theme .update-toast-notification,
     min-width: 32px;
     border-radius: 50%;
     background: rgba(13, 153, 255, 0.16);
-    border: 1px solid rgba(13, 153, 255, 0.45);
+    border: none;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--accent-blue, #0d99ff);
     font-size: 14px;
-    box-shadow: 0 0 10px rgba(13, 153, 255, 0.3);
+    box-shadow: none;
     animation: pulse-update-icon 2.2s infinite ease-in-out;
 }
 
 @keyframes pulse-update-icon {
     0%, 100% {
         transform: scale(1);
-        box-shadow: 0 0 10px rgba(13, 153, 255, 0.3);
     }
     50% {
         transform: scale(1.08);
-        box-shadow: 0 0 18px rgba(13, 153, 255, 0.55);
     }
 }
 
@@ -4107,14 +4105,14 @@ body.light-theme .update-toast-title,
     font-size: 11px;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(13, 153, 255, 0.35);
-    transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: none;
+    transition: background 0.15s ease, transform 0.15s ease;
 }
 
 .btn-update-toast-action:hover {
     background: var(--accent-blue-hover, #0b86e0);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(13, 153, 255, 0.45);
+    box-shadow: none;
 }
 
 .btn-update-toast-action:active {
