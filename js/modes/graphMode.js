@@ -456,14 +456,18 @@ class GraphMode {
 
     renderUI() {
         const i18n = window.i18n;
+        const layout = this.getSectionsLayout();
+        const isCollapsed = (id) => Boolean(layout.collapsed && layout.collapsed[id]);
+        const isVisible = (id) => layout.visibility[id] !== false;
+
         this.container.innerHTML = `
-            <div class="graph-mode-panel">
+            <div class="graph-mode-panel no-collapse-transition">
                 <!-- 1. Curve Layers Card -->
-                <div class="graph-modular-card" data-card-id="curves">
+                <div class="graph-modular-card ${isCollapsed('curves') ? 'is-collapsed' : ''}" data-card-id="curves" style="${isVisible('curves') ? '' : 'display:none;'}">
                     <div class="graph-modular-card-header">
                         <div class="card-header-left">
                             <div class="card-drag-handle" data-card="curves" draggable="true" title="${i18n ? i18n.t('dragToReorder') : 'Drag to reorder'}"><i class="hd-icon hd-icon-hamburger-menu"></i></div>
-                            <button type="button" class="btn-card-ctrl btn-card-collapse" data-card="curves" data-action="collapse" title="${i18n ? i18n.t('collapsePanelTitle') : 'Collapse'}"><i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i></button>
+                            <button type="button" class="btn-card-ctrl btn-card-collapse" data-card="curves" data-action="collapse" title="${isCollapsed('curves') ? (i18n ? i18n.t('expandPanelTitle') : 'Expand panel') : (i18n ? i18n.t('collapsePanelTitle') : 'Collapse')}"><i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i></button>
                             <span class="card-title">${i18n ? i18n.t('panelCurves') : 'Curve Layers'}</span>
                         </div>
                         <div class="card-header-right">
@@ -489,11 +493,11 @@ class GraphMode {
                 </div>
 
                 <!-- 2. Active Curve Settings Toolbar Card -->
-                <div class="graph-modular-card" data-card-id="toolbar">
+                <div class="graph-modular-card ${isCollapsed('toolbar') ? 'is-collapsed' : ''}" data-card-id="toolbar" style="${isVisible('toolbar') ? '' : 'display:none;'}">
                     <div class="graph-modular-card-header">
                         <div class="card-header-left">
                             <div class="card-drag-handle" data-card="toolbar" draggable="true" title="${i18n ? i18n.t('dragToReorder') : 'Drag to reorder'}"><i class="hd-icon hd-icon-hamburger-menu"></i></div>
-                            <button type="button" class="btn-card-ctrl btn-card-collapse" data-card="toolbar" data-action="collapse" title="${i18n ? i18n.t('collapsePanelTitle') : 'Collapse'}"><i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i></button>
+                            <button type="button" class="btn-card-ctrl btn-card-collapse" data-card="toolbar" data-action="collapse" title="${isCollapsed('toolbar') ? (i18n ? i18n.t('expandPanelTitle') : 'Expand panel') : (i18n ? i18n.t('collapsePanelTitle') : 'Collapse')}"><i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i></button>
                             <span class="card-title">${i18n ? i18n.t('panelToolbar') : 'Axis Settings'}</span>
                         </div>
                         <div class="card-header-right">
@@ -520,11 +524,11 @@ class GraphMode {
                 </div>
 
                 <!-- 3. Spline Canvas Card -->
-                <div class="graph-modular-card" data-card-id="canvas">
+                <div class="graph-modular-card ${isCollapsed('canvas') ? 'is-collapsed' : ''}" data-card-id="canvas" style="${isVisible('canvas') ? '' : 'display:none;'}">
                     <div class="graph-modular-card-header">
                         <div class="card-header-left">
                             <div class="card-drag-handle" data-card="canvas" draggable="true" title="${i18n ? i18n.t('dragToReorder') : 'Drag to reorder'}"><i class="hd-icon hd-icon-hamburger-menu"></i></div>
-                            <button type="button" class="btn-card-ctrl btn-card-collapse" data-card="canvas" data-action="collapse" title="${i18n ? i18n.t('collapsePanelTitle') : 'Collapse'}"><i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i></button>
+                            <button type="button" class="btn-card-ctrl btn-card-collapse" data-card="canvas" data-action="collapse" title="${isCollapsed('canvas') ? (i18n ? i18n.t('expandPanelTitle') : 'Expand panel') : (i18n ? i18n.t('collapsePanelTitle') : 'Collapse')}"><i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i></button>
                             <span class="card-title">${i18n ? i18n.t('panelCanvas') : 'Spline Canvas'}</span>
                         </div>
                         <div class="card-header-right">
@@ -556,11 +560,11 @@ class GraphMode {
                 </div>
 
                 <!-- 4. Points Control Toolbar Card -->
-                <div class="graph-modular-card" data-card-id="points">
+                <div class="graph-modular-card ${isCollapsed('points') ? 'is-collapsed' : ''}" data-card-id="points" style="${isVisible('points') ? '' : 'display:none;'}">
                     <div class="graph-modular-card-header">
                         <div class="card-header-left">
                             <div class="card-drag-handle" data-card="points" draggable="true" title="${i18n ? i18n.t('dragToReorder') : 'Drag to reorder'}"><i class="hd-icon hd-icon-hamburger-menu"></i></div>
-                            <button type="button" class="btn-card-ctrl btn-card-collapse" data-card="points" data-action="collapse" title="${i18n ? i18n.t('collapsePanelTitle') : 'Collapse'}"><i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i></button>
+                            <button type="button" class="btn-card-ctrl btn-card-collapse" data-card="points" data-action="collapse" title="${isCollapsed('points') ? (i18n ? i18n.t('expandPanelTitle') : 'Expand panel') : (i18n ? i18n.t('collapsePanelTitle') : 'Collapse')}"><i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i></button>
                             <span class="card-title">${i18n ? i18n.t('panelPoints') : 'Points Control'}</span>
                         </div>
                         <div class="card-header-right">
@@ -609,11 +613,11 @@ class GraphMode {
                 </div>
 
                 <!-- 5. Presets & Folders Card -->
-                <div class="graph-modular-card" data-card-id="presets">
+                <div class="graph-modular-card ${isCollapsed('presets') ? 'is-collapsed' : ''}" data-card-id="presets" style="${isVisible('presets') ? '' : 'display:none;'}">
                     <div class="graph-modular-card-header">
                         <div class="card-header-left">
                             <div class="card-drag-handle" data-card="presets" draggable="true" title="${i18n ? i18n.t('dragToReorder') : 'Drag to reorder'}"><i class="hd-icon hd-icon-hamburger-menu"></i></div>
-                            <button type="button" class="btn-card-ctrl btn-card-collapse" data-card="presets" data-action="collapse" title="${i18n ? i18n.t('collapsePanelTitle') : 'Collapse'}"><i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i></button>
+                            <button type="button" class="btn-card-ctrl btn-card-collapse" data-card="presets" data-action="collapse" title="${isCollapsed('presets') ? (i18n ? i18n.t('expandPanelTitle') : 'Expand panel') : (i18n ? i18n.t('collapsePanelTitle') : 'Collapse')}"><i class="hd-icon hd-icon-chevrolt-arrow-bottom"></i></button>
                             <span class="card-title">${i18n ? i18n.t('panelPresets') : 'Presets & Folders'}</span>
                         </div>
                         <div class="card-header-right">
@@ -685,6 +689,14 @@ class GraphMode {
 
         this.canvas = this.container.querySelector('#bezier-canvas');
         this.ctx = this.canvas.getContext('2d');
+
+        const panel = this.container.querySelector('.graph-mode-panel');
+        if (panel) {
+            requestAnimationFrame(() => {
+                panel.classList.remove('no-collapse-transition');
+            });
+        }
+        this.applySectionsLayout();
     }
 
     setupCanvas() {
@@ -1961,7 +1973,12 @@ class GraphMode {
         btnCancel.textContent = cancelText || (window.i18n ? window.i18n.t('cancelBtn') : 'Cancel');
 
         const closeModal = () => {
-            overlay.style.display = 'none';
+            overlay.classList.remove('is-open');
+            setTimeout(() => {
+                if (!overlay.classList.contains('is-open')) {
+                    overlay.style.display = 'none';
+                }
+            }, 240);
             btnConfirm.onclick = null;
             btnCancel.onclick = null;
             btnClose.onclick = null;
@@ -1983,6 +2000,8 @@ class GraphMode {
         };
 
         overlay.style.display = 'flex';
+        void overlay.offsetWidth;
+        overlay.classList.add('is-open');
     }
 
     // =========================================

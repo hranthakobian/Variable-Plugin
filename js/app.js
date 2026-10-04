@@ -63,7 +63,16 @@ class AppController {
         this.switchMode(this.activeMode);
         window.addEventListener('resize', () => {
             this.updateTabIndicator(this.activeMode);
+            this.redrawCanvases();
         });
+
+        if (typeof ResizeObserver !== 'undefined') {
+            const containerObserver = new ResizeObserver(() => {
+                this.updateTabIndicator(this.activeMode);
+                this.redrawCanvases();
+            });
+            containerObserver.observe(document.body);
+        }
 
         // Start polling for selection changes in Illustrator
         this.startSelectionPolling();
@@ -116,19 +125,37 @@ class AppController {
         const dropdown = document.getElementById('window-menu-dropdown');
         const btnReset = document.getElementById('btn-reset-layout');
 
+        const openDropdown = () => {
+            this.updateWindowMenuItems();
+            dropdown.style.display = 'flex';
+            void dropdown.offsetWidth; // force reflow for smooth transition
+            dropdown.classList.add('is-open');
+        };
+
+        const closeDropdown = () => {
+            dropdown.classList.remove('is-open');
+            setTimeout(() => {
+                if (!dropdown.classList.contains('is-open')) {
+                    dropdown.style.display = 'none';
+                }
+            }, 230);
+        };
+
         if (btnWindow && dropdown) {
             btnWindow.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const isHidden = (dropdown.style.display === 'none' || !dropdown.style.display);
-                dropdown.style.display = isHidden ? 'block' : 'none';
-                if (isHidden) {
-                    this.updateWindowMenuItems();
+                if (dropdown.classList.contains('is-open')) {
+                    closeDropdown();
+                } else {
+                    openDropdown();
                 }
             });
 
             document.addEventListener('click', (e) => {
                 if (!btnWindow.contains(e.target) && !dropdown.contains(e.target)) {
-                    dropdown.style.display = 'none';
+                    if (dropdown.classList.contains('is-open')) {
+                        closeDropdown();
+                    }
                 }
             });
         }
@@ -138,7 +165,7 @@ class AppController {
             btnRestartTour.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (dropdown) {
-                    dropdown.style.display = 'none';
+                    closeDropdown();
                 }
                 if (this.tourGuide) {
                     this.tourGuide.restartTour();
@@ -347,6 +374,7 @@ class AppController {
             } else {
                 winBtn.style.display = 'none';
                 if (winDropdown) {
+                    winDropdown.classList.remove('is-open');
                     winDropdown.style.display = 'none';
                 }
             }
@@ -537,22 +565,31 @@ class AppController {
 
     redrawCanvases() {
         try {
-            if (this.graphMode && typeof this.graphMode.redraw === 'function') {
-                this.graphMode.redraw();
+            if (this.graphMode) {
+                if (typeof this.graphMode.setupCanvas === 'function') {
+                    this.graphMode.setupCanvas();
+                }
+                if (typeof this.graphMode.redraw === 'function') {
+                    this.graphMode.redraw();
+                }
             }
-            if (this.designSpaceMode && typeof this.designSpaceMode.redraw === 'function') {
-                this.designSpaceMode.redraw();
+            if (this.designSpaceMode) {
+                if (typeof this.designSpaceMode.setupCanvas === 'function') {
+                    this.designSpaceMode.setupCanvas();
+                }
+                if (typeof this.designSpaceMode.redraw === 'function') {
+                    this.designSpaceMode.redraw();
+                }
             }
             if (this.sliderMode && typeof this.sliderMode.renderDynamicCurvePreview === 'function') {
                 this.sliderMode.renderDynamicCurvePreview();
             }
         } catch (e) {
-            console.warn('Canvas redraw on theme change error:', e);
+            console.warn('Canvas redraw error:', e);
         }
     }
 
     reRenderCurrentMode() {
-        this.redrawCanvases();
         const info = this.currentSelectionInfo;
         if (!info || !info.hasSelection) {
             this.updateNoSelectionView(true, info ? info.documentTextFrames : []);
@@ -567,7 +604,13 @@ class AppController {
             this.graphMode.renderUI();
             this.graphMode.setupCanvas();
             this.graphMode.bindEvents();
+            this.graphMode.renderCurvePills();
+            this.graphMode.renderPointChips();
+            this.graphMode.syncPointInspector();
+            this.graphMode.renderCustomPresets();
+            this.graphMode.applySectionsLayout();
             this.graphMode.syncSelection(info);
+            this.graphMode.redraw();
         }
         if (this.designSpaceMode) {
             this.designSpaceMode.renderUI();
@@ -575,7 +618,9 @@ class AppController {
             this.designSpaceMode.bindEvents();
             this.designSpaceMode.syncAxes(info.axes || []);
             this.designSpaceMode.syncValues(info.currentValues);
+            this.designSpaceMode.redraw();
         }
+        this.redrawCanvases();
     }
 
     updateNonVariableWarning(isNonVariable, fontName) {

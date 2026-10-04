@@ -136,7 +136,8 @@ html, body {
     display: flex;
     flex-direction: column;
     height: 100vh;
-    min-width: 280px;
+    width: 100%;
+    min-width: 0;
     overflow: hidden;
 }
 
@@ -318,10 +319,13 @@ html, body {
     display: flex;
     background-color: var(--bg-surface);
     border-bottom: 1px solid var(--border-color);
-    padding: 6px 8px;
-    gap: 6px;
+    padding: 5px 6px;
+    gap: 4px;
     flex-shrink: 0;
     align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .tab-indicator-pill {
@@ -362,13 +366,14 @@ html, body {
 
 .tab-btn {
     flex: 1;
+    min-width: 0;
     position: relative;
     z-index: 2;
     background: transparent;
     border: none;
     color: var(--text-muted);
-    padding: 6px 8px;
-    font-size: 11px;
+    padding: 5px 4px;
+    font-size: 10.5px;
     font-weight: 600;
     cursor: pointer;
     border-radius: 9999px;
@@ -398,6 +403,8 @@ html, body {
 .modes-viewport {
     flex: 1;
     min-height: 0;
+    width: 100%;
+    box-sizing: border-box;
     padding: 10px 12px;
     overflow-y: scroll;
     scrollbar-gutter: stable;
@@ -423,10 +430,20 @@ html, body {
 
 .mode-pane {
     display: none;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .mode-pane.active {
     display: block;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#slider-controls-container,
+#graph-controls-container {
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Empty State */
@@ -488,6 +505,8 @@ html, body {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .slider-row {
@@ -496,6 +515,8 @@ html, body {
     border-radius: 6px;
     padding: 8px 10px;
     transition: border-color 0.15s ease;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .slider-row:hover {
@@ -512,6 +533,9 @@ html, body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 6px;
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
 }
 
 .axis-label {
@@ -601,6 +625,8 @@ html, body {
     display: flex;
     align-items: center;
     gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .range-bound {
@@ -1221,7 +1247,8 @@ hd-slider.custom-slider-wrapper,
 .point-coords-group {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
+    flex-wrap: wrap;
 }
 
 .point-details-label, .point-actions-label {
@@ -1235,20 +1262,21 @@ hd-slider.custom-slider-wrapper,
 .point-actions-group {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
+    flex-wrap: wrap;
     margin-left: auto;
 }
 
 .point-detail-field {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     font-size: 11px;
     color: var(--text-muted);
 }
 
 .point-coord-input {
-    width: 60px;
+    width: 48px;
     height: 22px;
     background: var(--bg-input);
     border: 1px solid var(--border-color);
@@ -1369,6 +1397,7 @@ hd-slider.custom-slider-wrapper,
     display: flex;
     align-items: center;
     gap: 4px;
+    flex-wrap: wrap;
 }
 
 .btn-preset-action {
@@ -1948,6 +1977,8 @@ hd-slider.custom-slider-wrapper,
     user-select: none;
     -webkit-user-select: none;
     flex-shrink: 0;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 #design-space-canvas {
@@ -2119,6 +2150,7 @@ hd-slider.custom-slider-wrapper,
     display: flex;
     align-items: center;
     gap: 4px;
+    flex-wrap: wrap;
 }
 
 .add-curve-axis-select {
@@ -2129,7 +2161,7 @@ hd-slider.custom-slider-wrapper,
     padding: 2px 4px;
     font-size: 9.5px;
     outline: none;
-    max-width: 130px;
+    min-width: 70px;
     cursor: pointer;
 }
 
@@ -2367,7 +2399,19 @@ hd-slider.custom-slider-wrapper,
     padding: 6px 0;
     display: flex;
     flex-direction: column;
-    animation: fadeIn 0.15s ease;
+    transform-origin: top right;
+    opacity: 0;
+    transform: scale(0.92) translateY(-6px);
+    pointer-events: none;
+    visibility: hidden;
+    transition: opacity 0.22s cubic-bezier(0.22, 1, 0.36, 1), transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.22s;
+}
+
+.window-menu-dropdown.is-open {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    pointer-events: auto;
+    visibility: visible;
 }
 
 .window-menu-header {
@@ -2798,7 +2842,16 @@ hd-slider.custom-slider-wrapper,
     justify-content: center;
     padding: 16px;
     backdrop-filter: blur(2px);
-    animation: fadeIn 0.15s ease;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.24s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.24s;
+}
+
+.app-modal-overlay.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
 }
 
 .app-modal-dialog {
@@ -2811,12 +2864,12 @@ hd-slider.custom-slider-wrapper,
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    animation: modalPop 0.18s ease-out;
+    transform: scale(0.92) translateY(8px);
+    transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@keyframes modalPop {
-    from { transform: scale(0.95); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+.app-modal-overlay.is-open .app-modal-dialog {
+    transform: scale(1) translateY(0);
 }
 
 .app-modal-header {
@@ -2978,13 +3031,19 @@ hd-slider.custom-slider-wrapper,
 .card-header-left {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .card-title {
     font-size: 11px;
     font-weight: 600;
     color: var(--text-main);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .card-header-right {
@@ -3066,6 +3125,13 @@ hd-slider.custom-slider-wrapper,
     padding-top: 0 !important;
     padding-bottom: 0 !important;
     pointer-events: none;
+}
+
+.graph-modular-card.no-collapse-transition,
+.graph-modular-card.no-collapse-transition *,
+.graph-mode-panel.no-collapse-transition,
+.graph-mode-panel.no-collapse-transition * {
+    transition: none !important;
 }
 
 /* =========================================
@@ -3680,7 +3746,8 @@ button,
 
 .tab-btn {
     border-radius: 9999px !important;
-    padding: 6px 14px;
+    padding: 5px 6px;
+    font-size: 10.5px;
 }
 
 .folder-chip,

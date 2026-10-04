@@ -417,16 +417,39 @@ Set-Content -Path $doneFile -Value 'SUCCESS' -Encoding UTF8;
         const modal = document.getElementById('update-modal-overlay');
         const btnClose = document.getElementById('btn-update-modal-close');
 
+        const openModal = () => {
+            modal.style.display = 'flex';
+            void modal.offsetWidth; // force reflow for smooth transition
+            modal.classList.add('is-open');
+        };
+
+        const closeModal = () => {
+            modal.classList.remove('is-open');
+            setTimeout(() => {
+                if (!modal.classList.contains('is-open')) {
+                    modal.style.display = 'none';
+                }
+            }, 250);
+        };
+
         if (btnHeaderUpdate && modal) {
             btnHeaderUpdate.addEventListener('click', () => {
-                modal.style.display = 'flex';
+                openModal();
                 this.checkForUpdates(true);
             });
         }
 
         if (btnClose && modal) {
             btnClose.addEventListener('click', () => {
-                modal.style.display = 'none';
+                closeModal();
+            });
+        }
+
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
             });
         }
     }

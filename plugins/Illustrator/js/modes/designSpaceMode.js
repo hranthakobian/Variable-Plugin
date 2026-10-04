@@ -103,8 +103,8 @@ class DesignSpaceMode {
         const readoutH = readout ? readout.offsetHeight : 45;
         const gap = 16;
 
-        const availW = Math.max(160, panelWidth);
-        const availH = Math.max(160, panelHeight - toolbarH - readoutH - gap);
+        const availW = Math.max(60, panelWidth - 4);
+        const availH = Math.max(60, panelHeight - toolbarH - readoutH - gap);
 
         // 2D field MUST BE A SQUARE (քառակուսի): width === height
         const squareSize = Math.round(Math.min(availW, availH));
