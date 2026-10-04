@@ -282,7 +282,7 @@ const TRANSLATIONS = {
         vectorObjects: 'Dynamic Vector Object(s)',
 
         // Tabs
-        tabSliders: 'Sliders & Curves',
+        tabSliders: 'Sliders',
         tabGraph: 'Studio',
         tabDesignSpace: '2D Space',
 
