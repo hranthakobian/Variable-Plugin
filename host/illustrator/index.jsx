@@ -1180,6 +1180,15 @@ var VariableFontPlugin = {
 
             var mode = config.distributionTarget || 'characters';
 
+            // Exact per-letter lookup: when counts match use the value directly, otherwise interpolate
+            function sampleDistValues(vals, idx, n) {
+                if (vals.length === n) return vals[idx];
+                var pos = n > 1 ? (idx / (n - 1)) * (vals.length - 1) : 0;
+                var lo = Math.floor(pos);
+                var hi = Math.min(lo + 1, vals.length - 1);
+                return vals[lo] + (vals[hi] - vals[lo]) * (pos - lo);
+            }
+
             function distributeOverCharacters(chars, parentTf) {
                 var count = chars.length;
                 if (count <= 0 || curveList.length === 0) return;
@@ -1201,8 +1210,7 @@ var VariableFontPlugin = {
                         var cur = curveList[k];
                         var vals = cur.distributedValues || [];
                         if (vals.length > 0) {
-                            var vIdx = Math.min(Math.floor(normIndex * vals.length), vals.length - 1);
-                            var cy = vals[vIdx];
+                            var cy = sampleDistValues(vals, c, count);
                             var minV = Number(cur.minVal !== undefined ? cur.minVal : 0);
                             var maxV = Number(cur.maxVal !== undefined ? cur.maxVal : 100);
                             p[cur.targetAxis] = minV + cy * (maxV - minV);
@@ -1257,8 +1265,7 @@ var VariableFontPlugin = {
                             var cur = curveList[k];
                             var vals = cur.distributedValues || [];
                             if (vals.length > 0) {
-                                var vIdx = Math.min(Math.floor(norm * vals.length), vals.length - 1);
-                                var cy = vals[vIdx];
+                                var cy = sampleDistValues(vals, i, itemCount);
                                 var minV = Number(cur.minVal !== undefined ? cur.minVal : 0);
                                 var maxV = Number(cur.maxVal !== undefined ? cur.maxVal : 100);
                                 p[cur.targetAxis] = minV + cy * (maxV - minV);
