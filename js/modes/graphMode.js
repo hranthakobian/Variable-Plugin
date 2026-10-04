@@ -4473,7 +4473,10 @@ class GraphMode {
             const sampleIdx = this.getBarSampleIndex(i, count, realCount);
             const yNorm = this.getLetterY(cur, sampleIdx, realCount);
             const calculatedVal = Math.round(range.min + yNorm * (range.max - range.min));
-            const isOverride = Boolean(cur.overrides && cur.overrides[sampleIdx] !== undefined);
+            const step = realCount > 1 ? 1 / (realCount - 1) : 0.5;
+            const tol = Math.min(0.04, step * 0.45);
+            const xTarget = realCount > 1 ? sampleIdx / (realCount - 1) : 0;
+            const isAnchor = cur.points.some((p) => Math.abs(p.x - xTarget) <= tol);
 
             const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
             const letterDisplay = rawChar ? `${rawChar}` : `#${sampleIdx + 1}`;
@@ -4488,7 +4491,8 @@ class GraphMode {
             item.dataset.tip = tipText;
             item.title = tipText;
             item.classList.toggle('is-hovered', this.hoveredDistIndex === i);
-            item.classList.toggle('is-override', isOverride);
+            item.classList.toggle('is-anchor-point', isAnchor);
+            item.classList.remove('is-override');
 
             const innerChar = item.querySelector('.dist-bar-inner-char');
             if (innerChar) innerChar.textContent = letterDisplay;
@@ -4508,7 +4512,7 @@ class GraphMode {
         }
     }
 
-    // ---- Per-letter distribution helpers ----
+    // ---- Per-letter & curve deformation helpers ----
     getBarSampleIndex(i, count, realCount) {
         if (realCount === count) {
             return i;
@@ -4517,49 +4521,194 @@ class GraphMode {
         return Math.min(Math.round(xNorm * (realCount - 1)), realCount - 1);
     }
 
-    // Exact normalized value (0..1) for letter index i out of n letters.
+    // Exact normalized value (0..1) directly evaluated from the curve.
+    // The curve IS the single source of truth - no disconnected overrides!
     getLetterY(cur, i, n) {
-        if (cur && cur.overrides && cur.overrides[i] !== undefined && i < this.itemCount) {
-            return cur.overrides[i];
+        if (!cur) {
+            return 0;
         }
         const x = n > 1 ? i / (n - 1) : 0;
         return this.evaluateCurveAtFor(cur, x);
     }
 
-    setLetterOverride(letterIdx, yNorm, silent) {
+    // Auto-smooth Bézier handles around an anchor index to maintain C1 tangent continuity
+    autoSmoothPointHandles(cur, idx) {
+        if (!cur || !cur.points || idx < 0 || idx >= cur.points.length) {
+            return;
+        }
+        const pts = cur.points;
+        const n = pts.length;
+        const p = pts[idx];
+        if (p.straight) {
+            return;
+        }
+
+        if (idx < n - 1) {
+            const next = pts[idx + 1];
+            const dx = (next.x - p.x) / 3;
+            let slope = (next.y - p.y) / Math.max(1e-5, next.x - p.x);
+            if (idx > 0) {
+                const prev = pts[idx - 1];
+                const prevSlope = (p.y - prev.y) / Math.max(1e-5, p.x - prev.x);
+                slope = (slope + prevSlope) / 2;
+            }
+            if (!p.brokenHandles) {
+                p.hasNoCpOut = false;
+                p.cpOut = {
+                    x: Math.round((p.x + dx) * 1000) / 1000,
+                    y: Math.round(Math.max(0, Math.min(1, p.y + slope * dx)) * 1000) / 1000
+                };
+            }
+        }
+        if (idx > 0) {
+            const prev = pts[idx - 1];
+            const dx = (p.x - prev.x) / 3;
+            let slope = (p.y - prev.y) / Math.max(1e-5, p.x - prev.x);
+            if (idx < n - 1) {
+                const next = pts[idx + 1];
+                const nextSlope = (next.y - p.y) / Math.max(1e-5, next.x - p.x);
+                slope = (slope + nextSlope) / 2;
+            }
+            if (!p.brokenHandles) {
+                p.hasNoCpIn = false;
+                p.cpIn = {
+                    x: Math.round((p.x - dx) * 1000) / 1000,
+                    y: Math.round(Math.max(0, Math.min(1, p.y - slope * dx)) * 1000) / 1000
+                };
+            }
+        }
+    }
+
+    // Find the closest anchor point for this letter, or insert one on the curve if none exists
+    getOrInsertAnchorForLetter(cur, letterIdx) {
+        if (!cur || !cur.points || cur.points.length === 0) {
+            return 0;
+        }
+        const n = cur.points.length;
+        const totalLetters = Math.max(1, this.itemCount || 16);
+        const xTarget = totalLetters > 1 ? letterIdx / (totalLetters - 1) : 0;
+
+        if (letterIdx === 0) {
+            cur.points[0].x = 0;
+            return 0;
+        }
+        if (letterIdx === totalLetters - 1) {
+            cur.points[n - 1].x = 1;
+            return n - 1;
+        }
+
+        const step = 1 / (totalLetters - 1);
+        const threshold = Math.min(0.04, step * 0.45);
+
+        // Check if an anchor already exists close to this letter's x
+        let bestIdx = -1;
+        let bestDist = 999;
+        for (let i = 0; i < n; i++) {
+            const d = Math.abs(cur.points[i].x - xTarget);
+            if (d <= threshold && d < bestDist) {
+                bestDist = d;
+                bestIdx = i;
+            }
+        }
+
+        if (bestIdx >= 0) {
+            return bestIdx;
+        }
+
+        // Insert new anchor point directly on the curve at (xTarget, currentCurveY)
+        const currentY = this.evaluateCurveAtFor(cur, xTarget);
+        const newPt = {
+            x: Math.round(xTarget * 1000) / 1000,
+            y: Math.round(currentY * 1000) / 1000,
+            brokenHandles: false
+        };
+        cur.points.push(newPt);
+        cur.points.sort((a, b) => a.x - b.x);
+
+        const newIdx = cur.points.indexOf(newPt);
+        this.autoSmoothPointHandles(cur, newIdx - 1);
+        this.autoSmoothPointHandles(cur, newIdx);
+        this.autoSmoothPointHandles(cur, newIdx + 1);
+
+        return newIdx;
+    }
+
+    // Deform the curve so that at letterIdx, the curve has the new height
+    deformCurveAtLetter(cur, letterIdx, newY, anchorIdx) {
+        if (!cur || !cur.points) {
+            return;
+        }
+        const aIdx = (anchorIdx !== undefined && anchorIdx >= 0 && anchorIdx < cur.points.length)
+            ? anchorIdx
+            : this.getOrInsertAnchorForLetter(cur, letterIdx);
+
+        const pt = cur.points[aIdx];
+        if (!pt) {
+            return;
+        }
+
+        const clampedY = Math.max(0, Math.min(1, Math.round(newY * 1000) / 1000));
+        pt.y = clampedY;
+        pt.straight = false;
+
+        // Smooth handles for this point and adjacent points
+        this.autoSmoothPointHandles(cur, aIdx - 1);
+        this.autoSmoothPointHandles(cur, aIdx);
+        this.autoSmoothPointHandles(cur, aIdx + 1);
+
+        cur.preset = 'custom';
+        this.markCurveDirty(cur);
+        this.syncPointInspector();
+        this.renderPointChips();
+        this.redraw();
+        this.emitDistribution();
+    }
+
+    // Delete an anchor point associated with a letter (smooths the curve between neighbors)
+    deleteAnchorForLetter(cur, letterIdx) {
+        if (!cur || !cur.points || cur.points.length <= 2) {
+            return;
+        }
+        const totalLetters = Math.max(1, this.itemCount || 16);
+        if (letterIdx === 0 || letterIdx === totalLetters - 1) {
+            return;
+        }
+        const xTarget = letterIdx / (totalLetters - 1);
+        const step = 1 / (totalLetters - 1);
+        const threshold = Math.min(0.04, step * 0.45);
+
+        let bestIdx = -1;
+        let bestDist = 999;
+        for (let i = 1; i < cur.points.length - 1; i++) {
+            const d = Math.abs(cur.points[i].x - xTarget);
+            if (d <= threshold && d < bestDist) {
+                bestDist = d;
+                bestIdx = i;
+            }
+        }
+        if (bestIdx > 0 && bestIdx < cur.points.length - 1) {
+            this.recordHistoryState();
+            this.deletePointAt(bestIdx);
+        }
+    }
+
+    // Reset active curve to a clean smooth line/curve
+    resetActiveCurve() {
         const cur = this.getActiveCurve();
         if (!cur) {
             return;
         }
-        if (!cur.overrides) {
-            cur.overrides = {};
-        }
-        cur.overrides[letterIdx] = Math.max(0, Math.min(1, Math.round(yNorm * 1000) / 1000));
-        this.updateDistributionPreview();
+        this.recordHistoryState();
+        cur.preset = 'linear';
+        cur.points = [
+            { x: 0.0, y: 0.0, cpOut: { x: 0.33, y: 0.33 } },
+            { x: 1.0, y: 1.0, cpIn: { x: 0.67, y: 0.67 } }
+        ];
+        this.ensurePointHandles(cur);
+        this.renderPointChips();
+        this.syncPointInspector();
         this.redraw();
-        if (!silent) {
-            this.emitDistribution();
-        }
-    }
-
-    clearLetterOverride(letterIdx) {
-        const cur = this.getActiveCurve();
-        if (cur && cur.overrides && cur.overrides[letterIdx] !== undefined) {
-            delete cur.overrides[letterIdx];
-            this.updateDistributionPreview();
-            this.redraw();
-            this.emitDistribution();
-        }
-    }
-
-    clearAllOverrides() {
-        const cur = this.getActiveCurve();
-        if (cur && cur.overrides && Object.keys(cur.overrides).length) {
-            cur.overrides = {};
-            this.updateDistributionPreview();
-            this.redraw();
-            this.emitDistribution();
-        }
+        this.emitDistribution();
     }
 
     setupLetterEditing() {
@@ -4572,7 +4721,8 @@ class GraphMode {
         }
 
         if (btnReset) {
-            btnReset.addEventListener('click', () => this.clearAllOverrides());
+            btnReset.title = window.i18n && window.i18n.currentLang === 'en' ? 'Reset curve' : 'Վերականգնել կորը';
+            btnReset.addEventListener('click', () => this.resetActiveCurve());
         }
         if (chk) {
             chk.checked = Boolean(this.showDistPoints);
@@ -4582,26 +4732,42 @@ class GraphMode {
             });
         }
 
-        // --- Drag bars vertically to set the letter's own value ---
+        // --- Drag bars vertically to deform the curve directly at that letter ---
         let barDrag = null;
         barContainer.addEventListener('pointerdown', (e) => {
             const item = e.target.closest('.dist-bar-item');
             if (!item || e.button !== 0) {
                 return;
             }
+            const cur = this.getActiveCurve();
+            if (!cur) {
+                return;
+            }
+            const sampleIdx = parseInt(item.dataset.sample, 10);
             const track = item.querySelector('.dist-bar-track');
             const rect = track.getBoundingClientRect();
-            barDrag = { sample: parseInt(item.dataset.sample, 10), rect };
+
+            this.recordHistoryState();
+            const anchorIdx = this.getOrInsertAnchorForLetter(cur, sampleIdx);
+            barDrag = { sample: sampleIdx, anchorIdx, rect };
             try { barContainer.setPointerCapture(e.pointerId); } catch (err) {}
             e.preventDefault();
-            this.setLetterOverride(barDrag.sample, 1 - (e.clientY - rect.top) / rect.height);
+            const newY = 1 - (e.clientY - rect.top) / rect.height;
+            this.deformCurveAtLetter(cur, sampleIdx, newY, anchorIdx);
         });
+
         barContainer.addEventListener('pointermove', (e) => {
             if (!barDrag) {
                 return;
             }
-            this.setLetterOverride(barDrag.sample, 1 - (e.clientY - barDrag.rect.top) / barDrag.rect.height);
+            const cur = this.getActiveCurve();
+            if (!cur) {
+                return;
+            }
+            const newY = 1 - (e.clientY - barDrag.rect.top) / barDrag.rect.height;
+            this.deformCurveAtLetter(cur, barDrag.sample, newY, barDrag.anchorIdx);
         });
+
         const endBar = (e) => {
             if (barDrag) {
                 try { barContainer.releasePointerCapture(e.pointerId); } catch (err) {}
@@ -4610,14 +4776,16 @@ class GraphMode {
         };
         barContainer.addEventListener('pointerup', endBar);
         barContainer.addEventListener('pointercancel', endBar);
+
         barContainer.addEventListener('dblclick', (e) => {
             const item = e.target.closest('.dist-bar-item');
-            if (item) {
-                this.clearLetterOverride(parseInt(item.dataset.sample, 10));
+            const cur = this.getActiveCurve();
+            if (item && cur) {
+                this.deleteAnchorForLetter(cur, parseInt(item.dataset.sample, 10));
             }
         });
 
-        // --- Drag distribution points on the curve (capture phase: runs before curve editing) ---
+        // --- Drag distribution points on the curve (directly deforms the curve!) ---
         const hitDistPoint = (e) => {
             if (!this.showDistPoints) {
                 return null;
@@ -4634,7 +4802,7 @@ class GraphMode {
                 return null;
             }
             let best = null;
-            let bestD = 9;
+            let bestD = 10;
             for (let i = 0; i < n; i++) {
                 const pix = this.normToPixel({ x: n > 1 ? i / (n - 1) : 0, y: this.getLetterY(cur, i, n) });
                 const d = Math.hypot(px - pix.x, py - pix.y);
@@ -4655,23 +4823,46 @@ class GraphMode {
             if (idx === null) {
                 return;
             }
+            const cur = this.getActiveCurve();
+            if (!cur) {
+                return;
+            }
             e.stopImmediatePropagation();
             e.preventDefault();
-            ptDrag = { idx };
+
+            this.recordHistoryState();
+            const anchorIdx = this.getOrInsertAnchorForLetter(cur, idx);
+            ptDrag = { idx, anchorIdx };
             try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
-            this.hoveredDistIndex = null;
+            this.hoveredDistIndex = idx;
+
+            const r = canvas.getBoundingClientRect();
+            const py = (e.clientY - r.top) * (this.height / r.height);
+            const y = 1 - (py - this.padding) / (this.height - this.padding * 2);
+            this.deformCurveAtLetter(cur, idx, y, anchorIdx);
         }, true);
+
         canvas.addEventListener('pointermove', (e) => {
             if (ptDrag) {
                 e.stopImmediatePropagation();
+                const cur = this.getActiveCurve();
+                if (!cur) {
+                    return;
+                }
                 const r = canvas.getBoundingClientRect();
                 const py = (e.clientY - r.top) * (this.height / r.height);
                 const y = 1 - (py - this.padding) / (this.height - this.padding * 2);
-                this.setLetterOverride(ptDrag.idx, y);
+                this.deformCurveAtLetter(cur, ptDrag.idx, y, ptDrag.anchorIdx);
             } else if (this.showDistPoints) {
-                canvas.style.cursor = hitDistPoint(e) !== null ? 'ns-resize' : '';
+                const hit = hitDistPoint(e);
+                canvas.style.cursor = hit !== null ? 'ns-resize' : '';
+                if (hit !== this.hoveredDistIndex) {
+                    this.hoveredDistIndex = hit;
+                    this.redraw();
+                }
             }
         }, true);
+
         const endPt = (e) => {
             if (ptDrag) {
                 e.stopImmediatePropagation();
@@ -4681,11 +4872,13 @@ class GraphMode {
         };
         canvas.addEventListener('pointerup', endPt, true);
         canvas.addEventListener('pointercancel', endPt, true);
+
         canvas.addEventListener('dblclick', (e) => {
             const idx = hitDistPoint(e);
-            if (idx !== null) {
+            const cur = this.getActiveCurve();
+            if (idx !== null && cur) {
                 e.stopImmediatePropagation();
-                this.clearLetterOverride(idx);
+                this.deleteAnchorForLetter(cur, idx);
             }
         }, true);
     }
@@ -4696,17 +4889,35 @@ class GraphMode {
             return;
         }
         ctx.save();
+        const step = n > 1 ? 1 / (n - 1) : 0.5;
+        const threshold = Math.min(0.04, step * 0.45);
+
         for (let i = 0; i < n; i++) {
             const x = n > 1 ? i / (n - 1) : 0;
-            const y = this.getLetterY(cur, i, n);
-            const isOv = Boolean(cur.overrides && cur.overrides[i] !== undefined);
+            const y = this.evaluateCurveAtFor(cur, x);
             const px = pad + x * plotW;
             const py = h - pad - y * plotH;
+
+            const isAnchor = cur.points.some((p) => Math.abs(p.x - x) <= threshold);
+            const isHovered = this.hoveredDistIndex === i;
+
             ctx.beginPath();
-            ctx.arc(px, py, isOv ? 4.2 : 3.2, 0, Math.PI * 2);
-            ctx.fillStyle = isOv ? '#ffffff' : cur.color;
-            ctx.strokeStyle = isOv ? cur.color : 'rgba(255,255,255,0.85)';
-            ctx.lineWidth = isOv ? 2 : 1.2;
+            const radius = isHovered ? 5.5 : (isAnchor ? 4.2 : 3.0);
+            ctx.arc(px, py, radius, 0, Math.PI * 2);
+
+            if (isHovered) {
+                ctx.fillStyle = '#ffffff';
+                ctx.strokeStyle = cur.color;
+                ctx.lineWidth = 2.5;
+            } else if (isAnchor) {
+                ctx.fillStyle = cur.color;
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.8;
+            } else {
+                ctx.fillStyle = '#ffffff';
+                ctx.strokeStyle = cur.color;
+                ctx.lineWidth = 1.2;
+            }
             ctx.fill();
             ctx.stroke();
         }
@@ -4727,10 +4938,9 @@ class GraphMode {
             ['Box / lasso select', 'Drag on empty area / Alt + Drag'],
             ['Undo', 'Ctrl + Z'],
             ['Redo', 'Ctrl + Y / Ctrl + Shift + Z'],
-            ['Show distribution points', 'Checkbox under the canvas; drag a dot up/down to change that letter'],
-            ['Set a single letter value', 'Drag its bar in the distribution bars'],
-            ['Reset a letter to the curve', 'Double-click its bar or its dot'],
-            ['Reset all letter edits', '↺ button in distribution header'],
+            ['Show distribution points', 'Checkbox under canvas; drag any point or bar to shape the curve directly'],
+            ['Reset a point on the curve', 'Double-click the point or its bar to remove the anchor'],
+            ['Reset entire curve', '↺ button in distribution header'],
             ['Move templates between folders', 'Drag and drop preset chip onto any folder']
         ] : [
             ['Ավելացնել կետ', 'Կրկնակի կտտոց կորի վրա'],
@@ -4744,10 +4954,9 @@ class GraphMode {
             ['Ընտրել շրջանակով / լասսոյով', 'Քաշել դատարկ տեղում / Alt + Քաշել'],
             ['Հետարկել', 'Ctrl + Z'],
             ['Վերարկել', 'Ctrl + Y / Ctrl + Shift + Z'],
-            ['Ցուցադրել բաշխիչ կետերը', 'Նշատուփ կտավի տակ. կետը վեր/վար քաշելով փոխվում է այդ տառը'],
-            ['Փոխել առանձին տառի միավորը', 'Քաշել նրա սյունը բաշխման սյուների մեջ'],
-            ['Վերադարձնել տառը կորին', 'Կրկնակի կտտոց սյան կամ կետի վրա'],
-            ['Վերականգնել բոլոր տառերը', '↺ կոճակ բաշխման հեդրում'],
+            ['Ցուցադրել բաշխիչ կետերը', 'Նշատուփ կտավի տակ. կետը կամ սյունը քաշելով անմիջապես փոխվում է կորի տեսքը'],
+            ['Վերականգնել կետը կորի վրա', 'Կրկնակի կտտոց կետի կամ սյան վրա՝ կետը կորից հեռացնելու համար'],
+            ['Վերականգնել ամբողջ կորը', '↺ կոճակ բաշխման հեդրում'],
             ['Տեղափոխել կաղապարները պանակներում', 'Քաշել և գցել կաղապարը ցանկացած պանակի մեջ']
         ];
         const title = en ? 'Curve panel: features & shortcuts' : 'Կորերի փեղկ՝ հնարավորություններ և ստեղներ';
