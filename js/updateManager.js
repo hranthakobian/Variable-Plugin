@@ -7,7 +7,7 @@
 
 class UpdateManager {
     constructor() {
-        this.currentVersion = localStorage.getItem('vf_installed_version') || '2.6.0';
+        this.currentVersion = localStorage.getItem('vf_installed_version') || '2.7.0';
         this.defaultRepo = 'hranthakobian/Variable-Plugin';
         this.lastCheckResult = null;
         this.isChecking = false;
@@ -124,7 +124,7 @@ class UpdateManager {
 
             // Fallback default
             if (!latestVersion) {
-                latestVersion = '2.6.0';
+                latestVersion = '2.7.0';
             }
 
             const installedSha = localStorage.getItem('vf_installed_sha');
@@ -262,7 +262,7 @@ class UpdateManager {
             await this.runLiveUpdate(result);
 
             // Mark installed version & commit
-            this.currentVersion = result.latestVersion || '2.6.0';
+            this.currentVersion = result.latestVersion || '2.7.0';
             localStorage.setItem('vf_installed_version', this.currentVersion);
             if (result.latestSha) {
                 localStorage.setItem('vf_installed_sha', result.latestSha);
@@ -483,7 +483,7 @@ class UpdateManager {
         const actionEl = document.getElementById('update-toast-action-text');
 
         const i18n = window.i18n;
-        const ver = result.latestVersion || '2.6.0';
+        const ver = result.latestVersion || '2.7.0';
 
         if (titleEl) {
             titleEl.textContent = i18n ? i18n.t('updateToastTitle') : 'Առկա է նոր թարմացում';
@@ -605,7 +605,7 @@ class UpdateManager {
                     const descEl = document.getElementById('update-toast-desc');
                     const actionEl = document.getElementById('update-toast-action-text');
                     const i18n = window.i18n;
-                    const ver = this.lastCheckResult.latestVersion || '2.6.0';
+                    const ver = this.lastCheckResult.latestVersion || '2.7.0';
                     if (titleEl) titleEl.textContent = i18n ? i18n.t('updateToastTitle') : 'Առկա է նոր թարմացում';
                     if (descEl) descEl.textContent = i18n ? i18n.t('updateToastDesc', { version: ver }) : `Տարբերակ v${ver}-ը պատրաստ է`;
                     if (actionEl) actionEl.textContent = i18n ? i18n.t('updateToastAction') : 'Թարմացնել';

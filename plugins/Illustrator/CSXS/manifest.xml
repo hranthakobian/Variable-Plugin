@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ExtensionManifest Version="7.0" ExtensionBundleId="com.illustrator.variables.panel" ExtensionBundleVersion="2.6.0"
+<ExtensionManifest Version="7.0" ExtensionBundleId="com.illustrator.variables.panel" ExtensionBundleVersion="2.7.0"
     ExtensionBundleName="Variable Fonts &amp; Design Space Controller"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <ExtensionList>
-        <Extension Id="com.illustrator.variables.panel" Version="2.6.0" />
+        <Extension Id="com.illustrator.variables.panel" Version="2.7.0" />
     </ExtensionList>
     <ExecutionEnvironment>
         <HostList>

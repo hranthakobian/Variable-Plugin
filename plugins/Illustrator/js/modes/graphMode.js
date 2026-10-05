@@ -4490,11 +4490,10 @@ class GraphMode {
                 html += `
                     <div class="dist-bar-item" data-index="${i}">
                         <div class="dist-bar-track">
-                            <div class="dist-bar-fill">
-                                <div class="dist-bar-inner-content">
-                                    <span class="dist-bar-inner-char"></span>
-                                    <span class="dist-bar-inner-val"></span>
-                                </div>
+                            <div class="dist-bar-fill"></div>
+                            <div class="dist-bar-inner-content">
+                                <span class="dist-bar-inner-char"></span>
+                                <span class="dist-bar-inner-val"></span>
                             </div>
                         </div>
                     </div>

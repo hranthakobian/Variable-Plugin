@@ -385,8 +385,11 @@ class AppController {
         }
 
         const hasNoSel = !this.currentSelectionInfo || !this.currentSelectionInfo.hasSelection;
-        if (hasNoSel) {
-            this.updateNoSelectionView(true, this.currentSelectionInfo ? this.currentSelectionInfo.documentTextFrames : []);
+        const isNonVar = this.currentSelectionInfo && this.currentSelectionInfo.type === 'text' && (!this.currentSelectionInfo.axes || this.currentSelectionInfo.axes.length === 0);
+        if (hasNoSel || isNonVar) {
+            const modeType = isNonVar ? 'non_variable' : 'no_selection';
+            const fontName = isNonVar ? (this.currentSelectionInfo.fontName || this.currentSelectionInfo.fontFamily) : '';
+            this.updateNoSelectionView(true, this.currentSelectionInfo ? this.currentSelectionInfo.documentTextFrames : [], modeType, fontName);
             return;
         }
 
@@ -425,7 +428,7 @@ class AppController {
             if (!info || !info.hasDoc) {
                 this.currentSelectionInfo = info;
                 this.updateHeaderUI(info, false);
-                this.updateNoSelectionView(true, (info && info.documentTextFrames) ? info.documentTextFrames : []);
+                this.updateNoSelectionView(true, (info && info.documentTextFrames) ? info.documentTextFrames : [], 'no_doc');
                 this.updateNonVariableWarning(false);
                 return;
             }
@@ -434,22 +437,26 @@ class AppController {
             if (!info.hasSelection) {
                 this.currentSelectionInfo = info;
                 this.lastSelectionSignature = 'no_selection';
-                this.updateNoSelectionView(true, info.documentTextFrames || []);
+                this.updateNoSelectionView(true, info.documentTextFrames || [], 'no_selection');
                 this.updateNonVariableWarning(false);
                 this.updateHeaderUI(info, false);
                 return;
             }
 
-            // Dismiss no-selection empty state and show tools when valid selection exists
-            this.updateNoSelectionView(false);
-
             const isNonVar = info.type === 'text' && (!info.axes || info.axes.length === 0);
-            this.updateNonVariableWarning(isNonVar, info.fontName || info.fontFamily);
 
             if (isNonVar) {
+                this.currentSelectionInfo = info;
+                this.lastSelectionSignature = 'non_variable_' + (info.fontName || info.fontFamily);
+                this.updateNoSelectionView(true, info.documentTextFrames || [], 'non_variable', info.fontName || info.fontFamily);
+                this.updateNonVariableWarning(false);
                 this.updateHeaderUI(info, true);
                 return;
             }
+
+            // Dismiss no-selection empty state and show tools when valid selection exists
+            this.updateNoSelectionView(false);
+            this.updateNonVariableWarning(false);
 
             const axesIds = (info.axes || []).map((a) => a.id).join(',');
             const valsSig = Object.entries(info.currentValues || {}).map(([k, v]) => `${k}:${v}`).join(',');
@@ -553,14 +560,16 @@ class AppController {
 
         if (this.currentSelectionInfo) {
             if (!this.currentSelectionInfo.hasSelection) {
-                this.updateNoSelectionView(true, this.currentSelectionInfo.documentTextFrames || []);
+                this.updateNoSelectionView(true, this.currentSelectionInfo.documentTextFrames || [], 'no_selection');
                 this.updateHeaderUI(this.currentSelectionInfo, false);
             } else {
                 const isNonVar = this.currentSelectionInfo.type === 'text' && (!this.currentSelectionInfo.axes || this.currentSelectionInfo.axes.length === 0);
                 this.updateHeaderUI(this.currentSelectionInfo, isNonVar);
                 if (isNonVar) {
-                    this.updateNonVariableWarning(true, this.currentSelectionInfo.fontName || this.currentSelectionInfo.fontFamily);
+                    this.updateNoSelectionView(true, this.currentSelectionInfo.documentTextFrames || [], 'non_variable', this.currentSelectionInfo.fontName || this.currentSelectionInfo.fontFamily);
+                    this.updateNonVariableWarning(false);
                 } else {
+                    this.updateNoSelectionView(false);
                     this.updateNonVariableWarning(false);
                 }
             }
@@ -689,7 +698,7 @@ class AppController {
             .replace(/'/g, '&#039;');
     }
 
-    updateNoSelectionView(showEmpty, textFrames = []) {
+    updateNoSelectionView(showEmpty, textFrames = [], modeType = 'no_selection', fontName = '') {
         document.body.classList.toggle('has-no-selection', Boolean(showEmpty));
 
         if (showEmpty) {
@@ -717,17 +726,17 @@ class AppController {
 
             if (showEmpty) {
                 container.style.display = 'none';
-                const listSig = JSON.stringify((textFrames || []).map((tf) => [tf.index, tf.snippet || tf.text || '', tf.fontName || '', Boolean(tf.isVariable), tf.charCount || 0]));
+                const listSig = `${modeType}_${fontName}_` + JSON.stringify((textFrames || []).map((tf) => [tf.index, tf.snippet || tf.text || '', tf.fontName || '', Boolean(tf.isVariable), tf.charCount || 0]));
                 if (!existingCard) {
                     const card = document.createElement('div');
                     card.className = 'no-selection-card';
                     card.dataset.signature = listSig;
-                    card.innerHTML = this.buildNoSelectionHtml(textFrames);
+                    card.innerHTML = this.buildNoSelectionHtml(textFrames, modeType, fontName);
                     pane.appendChild(card);
                     this.bindNoSelectionEvents(card);
                 } else if (existingCard.dataset.signature !== listSig) {
                     existingCard.dataset.signature = listSig;
-                    existingCard.innerHTML = this.buildNoSelectionHtml(textFrames);
+                    existingCard.innerHTML = this.buildNoSelectionHtml(textFrames, modeType, fontName);
                     this.bindNoSelectionEvents(existingCard);
                 }
             } else {
@@ -739,10 +748,19 @@ class AppController {
         });
     }
 
-    buildNoSelectionHtml(textFrames) {
+    buildNoSelectionHtml(textFrames, modeType = 'no_selection', fontName = '') {
         const i18n = window.i18n;
-        const heading = i18n ? i18n.t('selectTextToEdit') : 'Select text to edit';
-        const subHeading = i18n ? i18n.t('docTextFramesTitle') : 'Document text frames:';
+        let heading = i18n ? i18n.t('selectTextToEdit') : 'Select text to edit';
+        let subBadgeHtml = '';
+
+        if (modeType === 'non_variable') {
+            heading = i18n ? i18n.t('selectVarShort') : 'Ընտրեք փոփոխական';
+            const fName = fontName ? this.escapeHtml(fontName) : 'Static Font';
+            const staticMsg = i18n ? i18n.t('selectedStaticFont', { font: fName }) : `Ընտրված է՝ ${fName} (Ստատիկ)`;
+            subBadgeHtml = `<div class="non-var-selected-badge"><i class="hd-icon hd-icon-info"></i> ${staticMsg}</div>`;
+        }
+
+        const subHeading = i18n ? i18n.t('docTextFramesTitle') : 'Փաստաթղթի տեքստերը՝';
         const emptyMsg = i18n ? i18n.t('noTextFramesInDoc') : 'No text frames in document';
         const clickTip = i18n ? i18n.t('clickToSelectInDoc') : 'Click to select in document';
         const varBadge = i18n ? i18n.t('variableFontTag') : 'Variable';
@@ -780,6 +798,7 @@ class AppController {
         return `
             <div class="no-selection-content">
                 <div class="no-selection-heading">${heading}</div>
+                ${subBadgeHtml}
                 <div class="no-selection-sub">${subHeading} (${textFrames ? textFrames.length : 0})</div>
                 ${listHtml}
             </div>

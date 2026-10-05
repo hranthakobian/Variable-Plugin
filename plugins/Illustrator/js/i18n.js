@@ -193,6 +193,9 @@ const TRANSLATIONS = {
         // Non-Variable Font & Empty Selection
         nonVarHeading: 'Տառատեսակը փոփոխական (Variable Font) չէ',
         nonVarBody: 'Ընտրված տառատեսակը չունի OpenType Variable Font առանցքներ։<br>Խնդրում ենք Illustrator-ում ընտրել փոփոխական տառատեսակ (օր․՝ ArTarumianAzdVar, Bahnschrift, Acumin Variable Concept և այլն)։',
+        selectVarShort: 'Ընտրեք փոփոխական',
+        selectVariableFont: 'Ընտրեք փոփոխական տառատեսակ',
+        selectedStaticFont: 'Ընտրված է՝ {font} (Ստատիկ)',
         selectTextToEdit: 'Ընտրեք տեքստ խմբագրելու համար',
         docTextFramesTitle: 'Փաստաթղթի տեքստերը՝',
         noTextFramesInDoc: 'Փաստաթղթում տեքստային շերտեր չկան',
@@ -451,6 +454,9 @@ const TRANSLATIONS = {
         // Non-Variable Font & Empty Selection
         nonVarHeading: 'Font is not a Variable Font',
         nonVarBody: 'The selected font does not contain OpenType Variable Font axes.<br>Please select text with a Variable Font in Illustrator (such as ArTarumianAzdVar, Bahnschrift, Acumin Variable Concept, etc.).',
+        selectVarShort: 'Select variable font',
+        selectVariableFont: 'Select a variable font',
+        selectedStaticFont: 'Selected: {font} (Static)',
         selectTextToEdit: 'Select text to edit',
         docTextFramesTitle: 'Document Text Frames:',
         noTextFramesInDoc: 'No text frames found in document',
