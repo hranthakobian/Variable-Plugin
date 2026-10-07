@@ -642,6 +642,10 @@ var VariableFontPlugin = {
                 textSnippet: '',
                 isVariableFont: true,
                 charCount: 0,
+                wordCount: 0,
+                lineCount: 0,
+                wordsList: [],
+                linesList: [],
                 axes: [],
                 currentValues: {},
                 savedCurve: null,
@@ -670,6 +674,51 @@ var VariableFontPlugin = {
                 } catch (eCC1) {}
                 result.charCount = charCount;
                 result.itemCount = charCount;
+
+                var wordCount = 1;
+                var wordsList = [];
+                try {
+                    if (tr.words && tr.words.length > 0) {
+                        wordCount = tr.words.length;
+                        for (var wi = 0; wi < Math.min(tr.words.length, 64); wi++) {
+                            var wt = (tr.words[wi].contents || '').replace(/[\r\n\t\s]+/g, '');
+                            if (wt) wordsList.push(wt.substring(0, 24));
+                        }
+                    }
+                } catch(eWc1) {}
+                if (wordsList.length === 0) {
+                    var mWords1 = (tr.contents || '').match(/\S+/g) || [];
+                    wordCount = Math.max(1, mWords1.length);
+                    for (var mwi = 0; mwi < Math.min(mWords1.length, 64); mwi++) {
+                        wordsList.push(mWords1[mwi].substring(0, 24));
+                    }
+                }
+                result.wordCount = wordCount;
+                result.wordsList = wordsList;
+
+                var lineCount = 1;
+                var linesList = [];
+                try {
+                    if (tr.lines && tr.lines.length > 0) {
+                        lineCount = tr.lines.length;
+                        for (var li = 0; li < Math.min(tr.lines.length, 64); li++) {
+                            var lt = (tr.lines[li].contents || '').replace(/[\r\n]+/g, ' ').replace(/^\s+|\s+$/g, '');
+                            if (lt) linesList.push(lt.substring(0, 32));
+                        }
+                    }
+                } catch(eLc1) {}
+                if (linesList.length === 0) {
+                    var mLines1 = (tr.contents || '').split(/[\r\n]+/) || [];
+                    var cleanLines1 = [];
+                    for (var cli = 0; cli < mLines1.length; cli++) {
+                        var cStr = mLines1[cli].replace(/^\s+|\s+$/g, '');
+                        if (cStr) cleanLines1.push(cStr);
+                    }
+                    lineCount = Math.max(1, cleanLines1.length);
+                    linesList = cleanLines1.slice(0, 64);
+                }
+                result.lineCount = lineCount;
+                result.linesList = linesList;
 
                 var fName = font ? font.name : 'Standard Font';
                 var fFamily = font ? font.family : 'Standard Font';
@@ -716,6 +765,56 @@ var VariableFontPlugin = {
                 } catch (eCC2) {}
                 result.charCount = charCount;
                 result.itemCount = charCount;
+
+                var targetTr = tr || firstTf.textRange;
+                var wordCount = 1;
+                var wordsList = [];
+                try {
+                    var wColl = (targetTr && targetTr.words) ? targetTr.words : (firstTf.words ? firstTf.words : null);
+                    if (wColl && wColl.length > 0) {
+                        wordCount = wColl.length;
+                        for (var wi = 0; wi < Math.min(wColl.length, 64); wi++) {
+                            var wt = (wColl[wi].contents || '').replace(/[\r\n\t\s]+/g, '');
+                            if (wt) wordsList.push(wt.substring(0, 24));
+                        }
+                    }
+                } catch(eWc2) {}
+                if (wordsList.length === 0) {
+                    var rawTxt = firstTf.contents || (targetTr ? targetTr.contents : '');
+                    var mWords2 = (rawTxt || '').match(/\S+/g) || [];
+                    wordCount = Math.max(1, mWords2.length);
+                    for (var mwi = 0; mwi < Math.min(mWords2.length, 64); mwi++) {
+                        wordsList.push(mWords2[mwi].substring(0, 24));
+                    }
+                }
+                result.wordCount = wordCount;
+                result.wordsList = wordsList;
+
+                var lineCount = 1;
+                var linesList = [];
+                try {
+                    var lColl = (targetTr && targetTr.lines) ? targetTr.lines : (firstTf.lines ? firstTf.lines : null);
+                    if (lColl && lColl.length > 0) {
+                        lineCount = lColl.length;
+                        for (var li = 0; li < Math.min(lColl.length, 64); li++) {
+                            var lt = (lColl[li].contents || '').replace(/[\r\n]+/g, ' ').replace(/^\s+|\s+$/g, '');
+                            if (lt) linesList.push(lt.substring(0, 32));
+                        }
+                    }
+                } catch(eLc2) {}
+                if (linesList.length === 0) {
+                    var rawTxt = firstTf.contents || (targetTr ? targetTr.contents : '');
+                    var mLines2 = (rawTxt || '').split(/[\r\n]+/) || [];
+                    var cleanLines2 = [];
+                    for (var cli = 0; cli < mLines2.length; cli++) {
+                        var cStr = mLines2[cli].replace(/^\s+|\s+$/g, '');
+                        if (cStr) cleanLines2.push(cStr);
+                    }
+                    lineCount = Math.max(1, cleanLines2.length);
+                    linesList = cleanLines2.slice(0, 64);
+                }
+                result.lineCount = lineCount;
+                result.linesList = linesList;
 
                 var fName = font ? font.name : 'Standard Font';
                 var fFamily = font ? font.family : 'Standard Font';
@@ -1368,9 +1467,121 @@ var VariableFontPlugin = {
                 }
             }
 
+            function distributeOverWords(words, parentTf) {
+                var count = words.length;
+                if (count <= 0 || curveList.length === 0) return;
+
+                var sampleFont = null;
+                try { sampleFont = words[0].characterAttributes.textFont; } catch(eSfW) {}
+                if (!sampleFont && parentTf) {
+                    try { sampleFont = parentTf.textRange.characterAttributes.textFont; } catch(eTfFW) {}
+                }
+
+                for (var w = 0; w < count; w++) {
+                    var word = words[w];
+                    var p = {};
+                    for (var k = 0; k < curveList.length; k++) {
+                        var cur = curveList[k];
+                        var vals = cur.distributedValues || [];
+                        if (vals.length > 0) {
+                            var cy = sampleDistValues(vals, w, count);
+                            var minV = Number(cur.minVal !== undefined ? cur.minVal : 0);
+                            var maxV = Number(cur.maxVal !== undefined ? cur.maxVal : 100);
+                            p[cur.targetAxis] = minV + cy * (maxV - minV);
+                        }
+                    }
+
+                    try {
+                        if (word.characterAttributes) {
+                            VariableFontPlugin.applyCharAttributes(word.characterAttributes, p, sampleFont);
+                        }
+                    } catch(eWa) {}
+
+                    try {
+                        var wChars = word.characters;
+                        if (wChars && wChars.length > 0) {
+                            for (var wc = 0; wc < wChars.length; wc++) {
+                                VariableFontPlugin.applyCharAttributes(wChars[wc].characterAttributes, p, sampleFont);
+                            }
+                        }
+                    } catch(eWca) {}
+                }
+
+                if (parentTf) {
+                    try { VariableFontPlugin.saveItemMetadata(parentTf, null, config); } catch(eMetaW) {}
+                }
+            }
+
+            function distributeOverLines(lines, parentTf) {
+                var count = lines.length;
+                if (count <= 0 || curveList.length === 0) return;
+
+                var sampleFont = null;
+                try { sampleFont = lines[0].characterAttributes.textFont; } catch(eSfL) {}
+                if (!sampleFont && parentTf) {
+                    try { sampleFont = parentTf.textRange.characterAttributes.textFont; } catch(eTfFL) {}
+                }
+
+                for (var l = 0; l < count; l++) {
+                    var line = lines[l];
+                    var p = {};
+                    for (var k = 0; k < curveList.length; k++) {
+                        var cur = curveList[k];
+                        var vals = cur.distributedValues || [];
+                        if (vals.length > 0) {
+                            var cy = sampleDistValues(vals, l, count);
+                            var minV = Number(cur.minVal !== undefined ? cur.minVal : 0);
+                            var maxV = Number(cur.maxVal !== undefined ? cur.maxVal : 100);
+                            p[cur.targetAxis] = minV + cy * (maxV - minV);
+                        }
+                    }
+
+                    try {
+                        if (line.characterAttributes) {
+                            VariableFontPlugin.applyCharAttributes(line.characterAttributes, p, sampleFont);
+                        }
+                    } catch(eLa) {}
+
+                    try {
+                        var lChars = line.characters;
+                        if (lChars && lChars.length > 0) {
+                            for (var lc = 0; lc < lChars.length; lc++) {
+                                VariableFontPlugin.applyCharAttributes(lChars[lc].characterAttributes, p, sampleFont);
+                            }
+                        }
+                    } catch(eLca) {}
+                }
+
+                if (parentTf) {
+                    try { VariableFontPlugin.saveItemMetadata(parentTf, null, config); } catch(eMetaL) {}
+                }
+            }
+
             if (selectedTextRange) {
                 var parentTf = (selectedTextRange.parent && selectedTextRange.parent.typename === 'TextFrame') ? selectedTextRange.parent : null;
-                distributeOverCharacters(selectedTextRange.characters, parentTf);
+                if (mode === 'words' && selectedTextRange.words && selectedTextRange.words.length > 0) {
+                    distributeOverWords(selectedTextRange.words, parentTf);
+                } else if (mode === 'lines' && selectedTextRange.lines && selectedTextRange.lines.length > 0) {
+                    distributeOverLines(selectedTextRange.lines, parentTf);
+                } else {
+                    distributeOverCharacters(selectedTextRange.characters, parentTf);
+                }
+            } else if (mode === 'words' && textFrames.length > 0) {
+                var tf = textFrames[0];
+                var wColl = (tf.textRange && tf.textRange.words) ? tf.textRange.words : (tf.words ? tf.words : null);
+                if (wColl && wColl.length > 0) {
+                    distributeOverWords(wColl, tf);
+                } else {
+                    distributeOverCharacters(tf.textRange.characters, tf);
+                }
+            } else if (mode === 'lines' && textFrames.length > 0) {
+                var tf = textFrames[0];
+                var lColl = (tf.textRange && tf.textRange.lines) ? tf.textRange.lines : (tf.lines ? tf.lines : null);
+                if (lColl && lColl.length > 0) {
+                    distributeOverLines(lColl, tf);
+                } else {
+                    distributeOverCharacters(tf.textRange.characters, tf);
+                }
             } else if (mode === 'characters' && textFrames.length > 0) {
                 var tf = textFrames[0];
                 distributeOverCharacters(tf.textRange.characters, tf);

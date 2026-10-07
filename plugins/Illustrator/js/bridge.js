@@ -6,7 +6,7 @@
 
 class IllustratorBridge {
     constructor() {
-        this.csInterface = new CSInterface();
+        this.csInterface = typeof CSInterface !== 'undefined' ? new CSInterface() : null;
         this.isCEP = typeof window.__adobe_cep__ !== 'undefined';
         this.isFigma = typeof window !== 'undefined' && window.parent && window.parent !== window && !this.isCEP;
         this.listeners = new Map();
@@ -15,10 +15,50 @@ class IllustratorBridge {
         
         // Mock state for standalone browser mode
         this.mockDocumentTextFrames = [
-            { index: 0, text: 'The quick brown fox jumps over the lazy dog', fontName: 'Acumin Variable Concept', isVariable: true, charCount: 43 },
-            { index: 1, text: 'ARMENIAN VARIABLE TYPOGRAPHY 2026', fontName: 'ArTarumianAzdVar', isVariable: true, charCount: 32 },
-            { index: 2, text: 'Futura Headline Display', fontName: 'Futura PT', isVariable: false, charCount: 23 },
-            { index: 3, text: 'Interactive Spline Curves & Distribution', fontName: 'Bahnschrift', isVariable: true, charCount: 40 }
+            { 
+                index: 0, 
+                text: 'The quick brown fox jumps over the lazy dog', 
+                fontName: 'Acumin Variable Concept', 
+                isVariable: true, 
+                charCount: 43,
+                wordCount: 9,
+                lineCount: 2,
+                wordsList: ['The', 'quick', 'brown', 'fox', 'jumps', 'over', 'the', 'lazy', 'dog'],
+                linesList: ['The quick brown fox', 'jumps over the lazy dog']
+            },
+            { 
+                index: 1, 
+                text: 'ARMENIAN VARIABLE TYPOGRAPHY 2026', 
+                fontName: 'ArTarumianAzdVar', 
+                isVariable: true, 
+                charCount: 32,
+                wordCount: 4,
+                lineCount: 2,
+                wordsList: ['ARMENIAN', 'VARIABLE', 'TYPOGRAPHY', '2026'],
+                linesList: ['ARMENIAN VARIABLE', 'TYPOGRAPHY 2026']
+            },
+            { 
+                index: 2, 
+                text: 'Futura Headline Display', 
+                fontName: 'Futura PT', 
+                isVariable: false, 
+                charCount: 23,
+                wordCount: 3,
+                lineCount: 1,
+                wordsList: ['Futura', 'Headline', 'Display'],
+                linesList: ['Futura Headline Display']
+            },
+            { 
+                index: 3, 
+                text: 'Interactive Spline Curves & Distribution', 
+                fontName: 'Bahnschrift', 
+                isVariable: true, 
+                charCount: 40,
+                wordCount: 5,
+                lineCount: 2,
+                wordsList: ['Interactive', 'Spline', 'Curves', '&', 'Distribution'],
+                linesList: ['Interactive Spline Curves', '& Distribution']
+            }
         ];
 
         this.mockSelection = {
@@ -32,6 +72,10 @@ class IllustratorBridge {
             textSnippet: 'The quick brown fox jumps over the lazy dog',
             isVariableFont: true,
             charCount: 43,
+            wordCount: 9,
+            lineCount: 2,
+            wordsList: ['The', 'quick', 'brown', 'fox', 'jumps', 'over', 'the', 'lazy', 'dog'],
+            linesList: ['The quick brown fox', 'jumps over the lazy dog'],
             axes: [
                 { id: 'wght', name: 'Weight', min: 100, max: 900, step: 1, defaultVal: 400 },
                 { id: 'wdth', name: 'Width', min: 50, max: 200, step: 1, defaultVal: 100 },
@@ -265,6 +309,10 @@ class IllustratorBridge {
                     this.mockSelection.fontName = chosen.fontName;
                     this.mockSelection.isVariableFont = chosen.isVariable;
                     this.mockSelection.charCount = chosen.charCount;
+                    this.mockSelection.wordCount = chosen.wordCount || 5;
+                    this.mockSelection.lineCount = chosen.lineCount || 2;
+                    this.mockSelection.wordsList = chosen.wordsList || [];
+                    this.mockSelection.linesList = chosen.linesList || [];
                     this.mockSelection.textSnippet = chosen.text;
                     this.emit('selectionChanged');
                 }

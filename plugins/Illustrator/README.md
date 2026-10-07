@@ -54,11 +54,17 @@ Variables Plugin/
 - **Dynamic Axis Discovery:** Automatically populates axes based on active selection (`wght`, `wdth`, `slnt`, `opsz`, or shape stroke/opacity).
 - **Weight Presets:** Thin (100), Light (300), Regular (400), Bold (700), and Black (900).
 
-### 2. Graph / Easing Mode (Curve Mapping)
-- **Interactive Bézier Curve Canvas:** Dual-handle cubic Bézier curve editor with tangent control stems ($P_1$ and $P_2$), grid guidelines, and responsive Retina/HiDPI rendering.
+### 2. Graph / Easing Mode (Multi-Point Spline Studio)
+- **Interactive Bézier Curve Canvas:** Multi-point spline curve editor with smooth/broken/straight tangent control handles, grid guidelines, and responsive Retina/HiDPI rendering.
+- **Horizontal Zoom & Point Spacing:** Granular zoom levels (`1x`, `1.5x`, `2x`, `3x`, `+`, `-`, reset, and `Ctrl + Wheel`) to space points apart horizontally with smooth scrolling, making dense multi-character distributions effortless to inspect and edit.
+- **Vertical Downward Resizer:** Drag handle to expand canvas height downward (140px to 700px) alongside quick height presets (`180px`, `240px`, `340px`, `460px`), saved automatically to `localStorage`.
 - **Newton-Raphson Curve Solver:** Inverts parametric cubic Bézier polynomials in real time to calculate $Y(X)$ for any point along the distribution.
-- **Presets:** Linear, Ease-In, Ease-Out, S-Curve, and Bell Curve.
-- **Distribution Scope:** Character-by-Character glyph mapping or Item-by-Item artwork mapping.
+- **Presets & Folder Organization:** Linear, Ease-In, Ease-Out, S-Curve, Bell, Wave, Pulse, Bounce, Elastic, and custom user preset management (export/import JSON).
+- **Flexible Distribution Scope:**
+  - **Characters (`characters`):** Individual glyph-by-glyph interpolation.
+  - **Words (`words`):** Word-level mapping where every glyph within a word receives the evaluated target value.
+  - **Lines (`lines`):** Line-by-line distribution across multi-line text blocks.
+  - **Items (`items`):** Multi-selection vector shape and path distribution.
 
 ### 3. 2D Design Space Field Mode (2D Cartesian Grid)
 - **Dual-Axis Cartesian Mapping:** Control two primary axes simultaneously (e.g. $X$ = Weight `wght`, $Y$ = Slant `slnt`).

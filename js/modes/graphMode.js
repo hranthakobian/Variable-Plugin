@@ -289,14 +289,24 @@ class GraphMode {
         // Canvas & layout state
         this.canvas = null;
         this.ctx = null;
+        this.baseWidth = 280;
+        this.canvasHeight = parseInt(localStorage.getItem('vf_graph_canvas_height') || '240', 10);
+        if (isNaN(this.canvasHeight) || this.canvasHeight < 160 || this.canvasHeight > 600) {
+            this.canvasHeight = 240;
+        }
         this.width = 280;
-        this.height = 180;
+        this.height = this.canvasHeight;
+        this.zoom = 1.0;
         this.padding = 24;
 
         this.availableAxes = [];
         this.axes = this.availableAxes;
         this.distributionTarget = 'characters';
         this.itemCount = 16;
+        this.wordsList = [];
+        this.linesList = [];
+        this.wordCount = 1;
+        this.lineCount = 1;
         this.hoveredDistIndex = null;
 
         // Multi-curve collection with multi-point splines
@@ -526,6 +536,8 @@ class GraphMode {
                                 <label for="graph-target-select">${i18n ? i18n.t('mapAcross') : 'Map across:'}</label>
                                 <select id="graph-target-select" class="dropdown-select">
                                     <option value="characters" selected>${i18n ? i18n.t('optCharacters') : 'Characters'}</option>
+                                    <option value="words">${i18n ? i18n.t('optWords') : 'Words'}</option>
+                                    <option value="lines">${i18n ? i18n.t('optLines') : 'Lines'}</option>
                                     <option value="items">${i18n ? i18n.t('optItems') : 'Selected Items'}</option>
                                 </select>
                             </div>
@@ -542,6 +554,23 @@ class GraphMode {
                             <span class="card-title">${i18n ? i18n.t('panelCanvas') : 'Spline Canvas'}</span>
                         </div>
                         <div class="card-header-right">
+                            <div class="canvas-zoom-group">
+                                <button type="button" class="btn-canvas-ctrl btn-zoom-out" id="btn-zoom-out" title="${i18n ? i18n.t('canvasZoomOut') : 'Zoom Out (-)'}">
+                                    <i class="hd-icon hd-icon-minus"></i>
+                                </button>
+                                <button type="button" class="btn-canvas-ctrl btn-zoom-badge" id="btn-zoom-reset" title="${i18n ? i18n.t('canvasZoomReset') : 'Reset Zoom (100%)'}">
+                                    <span id="canvas-zoom-label">100%</span>
+                                </button>
+                                <button type="button" class="btn-canvas-ctrl btn-zoom-in" id="btn-zoom-in" title="${i18n ? i18n.t('canvasZoomIn') : 'Zoom In (+)'}">
+                                    <i class="hd-icon hd-icon-plus"></i>
+                                </button>
+                                <div class="canvas-zoom-presets">
+                                    <button type="button" class="btn-zoom-preset active" data-zoom="1.0">1x</button>
+                                    <button type="button" class="btn-zoom-preset" data-zoom="1.5">1.5x</button>
+                                    <button type="button" class="btn-zoom-preset" data-zoom="2.0">2x</button>
+                                    <button type="button" class="btn-zoom-preset" data-zoom="3.0">3x</button>
+                                </div>
+                            </div>
                             ${helpBtn('canvas')}
                             <button type="button" class="btn-card-ctrl btn-card-up" data-card="canvas" data-action="up" title="${i18n ? i18n.t('moveUpTitle') : 'Move up'}"><i class="hd-icon hd-icon-arrow-up"></i></button>
                             <button type="button" class="btn-card-ctrl btn-card-down" data-card="canvas" data-action="down" title="${i18n ? i18n.t('moveDownTitle') : 'Move down'}"><i class="hd-icon hd-icon-arrow-bottom"></i></button>
@@ -550,12 +579,26 @@ class GraphMode {
                     </div>
                     <div class="graph-modular-card-body">
                         <div class="canvas-wrapper">
-                            <canvas id="bezier-canvas" width="280" height="180"></canvas>
+                            <canvas id="bezier-canvas" width="280" height="240"></canvas>
                             <div class="graph-axis-annotations">
                                 <span class="ann-y-max">${i18n ? i18n.t('annMax') : '1.0 (Max)'}</span>
                                 <span class="ann-y-min">${i18n ? i18n.t('annMin') : '0.0 (Min)'}</span>
                                 <span class="ann-x-start">${i18n ? i18n.t('annStart') : 'Start [0]'}</span>
                                 <span class="ann-x-end">${i18n ? i18n.t('annEnd') : 'End [N]'}</span>
+                            </div>
+                        </div>
+                        <div class="canvas-bottom-bar">
+                            <div class="canvas-height-resizer" id="canvas-height-resizer" title="${i18n ? i18n.t('canvasResizeDown') : 'Drag down to enlarge canvas height'}">
+                                <div class="resizer-pill">
+                                    <span class="resizer-bar"></span>
+                                </div>
+                            </div>
+                            <div class="canvas-height-presets">
+                                <span class="canvas-height-label">↕</span>
+                                <button type="button" class="btn-height-preset" data-height="180">180</button>
+                                <button type="button" class="btn-height-preset active" data-height="240">240</button>
+                                <button type="button" class="btn-height-preset" data-height="340">340</button>
+                                <button type="button" class="btn-height-preset" data-height="460">460</button>
                             </div>
                         </div>
                         <label class="dist-points-toggle">
@@ -725,17 +768,27 @@ class GraphMode {
         const wrap = this.canvas.parentElement;
         const displayWidth = wrap && wrap.clientWidth > 0
             ? Math.round(wrap.clientWidth)
-            : (this.width || 280);
-        const displayHeight = 180;
+            : (this.baseWidth || 280);
 
         if (displayWidth <= 0) {
             return;
         }
 
-        this.width = displayWidth;
-        this.height = displayHeight;
-        this.canvas.width = Math.round(displayWidth * dpr);
-        this.canvas.height = Math.round(displayHeight * dpr);
+        this.baseWidth = displayWidth;
+        this.zoom = this.zoom || 1.0;
+        this.canvasHeight = this.canvasHeight || 240;
+
+        const totalWidth = Math.round(this.baseWidth * this.zoom);
+        const totalHeight = this.canvasHeight;
+
+        this.width = totalWidth;
+        this.height = totalHeight;
+
+        this.canvas.style.width = `${totalWidth}px`;
+        this.canvas.style.height = `${totalHeight}px`;
+
+        this.canvas.width = Math.round(totalWidth * dpr);
+        this.canvas.height = Math.round(totalHeight * dpr);
 
         if (this.ctx.resetTransform) {
             this.ctx.resetTransform();
@@ -743,6 +796,86 @@ class GraphMode {
             this.ctx.setTransform(1, 0, 0, 1, 0, 0);
         }
         this.ctx.scale(dpr, dpr);
+    }
+
+    setZoom(level, anchorNormX) {
+        const oldZoom = this.zoom || 1.0;
+        const newZoom = Math.max(1.0, Math.min(4.0, Math.round(level * 100) / 100));
+        if (Math.abs(oldZoom - newZoom) < 0.01) {
+            return;
+        }
+
+        const wrap = this.canvas ? this.canvas.parentElement : null;
+        let scrollRatio = 0.5;
+        if (wrap && wrap.clientWidth > 0) {
+            if (anchorNormX !== undefined) {
+                scrollRatio = anchorNormX;
+            } else {
+                scrollRatio = (wrap.scrollLeft + wrap.clientWidth / 2) / (this.width || 1);
+            }
+        }
+
+        this.zoom = newZoom;
+        this.setupCanvas();
+        this.redraw();
+
+        const zoomLabel = this.container.querySelector('#canvas-zoom-label');
+        if (zoomLabel) {
+            zoomLabel.textContent = `${Math.round(this.zoom * 100)}%`;
+        }
+        this.container.querySelectorAll('.btn-zoom-preset').forEach((btn) => {
+            const z = parseFloat(btn.dataset.zoom);
+            btn.classList.toggle('active', Math.abs(z - this.zoom) < 0.05);
+        });
+
+        if (wrap && wrap.clientWidth > 0 && this.width > wrap.clientWidth) {
+            wrap.scrollLeft = Math.round(scrollRatio * this.width - wrap.clientWidth / 2);
+        }
+    }
+
+    zoomIn() {
+        const next = this.zoom < 1.45 ? 1.5 : (this.zoom < 1.95 ? 2.0 : (this.zoom < 2.95 ? 3.0 : 4.0));
+        this.setZoom(next);
+    }
+
+    zoomOut() {
+        const prev = this.zoom > 2.5 ? 2.0 : (this.zoom > 1.8 ? 1.5 : 1.0);
+        this.setZoom(prev);
+    }
+
+    resetZoom() {
+        this.setZoom(1.0);
+    }
+
+    setCanvasHeight(newH) {
+        const clamped = Math.max(160, Math.min(600, Math.round(newH)));
+        this.canvasHeight = clamped;
+        try {
+            localStorage.setItem('vf_graph_canvas_height', String(clamped));
+        } catch(e) {}
+        this.setupCanvas();
+        this.redraw();
+
+        this.container.querySelectorAll('.btn-height-preset').forEach((btn) => {
+            const h = parseInt(btn.dataset.height, 10);
+            btn.classList.toggle('active', Math.abs(h - this.canvasHeight) <= 25);
+        });
+    }
+
+    setDistributionTarget(target) {
+        this.distributionTarget = target;
+        if (target === 'words') {
+            this.itemCount = Math.max(1, this.wordCount || (this.wordsList && this.wordsList.length) || 1);
+        } else if (target === 'lines') {
+            this.itemCount = Math.max(1, this.lineCount || (this.linesList && this.linesList.length) || 1);
+        } else if (target === 'characters') {
+            this.itemCount = Math.max(1, (this.selectionInfo && this.selectionInfo.charCount) || 16);
+        } else if (target === 'items') {
+            this.itemCount = Math.max(1, (this.selectionInfo && this.selectionInfo.totalSelected) || 8);
+        }
+        this.updateDistributionPreview();
+        this.redraw();
+        this.emitDistribution();
     }
 
     getActiveCurve() {
@@ -3156,9 +3289,89 @@ class GraphMode {
 
         if (targetSelect) {
             targetSelect.addEventListener('change', (e) => {
-                this.distributionTarget = e.target.value;
-                this.emitDistribution();
+                this.setDistributionTarget(e.target.value);
             });
+        }
+
+        // Canvas Zoom Controls
+        const btnZoomIn = this.container.querySelector('#btn-zoom-in');
+        const btnZoomOut = this.container.querySelector('#btn-zoom-out');
+        const btnZoomReset = this.container.querySelector('#btn-zoom-reset');
+        if (btnZoomIn) {
+            btnZoomIn.addEventListener('click', () => this.zoomIn());
+        }
+        if (btnZoomOut) {
+            btnZoomOut.addEventListener('click', () => this.zoomOut());
+        }
+        if (btnZoomReset) {
+            btnZoomReset.addEventListener('click', () => this.resetZoom());
+        }
+
+        this.container.querySelectorAll('.btn-zoom-preset').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const z = parseFloat(btn.dataset.zoom);
+                if (z) {
+                    this.setZoom(z);
+                }
+            });
+        });
+
+        // Canvas Downward Height Resizer
+        const resizer = this.container.querySelector('#canvas-height-resizer');
+        if (resizer) {
+            let isResizing = false;
+            let startY = 0;
+            let startH = 0;
+
+            resizer.addEventListener('pointerdown', (e) => {
+                if (e.button !== 0) return;
+                isResizing = true;
+                startY = e.clientY;
+                startH = this.canvasHeight;
+                resizer.classList.add('is-dragging');
+                try { resizer.setPointerCapture(e.pointerId); } catch(err) {}
+                e.preventDefault();
+            });
+
+            resizer.addEventListener('pointermove', (e) => {
+                if (!isResizing) return;
+                const deltaY = e.clientY - startY;
+                const newHeight = startH + deltaY;
+                this.setCanvasHeight(newHeight);
+            });
+
+            const stopResizing = (e) => {
+                if (!isResizing) return;
+                isResizing = false;
+                resizer.classList.remove('is-dragging');
+                try { resizer.releasePointerCapture(e.pointerId); } catch(err) {}
+            };
+
+            resizer.addEventListener('pointerup', stopResizing);
+            resizer.addEventListener('pointercancel', stopResizing);
+        }
+
+        // Canvas Height Quick Presets
+        this.container.querySelectorAll('.btn-height-preset').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const h = parseInt(btn.dataset.height, 10);
+                if (h) {
+                    this.setCanvasHeight(h);
+                }
+            });
+        });
+
+        // Ctrl + Wheel Zoom on canvas
+        if (this.canvas) {
+            this.canvas.addEventListener('wheel', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    const rect = this.canvas.getBoundingClientRect();
+                    const mouseNormX = rect.width > 0 ? (e.clientX - rect.left) / rect.width : 0.5;
+                    const delta = e.deltaY < 0 ? 0.25 : -0.25;
+                    this.setZoom(this.zoom + delta, mouseNormX);
+                }
+            }, { passive: false });
         }
 
         // Presets for Active Curve
@@ -4239,8 +4452,18 @@ class GraphMode {
                         const pX = pad + xN * plotW;
                         const pY = h - pad - yN * plotH;
                         const val = Math.round(range.min + yN * (range.max - range.min));
-                        const rChar = (this.textSnippet && this.textSnippet[sIdx]) ? this.textSnippet[sIdx] : null;
-                        const label = rChar ? `${rChar}: ${val}` : `${val}`;
+                        let label = `${val}`;
+                        if (this.distributionTarget === 'words') {
+                            const rWord = (this.wordsList && this.wordsList[sIdx]) ? this.wordsList[sIdx] : null;
+                            label = rWord ? `${rWord}: ${val}` : `${val}`;
+                        } else if (this.distributionTarget === 'lines') {
+                            label = `L${sIdx + 1}: ${val}`;
+                        } else if (this.distributionTarget === 'items') {
+                            label = `#${sIdx + 1}: ${val}`;
+                        } else {
+                            const rChar = (this.textSnippet && this.textSnippet[sIdx]) ? this.textSnippet[sIdx] : null;
+                            label = rChar ? `${rChar}: ${val}` : `${val}`;
+                        }
 
                         ctx.font = 'bold 8px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
                         const tm = ctx.measureText(label);
@@ -4283,8 +4506,18 @@ class GraphMode {
                     const topAxisY = pad;
 
                     const calculatedVal = Math.round(range.min + yNorm * (range.max - range.min));
-                    const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
-                    const letterDisplay = rawChar ? `'${rawChar}'` : `#${sampleIdx + 1}`;
+                    let letterDisplay = `#${sampleIdx + 1}`;
+                    if (this.distributionTarget === 'words') {
+                        const rawWord = (this.wordsList && this.wordsList[sampleIdx]) ? this.wordsList[sampleIdx] : `#${sampleIdx + 1}`;
+                        letterDisplay = `«${rawWord}»`;
+                    } else if (this.distributionTarget === 'lines') {
+                        letterDisplay = `Line ${sampleIdx + 1}`;
+                    } else if (this.distributionTarget === 'items') {
+                        letterDisplay = `Item #${sampleIdx + 1}`;
+                    } else {
+                        const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
+                        letterDisplay = rawChar ? `'${rawChar}'` : `#${sampleIdx + 1}`;
+                    }
 
                     ctx.save();
 
@@ -4449,23 +4682,36 @@ class GraphMode {
         const range = this.getAxisRange(cur.axisId);
 
         if (axisLabel) {
-            const headingText = this.distributionTarget === 'characters'
-                ? (window.i18n ? window.i18n.t('charDistribution') : 'Տառերի բաշխում')
-                : (window.i18n ? window.i18n.t('itemDistribution') : 'Առարկաների բաշխում');
+            let headingText = window.i18n ? window.i18n.t('charDistribution') : 'Տառերի բաշխում';
+            if (this.distributionTarget === 'words') {
+                headingText = window.i18n ? window.i18n.t('wordDistribution') : 'Բառերի բաշխում';
+            } else if (this.distributionTarget === 'lines') {
+                headingText = window.i18n ? window.i18n.t('lineDistribution') : 'Տողերի բաշխում';
+            } else if (this.distributionTarget === 'items') {
+                headingText = window.i18n ? window.i18n.t('itemDistribution') : 'Առարկաների բաշխում';
+            }
             axisLabel.textContent = headingText;
         }
 
         barContainer.classList.remove('has-limit-warning');
+        barContainer.classList.toggle('is-words-or-lines', this.distributionTarget === 'words' || this.distributionTarget === 'lines');
         const realCount = Math.max(1, this.itemCount || 16);
         const count = Math.max(2, Math.min(128, realCount));
-        barContainer.classList.toggle('is-thin', count > 20);
-        barContainer.classList.toggle('dist-bars-dense', count > 36);
-        barContainer.classList.toggle('dist-bars-ultra', count > 44);
+        barContainer.classList.toggle('is-thin', count > 20 && this.distributionTarget === 'characters');
+        barContainer.classList.toggle('dist-bars-dense', count > 36 && this.distributionTarget === 'characters');
+        barContainer.classList.toggle('dist-bars-ultra', count > 44 && this.distributionTarget === 'characters');
 
         if (countLabel) {
-            const countStr = this.distributionTarget === 'characters'
-                ? (window.i18n ? window.i18n.t('charactersCount', { count: realCount }) : `${realCount} characters`)
-                : (window.i18n ? window.i18n.t('itemsCount', { count: realCount }) : `${realCount} items`);
+            let countStr = `${realCount} characters`;
+            if (this.distributionTarget === 'words') {
+                countStr = window.i18n ? window.i18n.t('wordsCount', { count: realCount }) : `${realCount} words`;
+            } else if (this.distributionTarget === 'lines') {
+                countStr = window.i18n ? window.i18n.t('linesCount', { count: realCount }) : `${realCount} lines`;
+            } else if (this.distributionTarget === 'items') {
+                countStr = window.i18n ? window.i18n.t('itemsCount', { count: realCount }) : `${realCount} items`;
+            } else {
+                countStr = window.i18n ? window.i18n.t('charactersCount', { count: realCount }) : `${realCount} characters`;
+            }
             countLabel.textContent = countStr;
         }
 
@@ -4534,11 +4780,30 @@ class GraphMode {
             const xTarget = realCount > 1 ? sampleIdx / (realCount - 1) : 0;
             const isAnchor = cur.points.some((p) => Math.abs(p.x - xTarget) <= tol);
 
-            const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
-            const letterDisplay = rawChar ? `${rawChar}` : `#${sampleIdx + 1}`;
-            const tipText = window.i18n
-                ? window.i18n.t('distBarLetterTip', { char: `'${letterDisplay}'`, idx: sampleIdx + 1, axis: axisName, val: calculatedVal })
-                : `Letter '${letterDisplay}' (#${sampleIdx + 1}): ${axisName} = ${calculatedVal}`;
+            let letterDisplay = `#${sampleIdx + 1}`;
+            let tipText = '';
+            if (this.distributionTarget === 'words') {
+                const rawWord = (this.wordsList && this.wordsList[sampleIdx]) ? this.wordsList[sampleIdx] : `#${sampleIdx + 1}`;
+                letterDisplay = rawWord;
+                tipText = window.i18n
+                    ? window.i18n.t('distBarWordTip', { word: rawWord, idx: sampleIdx + 1, axis: axisName, val: calculatedVal })
+                    : `Word '${rawWord}' (#${sampleIdx + 1}): ${axisName} = ${calculatedVal}`;
+            } else if (this.distributionTarget === 'lines') {
+                const rawLine = (this.linesList && this.linesList[sampleIdx]) ? this.linesList[sampleIdx] : `L${sampleIdx + 1}`;
+                letterDisplay = rawLine.length > 8 ? rawLine.substring(0, 7) + '…' : rawLine;
+                tipText = window.i18n
+                    ? window.i18n.t('distBarLineTip', { idx: sampleIdx + 1, axis: axisName, val: calculatedVal })
+                    : `Line #${sampleIdx + 1}: ${axisName} = ${calculatedVal}`;
+            } else if (this.distributionTarget === 'items') {
+                letterDisplay = `#${sampleIdx + 1}`;
+                tipText = `Item #${sampleIdx + 1}: ${axisName} = ${calculatedVal}`;
+            } else {
+                const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
+                letterDisplay = rawChar ? `${rawChar}` : `#${sampleIdx + 1}`;
+                tipText = window.i18n
+                    ? window.i18n.t('distBarLetterTip', { char: `'${letterDisplay}'`, idx: sampleIdx + 1, axis: axisName, val: calculatedVal })
+                    : `Letter '${letterDisplay}' (#${sampleIdx + 1}): ${axisName} = ${calculatedVal}`;
+            }
 
             item.dataset.index = i;
             item.dataset.sample = sampleIdx;
@@ -5217,16 +5482,32 @@ class GraphMode {
         if (!info) {
             return;
         }
+        this.selectionInfo = info;
 
         if (info.type === 'text') {
-            this.itemCount = info.charCount > 0 ? info.charCount : 16;
-            this.distributionTarget = 'characters';
+            this.wordsList = info.wordsList || (info.textSnippet ? (info.textSnippet.match(/\S+/g) || []) : []);
+            this.linesList = info.linesList || (info.textSnippet ? (info.textSnippet.split(/[\r\n]+/) || []) : []);
+            this.wordCount = info.wordCount || (this.wordsList.length > 0 ? this.wordsList.length : 1);
+            this.lineCount = info.lineCount || (this.linesList.length > 0 ? this.linesList.length : 1);
             this.textSnippet = info.textSnippet || '';
+
+            if (this.distributionTarget === 'words') {
+                this.itemCount = Math.max(1, this.wordCount);
+            } else if (this.distributionTarget === 'lines') {
+                this.itemCount = Math.max(1, this.lineCount);
+            } else {
+                this.distributionTarget = 'characters';
+                this.itemCount = info.charCount > 0 ? info.charCount : 16;
+            }
             const targetSel = this.container.querySelector('#graph-target-select');
             if (targetSel) {
-                targetSel.value = 'characters';
+                targetSel.value = this.distributionTarget;
             }
         } else {
+            this.wordsList = [];
+            this.linesList = [];
+            this.wordCount = 0;
+            this.lineCount = 0;
             this.itemCount = info.totalSelected > 0 ? info.totalSelected : 8;
             this.distributionTarget = 'items';
             this.textSnippet = '';
@@ -5263,6 +5544,22 @@ class GraphMode {
         // If the item has saved curve parameters, restore them seamlessly
         if (info.savedCurve) {
             try {
+                if (info.savedCurve.distributionTarget) {
+                    this.distributionTarget = info.savedCurve.distributionTarget;
+                    if (this.distributionTarget === 'words') {
+                        this.itemCount = Math.max(1, this.wordCount);
+                    } else if (this.distributionTarget === 'lines') {
+                        this.itemCount = Math.max(1, this.lineCount);
+                    } else if (this.distributionTarget === 'characters') {
+                        this.itemCount = info.charCount > 0 ? info.charCount : 16;
+                    } else if (this.distributionTarget === 'items') {
+                        this.itemCount = info.totalSelected > 0 ? info.totalSelected : 8;
+                    }
+                    const targetSel = this.container.querySelector('#graph-target-select');
+                    if (targetSel) {
+                        targetSel.value = this.distributionTarget;
+                    }
+                }
                 if (Array.isArray(info.savedCurve.curvesCollection) && info.savedCurve.curvesCollection.length > 0) {
                     this.curves = JSON.parse(JSON.stringify(info.savedCurve.curvesCollection));
                     if (!this.curves.some((c) => c.id === this.activeCurveId)) {

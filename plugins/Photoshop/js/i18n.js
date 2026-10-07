@@ -37,6 +37,8 @@ const TRANSLATIONS = {
         curveBtn: 'Կոր',
         easingDistFor: 'Բաշխման կոր {name}-ի համար',
         mapAcrossChars: 'Տարածել տառերի վրա',
+        mapAcrossWords: 'Տարածել բառերի վրա',
+        mapAcrossLines: 'Տարածել տողերի վրա',
         mapAcrossItems: 'Տարածել առարկաների վրա',
         p0Start: 'P0 (Սկիզբ)',
         p1Coord: 'P1 (X, Y)',
@@ -149,11 +151,18 @@ const TRANSLATIONS = {
         axisChanged: 'Կորի առանցքը փոխվեց՝ {axis}',
         mapAcross: 'Տարածել՝',
         optCharacters: 'Տառերի վրա',
+        optWords: 'Բառերի վրա',
+        optLines: 'Տողերի վրա',
         optItems: 'Ընտրված առարկաների',
         annMax: '1.0 (Առավ.)',
         annMin: '0.0 (Նվազ.)',
         annStart: 'Սկիզբ [0]',
         annEnd: 'Վերջ [N]',
+        canvasZoomIn: 'Մեծացնել մաշտաբը (+)',
+        canvasZoomOut: 'Փոքրացնել մաշտաբը (-)',
+        canvasZoomReset: 'Վերականգնել մաշտաբը (100%)',
+        canvasResizeDown: 'Քաշեք՝ կտավի բարձրությունը ներքև մեծացնելու համար',
+        canvasHeightTitle: 'Կտավի բարձրություն՝ {val}px',
         pointsLabel: 'Կետեր՝',
         pointDetailsLabel: 'Մանրամասներ՝',
         pointActionsLabel: 'Գործողություններ՝',
@@ -177,10 +186,16 @@ const TRANSLATIONS = {
         curvePresetsLabel: 'Կորի կաղապներ (Ակտիվ կոր)՝',
         distributionPrefix: 'Բաշխում՝',
         charDistribution: 'Տառերի բաշխում',
+        wordDistribution: 'Բառերի բաշխում',
+        lineDistribution: 'Տողերի բաշխում',
         itemDistribution: 'Առարկաների բաշխում',
         elementsCount: '{count} տարր',
         charactersCount: '{count} տառ',
+        wordsCount: '{count} բառ',
+        linesCount: '{count} տող',
         itemsCount: '{count} առարկա',
+        distBarWordTip: 'Բառ «{word}» (#{idx})՝ {axis} = {val}',
+        distBarLineTip: 'Տող #{idx}՝ {axis} = {val}',
 
         // Mode 3: 2D Design Space
         xAxisLabel: 'X առանցք՝',
@@ -193,6 +208,9 @@ const TRANSLATIONS = {
         // Non-Variable Font & Empty Selection
         nonVarHeading: 'Տառատեսակը փոփոխական (Variable Font) չէ',
         nonVarBody: 'Ընտրված տառատեսակը չունի OpenType Variable Font առանցքներ։<br>Խնդրում ենք Illustrator-ում ընտրել փոփոխական տառատեսակ (օր․՝ ArTarumianAzdVar, Bahnschrift, Acumin Variable Concept և այլն)։',
+        selectVarShort: 'Ընտրեք փոփոխական',
+        selectVariableFont: 'Ընտրեք փոփոխական տառատեսակ',
+        selectedStaticFont: 'Ընտրված է՝ {font} (Ստատիկ)',
         selectTextToEdit: 'Ընտրեք տեքստ խմբագրելու համար',
         docTextFramesTitle: 'Փաստաթղթի տեքստերը՝',
         noTextFramesInDoc: 'Փաստաթղթում տեքստային շերտեր չկան',
@@ -295,6 +313,8 @@ const TRANSLATIONS = {
         curveBtn: 'Curve',
         easingDistFor: 'Bézier Easing Distribution for {name}',
         mapAcrossChars: 'Map across characters',
+        mapAcrossWords: 'Map across words',
+        mapAcrossLines: 'Map across lines',
         mapAcrossItems: 'Map across items',
         p0Start: 'P0 (Start)',
         p1Coord: 'P1 (X, Y)',
@@ -407,11 +427,18 @@ const TRANSLATIONS = {
         axisChanged: 'Curve axis changed to {axis}',
         mapAcross: 'Map across:',
         optCharacters: 'Characters',
+        optWords: 'Words',
+        optLines: 'Lines',
         optItems: 'Selected Items',
         annMax: '1.0 (Max)',
         annMin: '0.0 (Min)',
         annStart: 'Start [0]',
         annEnd: 'End [N]',
+        canvasZoomIn: 'Zoom In (+)',
+        canvasZoomOut: 'Zoom Out (-)',
+        canvasZoomReset: 'Reset Zoom (100%)',
+        canvasResizeDown: 'Drag down to enlarge canvas height',
+        canvasHeightTitle: 'Canvas Height: {val}px',
         pointsLabel: 'Points:',
         pointDetailsLabel: 'Details:',
         pointActionsLabel: 'Actions:',
@@ -435,10 +462,16 @@ const TRANSLATIONS = {
         curvePresetsLabel: 'Curve Presets (Active Curve):',
         distributionPrefix: 'Distribution:',
         charDistribution: 'Character Distribution',
+        wordDistribution: 'Word Distribution',
+        lineDistribution: 'Line Distribution',
         itemDistribution: 'Item Distribution',
         elementsCount: '{count} elements',
         charactersCount: '{count} characters',
+        wordsCount: '{count} words',
+        linesCount: '{count} lines',
         itemsCount: '{count} items',
+        distBarWordTip: 'Word "{word}" (#{idx}): {axis} = {val}',
+        distBarLineTip: 'Line #{idx}: {axis} = {val}',
 
         // Mode 3: 2D Design Space
         xAxisLabel: 'X-Axis:',
@@ -451,6 +484,9 @@ const TRANSLATIONS = {
         // Non-Variable Font & Empty Selection
         nonVarHeading: 'Font is not a Variable Font',
         nonVarBody: 'The selected font does not contain OpenType Variable Font axes.<br>Please select text with a Variable Font in Illustrator (such as ArTarumianAzdVar, Bahnschrift, Acumin Variable Concept, etc.).',
+        selectVarShort: 'Select variable font',
+        selectVariableFont: 'Select a variable font',
+        selectedStaticFont: 'Selected: {font} (Static)',
         selectTextToEdit: 'Select text to edit',
         docTextFramesTitle: 'Document Text Frames:',
         noTextFramesInDoc: 'No text frames found in document',
@@ -634,7 +670,9 @@ class I18nManager {
     }
 
     notify() {
-        document.documentElement.lang = this.currentLang;
+        if (typeof document !== 'undefined' && document.documentElement) {
+            document.documentElement.lang = this.currentLang;
+        }
         this.listeners.forEach((fn) => {
             try {
                 fn(this.currentLang);

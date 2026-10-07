@@ -91,7 +91,11 @@ class SliderMode {
             const curveToggleTitle = window.i18n ? window.i18n.t('toggleCurveDrawer', { name: axisDisplayName }) : `Toggle Bézier Easing Curve for ${axis.name}`;
             const curveBtnText = window.i18n ? window.i18n.t('curveBtn') : 'Curve';
             const distHeaderText = window.i18n ? window.i18n.t('easingDistFor', { name: axisDisplayName }) : `Bézier Easing Distribution for ${axis.name}`;
-            const distTargetText = window.i18n ? (this.distributionTarget === 'characters' ? window.i18n.t('mapAcrossChars') : window.i18n.t('mapAcrossItems')) : `Map across ${this.distributionTarget}`;
+            const distTargetText = window.i18n ? (
+                this.distributionTarget === 'characters' ? window.i18n.t('mapAcrossChars') :
+                (this.distributionTarget === 'words' ? window.i18n.t('mapAcrossWords') :
+                (this.distributionTarget === 'lines' ? window.i18n.t('mapAcrossLines') : window.i18n.t('mapAcrossItems')))
+            ) : `Map across ${this.distributionTarget}`;
             const axisPresets = this.getPresetsForAxis(axis);
 
             row.innerHTML = `
