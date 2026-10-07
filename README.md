@@ -1,4 +1,4 @@
-# Adobe CC Variable Font & Dynamic Parameter Controller Suite
+# Adobe CC Variable Font & Dynamic Parameter Controller Suite (v3.0.0)
 ## (Adobe Illustrator, Adobe InDesign & Adobe Photoshop)
 
 A professional, multi-host Adobe CEP extension panel engineered to manipulate OpenType Variable Fonts and dynamic vector/layer parameters across three specialized control paradigms in **Adobe Illustrator**, **Adobe InDesign**, and **Adobe Photoshop**.

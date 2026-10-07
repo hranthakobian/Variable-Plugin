@@ -7,7 +7,7 @@
 
 class UpdateManager {
     constructor() {
-        this.currentVersion = localStorage.getItem('vf_installed_version') || '2.7.0';
+        this.currentVersion = localStorage.getItem('vf_installed_version') || '3.0.0';
         this.defaultRepo = 'hranthakobian/Variable-Plugin';
         this.lastCheckResult = null;
         this.isChecking = false;

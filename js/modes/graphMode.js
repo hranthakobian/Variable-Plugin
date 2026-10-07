@@ -541,6 +541,15 @@ class GraphMode {
                                     <option value="items">${i18n ? i18n.t('optItems') : 'Selected Items'}</option>
                                 </select>
                             </div>
+                            <div class="field-group field-group-text-edit" id="field-group-text-edit">
+                                <label for="graph-live-text-input">${i18n ? i18n.t('liveEditText') : 'Live Edit Text:'}</label>
+                                <div class="live-text-input-wrap">
+                                    <input type="text" id="graph-live-text-input" class="dropdown-select live-text-input" placeholder="${i18n ? i18n.t('liveTextPlaceholder') : 'Type text to shape live with graph...'}" />
+                                    <button type="button" id="btn-reapply-graph" class="btn-reapply-graph" title="${i18n ? i18n.t('reapplyGraphTitle') : 'Re-apply graph to text'}">
+                                        <i class="hd-icon hd-icon-redo-arrow"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -798,6 +807,16 @@ class GraphMode {
             this.ctx.setTransform(1, 0, 0, 1, 0, 0);
         }
         this.ctx.scale(dpr, dpr);
+
+        // Scale distribution bars in 1:1 sync with the canvas zoom
+        const pad = 24;
+        const barContainer = this.container.querySelector('#distribution-bars');
+        if (barContainer) {
+            barContainer.style.width = `${totalWidth}px`;
+            barContainer.style.minWidth = `${totalWidth}px`;
+            barContainer.style.paddingLeft = `${pad}px`;
+            barContainer.style.paddingRight = `${pad}px`;
+        }
     }
 
     setZoom(level, anchorNormX) {
@@ -820,7 +839,6 @@ class GraphMode {
         this.zoom = newZoom;
         this.setupCanvas();
         this.redraw();
-        this.updateDistributionPreview();
 
         const zoomLabel = this.container.querySelector('#canvas-zoom-label');
         if (zoomLabel) {
@@ -831,12 +849,17 @@ class GraphMode {
             btn.classList.toggle('active', Math.abs(z - this.zoom) < 0.05);
         });
 
-        const distScroll = this.container.querySelector('#distribution-bars-scroll');
         if (wrap && wrap.clientWidth > 0 && this.width > wrap.clientWidth) {
-            const newScroll = Math.round(scrollRatio * this.width - wrap.clientWidth / 2);
-            wrap.scrollLeft = newScroll;
+            wrap.scrollLeft = Math.round(scrollRatio * this.width - wrap.clientWidth / 2);
+            const distScroll = this.container.querySelector('#distribution-bars-scroll');
             if (distScroll) {
-                distScroll.scrollLeft = newScroll;
+                distScroll.scrollLeft = wrap.scrollLeft;
+            }
+        } else if (wrap && this.zoom <= 1.05) {
+            wrap.scrollLeft = 0;
+            const distScroll = this.container.querySelector('#distribution-bars-scroll');
+            if (distScroll) {
+                distScroll.scrollLeft = 0;
             }
         }
     }
@@ -863,7 +886,6 @@ class GraphMode {
         } catch(e) {}
         this.setupCanvas();
         this.redraw();
-        this.updateDistributionPreview();
 
         this.container.querySelectorAll('.btn-height-preset').forEach((btn) => {
             const h = parseInt(btn.dataset.height, 10);
@@ -3325,6 +3347,77 @@ class GraphMode {
             });
         });
 
+        // Synchronized Scrolling between Canvas and Distribution Bars
+        const canvasWrap = this.canvas ? this.canvas.parentElement : null;
+        const distScroll = this.container.querySelector('#distribution-bars-scroll');
+        if (canvasWrap && distScroll) {
+            let syncingCanvas = false;
+            let syncingDist = false;
+            canvasWrap.addEventListener('scroll', () => {
+                if (syncingDist) return;
+                syncingCanvas = true;
+                distScroll.scrollLeft = canvasWrap.scrollLeft;
+                syncingCanvas = false;
+            }, { passive: true });
+            distScroll.addEventListener('scroll', () => {
+                if (syncingCanvas) return;
+                syncingDist = true;
+                canvasWrap.scrollLeft = distScroll.scrollLeft;
+                syncingDist = false;
+            }, { passive: true });
+        }
+
+        // Live Text Editing: dynamically reshaping text with the active graph in real time!
+        const liveTextInput = this.container.querySelector('#graph-live-text-input');
+        const btnReapplyGraph = this.container.querySelector('#btn-reapply-graph');
+        if (liveTextInput) {
+            let debounceTimer = null;
+            const applyTextChange = (immediate = false) => {
+                const newText = liveTextInput.value;
+                this.textSnippet = newText;
+                this.wordsList = newText.match(/\S+/g) || [];
+                this.linesList = newText.split(/[\r\n]+/) || [];
+                this.wordCount = Math.max(1, this.wordsList.length);
+                this.lineCount = Math.max(1, this.linesList.length);
+
+                if (this.distributionTarget === 'words') {
+                    this.itemCount = this.wordCount;
+                } else if (this.distributionTarget === 'lines') {
+                    this.itemCount = this.lineCount;
+                } else {
+                    this.itemCount = Math.max(1, newText.length || 1);
+                }
+
+                this.updateDistributionPreview();
+                this.redraw();
+
+                // Send live update to host application and apply graph distribution live!
+                if (window.illustratorBridge && typeof window.illustratorBridge.setTextContents === 'function') {
+                    window.illustratorBridge.setTextContents(newText).catch(() => {});
+                }
+                this.emitDistribution();
+            };
+
+            liveTextInput.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => applyTextChange(false), 40);
+            });
+
+            liveTextInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    clearTimeout(debounceTimer);
+                    applyTextChange(true);
+                }
+            });
+        }
+
+        if (btnReapplyGraph) {
+            btnReapplyGraph.addEventListener('click', () => {
+                this.emitDistribution();
+            });
+        }
+
         // Canvas Downward Height Resizer
         const resizer = this.container.querySelector('#canvas-height-resizer');
         if (resizer) {
@@ -3376,36 +3469,6 @@ class GraphMode {
                 if (e.ctrlKey || e.metaKey) {
                     e.preventDefault();
                     const rect = this.canvas.getBoundingClientRect();
-                    const mouseNormX = rect.width > 0 ? (e.clientX - rect.left) / rect.width : 0.5;
-                    const delta = e.deltaY < 0 ? 0.25 : -0.25;
-                    this.setZoom(this.zoom + delta, mouseNormX);
-                }
-            }, { passive: false });
-        }
-
-        // Synchronize horizontal scrolling between Canvas and Distribution Bars
-        const canvasWrapper = this.canvas ? this.canvas.parentElement : null;
-        const distScroll = this.container.querySelector('#distribution-bars-scroll');
-        if (canvasWrapper && distScroll) {
-            let isSyncing = false;
-            canvasWrapper.addEventListener('scroll', () => {
-                if (!isSyncing) {
-                    isSyncing = true;
-                    distScroll.scrollLeft = canvasWrapper.scrollLeft;
-                    isSyncing = false;
-                }
-            });
-            distScroll.addEventListener('scroll', () => {
-                if (!isSyncing) {
-                    isSyncing = true;
-                    canvasWrapper.scrollLeft = distScroll.scrollLeft;
-                    isSyncing = false;
-                }
-            });
-            distScroll.addEventListener('wheel', (e) => {
-                if (e.ctrlKey || e.metaKey) {
-                    e.preventDefault();
-                    const rect = distScroll.getBoundingClientRect();
                     const mouseNormX = rect.width > 0 ? (e.clientX - rect.left) / rect.width : 0.5;
                     const delta = e.deltaY < 0 ? 0.25 : -0.25;
                     this.setZoom(this.zoom + delta, mouseNormX);
@@ -4155,7 +4218,6 @@ class GraphMode {
         this.resizeHandler = () => {
             this.setupCanvas();
             this.redraw();
-            this.updateDistributionPreview();
         };
         window.addEventListener('resize', this.resizeHandler);
 
@@ -4169,7 +4231,6 @@ class GraphMode {
                 this.resizeObserver = new ResizeObserver(() => {
                     this.setupCanvas();
                     this.redraw();
-                    this.updateDistributionPreview();
                 });
                 this.resizeObserver.observe(wrap);
             }
@@ -4712,6 +4773,13 @@ class GraphMode {
             return;
         }
 
+        const pad = 24;
+        const targetW = this.width || Math.round((this.baseWidth || 280) * (this.zoom || 1.0));
+        barContainer.style.width = `${targetW}px`;
+        barContainer.style.minWidth = `${targetW}px`;
+        barContainer.style.paddingLeft = `${pad}px`;
+        barContainer.style.paddingRight = `${pad}px`;
+
         const cur = this.getActiveCurve();
         if (!cur) {
             return;
@@ -4738,20 +4806,9 @@ class GraphMode {
         barContainer.classList.toggle('is-words-or-lines', this.distributionTarget === 'words' || this.distributionTarget === 'lines');
         const realCount = Math.max(1, this.itemCount || 16);
         const count = Math.max(2, Math.min(128, realCount));
-
-        const isZoomed = (this.zoom || 1.0) > 1.01;
-        barContainer.classList.toggle('is-zoomed', isZoomed);
-        if (isZoomed) {
-            barContainer.style.width = `${this.width}px`;
-            barContainer.classList.remove('is-thin', 'dist-bars-dense', 'dist-bars-ultra');
-        } else {
-            barContainer.style.width = '100%';
-            barContainer.classList.toggle('is-thin', count > 20 && this.distributionTarget === 'characters');
-            barContainer.classList.toggle('dist-bars-dense', count > 36 && this.distributionTarget === 'characters');
-            barContainer.classList.toggle('dist-bars-ultra', count > 44 && this.distributionTarget === 'characters');
-        }
-        barContainer.style.paddingLeft = `${this.padding || 24}px`;
-        barContainer.style.paddingRight = `${this.padding || 24}px`;
+        barContainer.classList.toggle('is-thin', count > 20 && this.distributionTarget === 'characters');
+        barContainer.classList.toggle('dist-bars-dense', count > 36 && this.distributionTarget === 'characters');
+        barContainer.classList.toggle('dist-bars-ultra', count > 44 && this.distributionTarget === 'characters');
 
         if (countLabel) {
             let countStr = `${realCount} characters`;
@@ -4851,31 +4908,10 @@ class GraphMode {
                 tipText = `Item #${sampleIdx + 1}: ${axisName} = ${calculatedVal}`;
             } else {
                 const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
-                if (rawChar === ' ') {
-                    letterDisplay = '␣';
-                    tipText = window.i18n
-                        ? window.i18n.t('distBarLetterTip', { char: `'␣' (${window.i18n.currentLang === 'hy' ? 'բացատ' : 'space'})`, idx: sampleIdx + 1, axis: axisName, val: calculatedVal })
-                        : `Space '␣' (#${sampleIdx + 1}): ${axisName} = ${calculatedVal}`;
-                } else {
-                    letterDisplay = rawChar ? `${rawChar}` : `#${sampleIdx + 1}`;
-                    tipText = window.i18n
-                        ? window.i18n.t('distBarLetterTip', { char: `'${letterDisplay}'`, idx: sampleIdx + 1, axis: axisName, val: calculatedVal })
-                        : `Letter '${letterDisplay}' (#${sampleIdx + 1}): ${axisName} = ${calculatedVal}`;
-                }
-            }
-
-            if (isZoomed) {
-                const minW = this.distributionTarget === 'words' || this.distributionTarget === 'lines'
-                    ? Math.round(36 * Math.min(2.5, this.zoom))
-                    : Math.max(14, Math.round(18 * this.zoom));
-                item.style.minWidth = `${minW}px`;
-                item.style.flex = '1 0 auto';
-            } else if (this.distributionTarget === 'words' || this.distributionTarget === 'lines') {
-                item.style.minWidth = '28px';
-                item.style.flex = '1 0 auto';
-            } else {
-                item.style.minWidth = '';
-                item.style.flex = '1 1 0px';
+                letterDisplay = rawChar ? `${rawChar}` : `#${sampleIdx + 1}`;
+                tipText = window.i18n
+                    ? window.i18n.t('distBarLetterTip', { char: `'${letterDisplay}'`, idx: sampleIdx + 1, axis: axisName, val: calculatedVal })
+                    : `Letter '${letterDisplay}' (#${sampleIdx + 1}): ${axisName} = ${calculatedVal}`;
             }
 
             item.dataset.index = i;
@@ -5587,6 +5623,17 @@ class GraphMode {
             const targetSel = this.container.querySelector('#graph-target-select');
             if (targetSel) {
                 targetSel.value = 'items';
+            }
+        }
+
+        const liveInput = this.container.querySelector('#graph-live-text-input');
+        const textEditGroup = this.container.querySelector('#field-group-text-edit');
+        if (textEditGroup) {
+            textEditGroup.style.display = info.type === 'text' ? '' : 'none';
+        }
+        if (liveInput && info.type === 'text') {
+            if (document.activeElement !== liveInput) {
+                liveInput.value = this.textSnippet || '';
             }
         }
 

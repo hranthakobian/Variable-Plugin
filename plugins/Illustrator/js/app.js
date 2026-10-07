@@ -329,7 +329,7 @@ class AppController {
                 return;
             }
             await this.refreshSelection(false);
-        }, 200);
+        }, 120);
     }
 
     updateTabIndicator(modeName = this.activeMode) {
@@ -461,8 +461,25 @@ class AppController {
             const axesIds = (info.axes || []).map((a) => a.id).join(',');
             const valsSig = Object.entries(info.currentValues || {}).map(([k, v]) => `${k}:${v}`).join(',');
             const curveSig = info.savedCurve ? JSON.stringify(info.savedCurve) : '';
-            const textSig = `${info.charCount}_${info.wordCount || 0}_${info.lineCount || 0}_${info.textHash || info.textSnippet || ''}`;
-            const signature = `${info.hasSelection}_${info.itemId || ''}_${info.type}_${info.fontFamily}_${info.fontName}_${textSig}_${info.totalSelected}_${axesIds}_${valsSig}_${curveSig}`;
+            const charCount = info.charCount || 0;
+            const wordCount = info.wordCount || 0;
+            const lineCount = info.lineCount || 0;
+            const textSnippet = info.textSnippet || '';
+            const signature = `${info.hasSelection}_${info.itemId || ''}_${info.type}_${info.fontFamily}_${info.fontName}_${charCount}_${wordCount}_${lineCount}_${textSnippet}_${info.totalSelected}_${axesIds}_${valsSig}_${curveSig}`;
+
+            // Check if text content, characters, words, or lines changed while editing text
+            const textChanged = (info.type === 'text') && (
+                this.lastTextSnippet !== undefined &&
+                (this.lastTextSnippet !== textSnippet ||
+                 this.lastCharCount !== charCount ||
+                 this.lastWordCount !== wordCount ||
+                 this.lastLineCount !== lineCount)
+            );
+
+            this.lastTextSnippet = textSnippet;
+            this.lastCharCount = charCount;
+            this.lastWordCount = wordCount;
+            this.lastLineCount = lineCount;
 
             if (!forceRender && signature === this.lastSelectionSignature) {
                 this.sliderMode.syncValues(info.currentValues);
@@ -474,22 +491,22 @@ class AppController {
             this.currentSelectionInfo = info;
             this.updateHeaderUI(info, false);
 
-            const currentTarget = (this.graphMode && this.graphMode.distributionTarget)
-                ? this.graphMode.distributionTarget
-                : (info.type === 'text' ? 'characters' : 'items');
+            const target = info.type === 'text' ? 'characters' : 'items';
+            const count = info.type === 'text' ? (info.charCount || 16) : (info.totalSelected || 8);
 
-            let count = info.type === 'text' ? (info.charCount || 16) : (info.totalSelected || 8);
-            if (currentTarget === 'words') {
-                count = Math.max(1, info.wordCount || (info.wordsList && info.wordsList.length) || 1);
-            } else if (currentTarget === 'lines') {
-                count = Math.max(1, info.lineCount || (info.linesList && info.linesList.length) || 1);
-            }
-
-            this.sliderMode.configure(info.axes, info.currentValues, count, currentTarget, info.savedCurve);
+            this.sliderMode.configure(info.axes, info.currentValues, count, target, info.savedCurve);
             this.sliderMode.syncValues(info.currentValues);
             this.graphMode.syncSelection(info);
             this.designSpaceMode.syncAxes(info.axes);
             this.designSpaceMode.syncValues(info.currentValues);
+
+            // Real-time reshaping: if text was edited in Illustrator or plugin,
+            // immediately re-apply the active graph distribution to the new text in real time!
+            if (textChanged && (this.activeMode === 'graph' || (info.savedCurve && info.savedCurve.curves))) {
+                if (this.graphMode && typeof this.graphMode.emitDistribution === 'function') {
+                    this.graphMode.emitDistribution();
+                }
+            }
         } catch (err) {
             console.error('Failed to read selection info:', err);
         }

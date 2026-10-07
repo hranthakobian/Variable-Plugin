@@ -196,6 +196,9 @@ const TRANSLATIONS = {
         itemsCount: '{count} առարկա',
         distBarWordTip: 'Բառ «{word}» (#{idx})՝ {axis} = {val}',
         distBarLineTip: 'Տող #{idx}՝ {axis} = {val}',
+        liveEditText: 'Խմբագրել Տեքստը՝',
+        liveTextPlaceholder: 'Մուտքագրեք տեքստը կենդանի ձևափոխման համար...',
+        reapplyGraphTitle: 'Վերակիրառել գրաֆը տեքստի վրա',
 
         // Mode 3: 2D Design Space
         xAxisLabel: 'X առանցք՝',
@@ -472,6 +475,9 @@ const TRANSLATIONS = {
         itemsCount: '{count} items',
         distBarWordTip: 'Word "{word}" (#{idx}): {axis} = {val}',
         distBarLineTip: 'Line #{idx}: {axis} = {val}',
+        liveEditText: 'Live Edit Text:',
+        liveTextPlaceholder: 'Type text to shape live with graph...',
+        reapplyGraphTitle: 'Re-apply graph to text',
 
         // Mode 3: 2D Design Space
         xAxisLabel: 'X-Axis:',

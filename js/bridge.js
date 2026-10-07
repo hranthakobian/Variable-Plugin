@@ -89,8 +89,6 @@ class IllustratorBridge {
                 opsz: 14
             },
             uiBrightness: 0.0,
-            textHash: '43:The quick brown fox jumps',
-            isTextEditing: false,
             documentTextFrames: this.mockDocumentTextFrames
         };
 
@@ -301,6 +299,34 @@ class IllustratorBridge {
             } catch (err) {
                 resolve({ success: true, simulated: true });
             }
+        } else if (script.indexOf('VariableFontPlugin.setTextContents') !== -1) {
+            try {
+                const match = script.match(/setTextContents\('([^']+)'\)/);
+                if (match && match[1]) {
+                    let text = '';
+                    try {
+                        text = decodeURIComponent(match[1]);
+                    } catch (eDec) {
+                        try {
+                            const parsed = JSON.parse(match[1]);
+                            text = typeof parsed === 'string' ? parsed : (parsed.text !== undefined ? parsed.text : match[1]);
+                        } catch (eParse) {
+                            text = match[1];
+                        }
+                    }
+                    this.mockSelection.text = text;
+                    this.mockSelection.textSnippet = text;
+                    this.mockSelection.charCount = text.length;
+                    this.mockSelection.wordsList = text.match(/\S+/g) || [];
+                    this.mockSelection.linesList = text.split(/[\r\n]+/) || [];
+                    this.mockSelection.wordCount = Math.max(1, this.mockSelection.wordsList.length);
+                    this.mockSelection.lineCount = Math.max(1, this.mockSelection.linesList.length);
+                    this.emit('selectionChanged');
+                }
+                resolve({ success: true, simulated: true });
+            } catch (err) {
+                resolve({ success: true, simulated: true });
+            }
         } else if (script.indexOf('VariableFontPlugin.selectTextFrame') !== -1) {
             try {
                 const match = script.match(/selectTextFrame\('(\d+)'\)/);
@@ -391,26 +417,6 @@ class IllustratorBridge {
     }
 
     /**
-     * Simulate live text typing / changes in standalone mode
-     */
-    setMockText(newText) {
-        if (!this.mockSelection) {
-            return;
-        }
-        const txt = String(newText || '');
-        this.mockSelection.textSnippet = txt;
-        this.mockSelection.charCount = txt.length;
-        const words = txt.match(/\S+/g) || [];
-        this.mockSelection.wordCount = Math.max(1, words.length);
-        this.mockSelection.wordsList = words;
-        const lines = txt.split(/[\r\n]+/) || [];
-        this.mockSelection.lineCount = Math.max(1, lines.length);
-        this.mockSelection.linesList = lines;
-        this.mockSelection.textHash = `${txt.length}:${txt.substring(0, 24)}`;
-        this.emit('selectionChanged');
-    }
-
-    /**
      * Live update 1D / 2D parameters
      */
     async applyParameters(parameters) {
@@ -424,6 +430,14 @@ class IllustratorBridge {
     async applyCurveDistribution(distributionConfig) {
         const payload = JSON.stringify(distributionConfig).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         return await this.evalScript(`VariableFontPlugin.applyCurveDistribution('${payload}')`);
+    }
+
+    /**
+     * Live text editing update
+     */
+    async setTextContents(newText) {
+        const payload = encodeURIComponent(typeof newText === 'string' ? newText : JSON.stringify(newText));
+        return await this.evalScript(`VariableFontPlugin.setTextContents('${payload}')`);
     }
 }
 
