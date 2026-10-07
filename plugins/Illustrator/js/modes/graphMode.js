@@ -612,7 +612,9 @@ class GraphMode {
                                 <button type="button" id="btn-reset-overrides" class="btn-reset-overrides" title="${i18n && i18n.currentLang === 'en' ? 'Reset all per-letter edits' : 'Վերականգնել տառերի բոլոր փոփոխությունները'}">&#8634;</button>
                                 <span id="preview-sample-count">16</span>
                             </div>
-                            <div id="distribution-bars" class="distribution-bars"></div>
+                            <div class="distribution-bars-scroll" id="distribution-bars-scroll">
+                                <div id="distribution-bars" class="distribution-bars"></div>
+                            </div>
                             <div id="distribution-axis-footer" class="distribution-axis-footer"></div>
                         </div>
                     </div>
@@ -818,6 +820,7 @@ class GraphMode {
         this.zoom = newZoom;
         this.setupCanvas();
         this.redraw();
+        this.updateDistributionPreview();
 
         const zoomLabel = this.container.querySelector('#canvas-zoom-label');
         if (zoomLabel) {
@@ -828,8 +831,13 @@ class GraphMode {
             btn.classList.toggle('active', Math.abs(z - this.zoom) < 0.05);
         });
 
+        const distScroll = this.container.querySelector('#distribution-bars-scroll');
         if (wrap && wrap.clientWidth > 0 && this.width > wrap.clientWidth) {
-            wrap.scrollLeft = Math.round(scrollRatio * this.width - wrap.clientWidth / 2);
+            const newScroll = Math.round(scrollRatio * this.width - wrap.clientWidth / 2);
+            wrap.scrollLeft = newScroll;
+            if (distScroll) {
+                distScroll.scrollLeft = newScroll;
+            }
         }
     }
 
@@ -855,6 +863,7 @@ class GraphMode {
         } catch(e) {}
         this.setupCanvas();
         this.redraw();
+        this.updateDistributionPreview();
 
         this.container.querySelectorAll('.btn-height-preset').forEach((btn) => {
             const h = parseInt(btn.dataset.height, 10);
@@ -3374,6 +3383,36 @@ class GraphMode {
             }, { passive: false });
         }
 
+        // Synchronize horizontal scrolling between Canvas and Distribution Bars
+        const canvasWrapper = this.canvas ? this.canvas.parentElement : null;
+        const distScroll = this.container.querySelector('#distribution-bars-scroll');
+        if (canvasWrapper && distScroll) {
+            let isSyncing = false;
+            canvasWrapper.addEventListener('scroll', () => {
+                if (!isSyncing) {
+                    isSyncing = true;
+                    distScroll.scrollLeft = canvasWrapper.scrollLeft;
+                    isSyncing = false;
+                }
+            });
+            distScroll.addEventListener('scroll', () => {
+                if (!isSyncing) {
+                    isSyncing = true;
+                    canvasWrapper.scrollLeft = distScroll.scrollLeft;
+                    isSyncing = false;
+                }
+            });
+            distScroll.addEventListener('wheel', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    const rect = distScroll.getBoundingClientRect();
+                    const mouseNormX = rect.width > 0 ? (e.clientX - rect.left) / rect.width : 0.5;
+                    const delta = e.deltaY < 0 ? 0.25 : -0.25;
+                    this.setZoom(this.zoom + delta, mouseNormX);
+                }
+            }, { passive: false });
+        }
+
         // Presets for Active Curve
         this.container.querySelectorAll('.btn-curve-preset').forEach((btn) => {
             btn.addEventListener('click', () => {
@@ -4116,6 +4155,7 @@ class GraphMode {
         this.resizeHandler = () => {
             this.setupCanvas();
             this.redraw();
+            this.updateDistributionPreview();
         };
         window.addEventListener('resize', this.resizeHandler);
 
@@ -4129,6 +4169,7 @@ class GraphMode {
                 this.resizeObserver = new ResizeObserver(() => {
                     this.setupCanvas();
                     this.redraw();
+                    this.updateDistributionPreview();
                 });
                 this.resizeObserver.observe(wrap);
             }
@@ -4697,9 +4738,20 @@ class GraphMode {
         barContainer.classList.toggle('is-words-or-lines', this.distributionTarget === 'words' || this.distributionTarget === 'lines');
         const realCount = Math.max(1, this.itemCount || 16);
         const count = Math.max(2, Math.min(128, realCount));
-        barContainer.classList.toggle('is-thin', count > 20 && this.distributionTarget === 'characters');
-        barContainer.classList.toggle('dist-bars-dense', count > 36 && this.distributionTarget === 'characters');
-        barContainer.classList.toggle('dist-bars-ultra', count > 44 && this.distributionTarget === 'characters');
+
+        const isZoomed = (this.zoom || 1.0) > 1.01;
+        barContainer.classList.toggle('is-zoomed', isZoomed);
+        if (isZoomed) {
+            barContainer.style.width = `${this.width}px`;
+            barContainer.classList.remove('is-thin', 'dist-bars-dense', 'dist-bars-ultra');
+        } else {
+            barContainer.style.width = '100%';
+            barContainer.classList.toggle('is-thin', count > 20 && this.distributionTarget === 'characters');
+            barContainer.classList.toggle('dist-bars-dense', count > 36 && this.distributionTarget === 'characters');
+            barContainer.classList.toggle('dist-bars-ultra', count > 44 && this.distributionTarget === 'characters');
+        }
+        barContainer.style.paddingLeft = `${this.padding || 24}px`;
+        barContainer.style.paddingRight = `${this.padding || 24}px`;
 
         if (countLabel) {
             let countStr = `${realCount} characters`;
@@ -4799,10 +4851,31 @@ class GraphMode {
                 tipText = `Item #${sampleIdx + 1}: ${axisName} = ${calculatedVal}`;
             } else {
                 const rawChar = (this.textSnippet && this.textSnippet[sampleIdx]) ? this.textSnippet[sampleIdx] : null;
-                letterDisplay = rawChar ? `${rawChar}` : `#${sampleIdx + 1}`;
-                tipText = window.i18n
-                    ? window.i18n.t('distBarLetterTip', { char: `'${letterDisplay}'`, idx: sampleIdx + 1, axis: axisName, val: calculatedVal })
-                    : `Letter '${letterDisplay}' (#${sampleIdx + 1}): ${axisName} = ${calculatedVal}`;
+                if (rawChar === ' ') {
+                    letterDisplay = '␣';
+                    tipText = window.i18n
+                        ? window.i18n.t('distBarLetterTip', { char: `'␣' (${window.i18n.currentLang === 'hy' ? 'բացատ' : 'space'})`, idx: sampleIdx + 1, axis: axisName, val: calculatedVal })
+                        : `Space '␣' (#${sampleIdx + 1}): ${axisName} = ${calculatedVal}`;
+                } else {
+                    letterDisplay = rawChar ? `${rawChar}` : `#${sampleIdx + 1}`;
+                    tipText = window.i18n
+                        ? window.i18n.t('distBarLetterTip', { char: `'${letterDisplay}'`, idx: sampleIdx + 1, axis: axisName, val: calculatedVal })
+                        : `Letter '${letterDisplay}' (#${sampleIdx + 1}): ${axisName} = ${calculatedVal}`;
+                }
+            }
+
+            if (isZoomed) {
+                const minW = this.distributionTarget === 'words' || this.distributionTarget === 'lines'
+                    ? Math.round(36 * Math.min(2.5, this.zoom))
+                    : Math.max(14, Math.round(18 * this.zoom));
+                item.style.minWidth = `${minW}px`;
+                item.style.flex = '1 0 auto';
+            } else if (this.distributionTarget === 'words' || this.distributionTarget === 'lines') {
+                item.style.minWidth = '28px';
+                item.style.flex = '1 0 auto';
+            } else {
+                item.style.minWidth = '';
+                item.style.flex = '1 1 0px';
             }
 
             item.dataset.index = i;

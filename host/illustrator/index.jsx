@@ -637,6 +637,8 @@ var VariableFontPlugin = {
                 totalSelected: selectedTextRange ? 1 : (textFrames.length || pathItems.length || 1),
                 type: 'mixed',
                 isTextRange: Boolean(selectedTextRange),
+                isTextEditing: Boolean(sel && sel.typename === 'TextRange'),
+                textHash: '',
                 fontName: '',
                 fontFamily: '',
                 textSnippet: '',
@@ -668,57 +670,33 @@ var VariableFontPlugin = {
                     } catch (eF2) {}
                 }
 
-                var charCount = 1;
+                var rawTrTxt = '';
                 try {
-                    charCount = tr.contents ? tr.contents.length : tr.characters.length;
-                } catch (eCC1) {}
+                    rawTrTxt = tr.contents || '';
+                } catch(eTrTxt) {}
+
+                var charCount = Math.max(1, rawTrTxt.length || (tr.characters ? tr.characters.length : 1));
                 result.charCount = charCount;
                 result.itemCount = charCount;
+                result.textHash = charCount + ':' + (rawTrTxt.length <= 48 ? rawTrTxt : (rawTrTxt.substring(0, 24) + '__' + rawTrTxt.substring(rawTrTxt.length - 24)));
 
-                var wordCount = 1;
+                var mWords1 = rawTrTxt.match(/\S+/g) || [];
+                var wordCount = Math.max(1, mWords1.length);
                 var wordsList = [];
-                try {
-                    if (tr.words && tr.words.length > 0) {
-                        wordCount = tr.words.length;
-                        for (var wi = 0; wi < Math.min(tr.words.length, 64); wi++) {
-                            var wt = (tr.words[wi].contents || '').replace(/[\r\n\t\s]+/g, '');
-                            if (wt) wordsList.push(wt.substring(0, 24));
-                        }
-                    }
-                } catch(eWc1) {}
-                if (wordsList.length === 0) {
-                    var mWords1 = (tr.contents || '').match(/\S+/g) || [];
-                    wordCount = Math.max(1, mWords1.length);
-                    for (var mwi = 0; mwi < Math.min(mWords1.length, 64); mwi++) {
-                        wordsList.push(mWords1[mwi].substring(0, 24));
-                    }
+                for (var mwi = 0; mwi < Math.min(mWords1.length, 64); mwi++) {
+                    wordsList.push(mWords1[mwi].substring(0, 24));
                 }
                 result.wordCount = wordCount;
                 result.wordsList = wordsList;
 
-                var lineCount = 1;
-                var linesList = [];
-                try {
-                    if (tr.lines && tr.lines.length > 0) {
-                        lineCount = tr.lines.length;
-                        for (var li = 0; li < Math.min(tr.lines.length, 64); li++) {
-                            var lt = (tr.lines[li].contents || '').replace(/[\r\n]+/g, ' ').replace(/^\s+|\s+$/g, '');
-                            if (lt) linesList.push(lt.substring(0, 32));
-                        }
-                    }
-                } catch(eLc1) {}
-                if (linesList.length === 0) {
-                    var mLines1 = (tr.contents || '').split(/[\r\n]+/) || [];
-                    var cleanLines1 = [];
-                    for (var cli = 0; cli < mLines1.length; cli++) {
-                        var cStr = mLines1[cli].replace(/^\s+|\s+$/g, '');
-                        if (cStr) cleanLines1.push(cStr);
-                    }
-                    lineCount = Math.max(1, cleanLines1.length);
-                    linesList = cleanLines1.slice(0, 64);
+                var mLines1 = rawTrTxt.split(/[\r\n]+/) || [];
+                var cleanLines1 = [];
+                for (var cli = 0; cli < mLines1.length; cli++) {
+                    var cStr = mLines1[cli].replace(/^\s+|\s+$/g, '');
+                    if (cStr) cleanLines1.push(cStr.substring(0, 32));
                 }
-                result.lineCount = lineCount;
-                result.linesList = linesList;
+                result.lineCount = Math.max(1, cleanLines1.length);
+                result.linesList = cleanLines1.slice(0, 64);
 
                 var fName = font ? font.name : 'Standard Font';
                 var fFamily = font ? font.family : 'Standard Font';
@@ -727,7 +705,7 @@ var VariableFontPlugin = {
                 result.itemId = 'range_' + charCount + '_' + fName;
 
                 try {
-                    result.textSnippet = (tr.contents || '').substring(0, 128).replace(/[\r\n\t]+/g, ' ');
+                    result.textSnippet = rawTrTxt.substring(0, 128).replace(/[\r\n\t]+/g, ' ');
                 } catch (eText1) {
                     result.textSnippet = '';
                 }
@@ -759,62 +737,33 @@ var VariableFontPlugin = {
                     }
                 } catch (eTr2) {}
 
-                var charCount = 1;
+                var rawTxt = '';
                 try {
-                    charCount = tr ? (tr.characters ? tr.characters.length : (tr.contents ? tr.contents.length : 1)) : (firstTf.contents ? firstTf.contents.length : 1);
-                } catch (eCC2) {}
+                    rawTxt = firstTf.contents || (tr ? tr.contents : '') || '';
+                } catch (eRawTf) {}
+
+                var charCount = Math.max(1, rawTxt.length || (tr && tr.characters ? tr.characters.length : 1));
                 result.charCount = charCount;
                 result.itemCount = charCount;
+                result.textHash = charCount + ':' + (rawTxt.length <= 48 ? rawTxt : (rawTxt.substring(0, 24) + '__' + rawTxt.substring(rawTxt.length - 24)));
 
-                var targetTr = tr || firstTf.textRange;
-                var wordCount = 1;
+                var mWords2 = rawTxt.match(/\S+/g) || [];
+                var wordCount = Math.max(1, mWords2.length);
                 var wordsList = [];
-                try {
-                    var wColl = (targetTr && targetTr.words) ? targetTr.words : (firstTf.words ? firstTf.words : null);
-                    if (wColl && wColl.length > 0) {
-                        wordCount = wColl.length;
-                        for (var wi = 0; wi < Math.min(wColl.length, 64); wi++) {
-                            var wt = (wColl[wi].contents || '').replace(/[\r\n\t\s]+/g, '');
-                            if (wt) wordsList.push(wt.substring(0, 24));
-                        }
-                    }
-                } catch(eWc2) {}
-                if (wordsList.length === 0) {
-                    var rawTxt = firstTf.contents || (targetTr ? targetTr.contents : '');
-                    var mWords2 = (rawTxt || '').match(/\S+/g) || [];
-                    wordCount = Math.max(1, mWords2.length);
-                    for (var mwi = 0; mwi < Math.min(mWords2.length, 64); mwi++) {
-                        wordsList.push(mWords2[mwi].substring(0, 24));
-                    }
+                for (var mwi = 0; mwi < Math.min(mWords2.length, 64); mwi++) {
+                    wordsList.push(mWords2[mwi].substring(0, 24));
                 }
                 result.wordCount = wordCount;
                 result.wordsList = wordsList;
 
-                var lineCount = 1;
-                var linesList = [];
-                try {
-                    var lColl = (targetTr && targetTr.lines) ? targetTr.lines : (firstTf.lines ? firstTf.lines : null);
-                    if (lColl && lColl.length > 0) {
-                        lineCount = lColl.length;
-                        for (var li = 0; li < Math.min(lColl.length, 64); li++) {
-                            var lt = (lColl[li].contents || '').replace(/[\r\n]+/g, ' ').replace(/^\s+|\s+$/g, '');
-                            if (lt) linesList.push(lt.substring(0, 32));
-                        }
-                    }
-                } catch(eLc2) {}
-                if (linesList.length === 0) {
-                    var rawTxt = firstTf.contents || (targetTr ? targetTr.contents : '');
-                    var mLines2 = (rawTxt || '').split(/[\r\n]+/) || [];
-                    var cleanLines2 = [];
-                    for (var cli = 0; cli < mLines2.length; cli++) {
-                        var cStr = mLines2[cli].replace(/^\s+|\s+$/g, '');
-                        if (cStr) cleanLines2.push(cStr);
-                    }
-                    lineCount = Math.max(1, cleanLines2.length);
-                    linesList = cleanLines2.slice(0, 64);
+                var mLines2 = rawTxt.split(/[\r\n]+/) || [];
+                var cleanLines2 = [];
+                for (var cli = 0; cli < mLines2.length; cli++) {
+                    var cStr = mLines2[cli].replace(/^\s+|\s+$/g, '');
+                    if (cStr) cleanLines2.push(cStr.substring(0, 32));
                 }
-                result.lineCount = lineCount;
-                result.linesList = linesList;
+                result.lineCount = Math.max(1, cleanLines2.length);
+                result.linesList = cleanLines2.slice(0, 64);
 
                 var fName = font ? font.name : 'Standard Font';
                 var fFamily = font ? font.family : 'Standard Font';
@@ -828,7 +777,7 @@ var VariableFontPlugin = {
                 }
 
                 try {
-                    result.textSnippet = (firstTf.contents || '').substring(0, 128).replace(/[\r\n\t]+/g, ' ');
+                    result.textSnippet = rawTxt.substring(0, 128).replace(/[\r\n\t]+/g, ' ');
                 } catch (eText2) {
                     result.textSnippet = '';
                 }

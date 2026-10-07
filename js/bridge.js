@@ -89,6 +89,8 @@ class IllustratorBridge {
                 opsz: 14
             },
             uiBrightness: 0.0,
+            textHash: '43:The quick brown fox jumps',
+            isTextEditing: false,
             documentTextFrames: this.mockDocumentTextFrames
         };
 
@@ -386,6 +388,26 @@ class IllustratorBridge {
      */
     async selectTextFrame(index) {
         return await this.evalScript(`VariableFontPlugin.selectTextFrame('${index}')`);
+    }
+
+    /**
+     * Simulate live text typing / changes in standalone mode
+     */
+    setMockText(newText) {
+        if (!this.mockSelection) {
+            return;
+        }
+        const txt = String(newText || '');
+        this.mockSelection.textSnippet = txt;
+        this.mockSelection.charCount = txt.length;
+        const words = txt.match(/\S+/g) || [];
+        this.mockSelection.wordCount = Math.max(1, words.length);
+        this.mockSelection.wordsList = words;
+        const lines = txt.split(/[\r\n]+/) || [];
+        this.mockSelection.lineCount = Math.max(1, lines.length);
+        this.mockSelection.linesList = lines;
+        this.mockSelection.textHash = `${txt.length}:${txt.substring(0, 24)}`;
+        this.emit('selectionChanged');
     }
 
     /**

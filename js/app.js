@@ -461,7 +461,8 @@ class AppController {
             const axesIds = (info.axes || []).map((a) => a.id).join(',');
             const valsSig = Object.entries(info.currentValues || {}).map(([k, v]) => `${k}:${v}`).join(',');
             const curveSig = info.savedCurve ? JSON.stringify(info.savedCurve) : '';
-            const signature = `${info.hasSelection}_${info.itemId || ''}_${info.type}_${info.fontFamily}_${info.fontName}_${info.charCount}_${info.totalSelected}_${axesIds}_${valsSig}_${curveSig}`;
+            const textSig = `${info.charCount}_${info.wordCount || 0}_${info.lineCount || 0}_${info.textHash || info.textSnippet || ''}`;
+            const signature = `${info.hasSelection}_${info.itemId || ''}_${info.type}_${info.fontFamily}_${info.fontName}_${textSig}_${info.totalSelected}_${axesIds}_${valsSig}_${curveSig}`;
 
             if (!forceRender && signature === this.lastSelectionSignature) {
                 this.sliderMode.syncValues(info.currentValues);
@@ -473,10 +474,18 @@ class AppController {
             this.currentSelectionInfo = info;
             this.updateHeaderUI(info, false);
 
-            const target = info.type === 'text' ? 'characters' : 'items';
-            const count = info.type === 'text' ? (info.charCount || 16) : (info.totalSelected || 8);
+            const currentTarget = (this.graphMode && this.graphMode.distributionTarget)
+                ? this.graphMode.distributionTarget
+                : (info.type === 'text' ? 'characters' : 'items');
 
-            this.sliderMode.configure(info.axes, info.currentValues, count, target, info.savedCurve);
+            let count = info.type === 'text' ? (info.charCount || 16) : (info.totalSelected || 8);
+            if (currentTarget === 'words') {
+                count = Math.max(1, info.wordCount || (info.wordsList && info.wordsList.length) || 1);
+            } else if (currentTarget === 'lines') {
+                count = Math.max(1, info.lineCount || (info.linesList && info.linesList.length) || 1);
+            }
+
+            this.sliderMode.configure(info.axes, info.currentValues, count, currentTarget, info.savedCurve);
             this.sliderMode.syncValues(info.currentValues);
             this.graphMode.syncSelection(info);
             this.designSpaceMode.syncAxes(info.axes);
