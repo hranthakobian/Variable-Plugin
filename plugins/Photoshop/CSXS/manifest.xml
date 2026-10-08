@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ExtensionManifest Version="7.0" ExtensionBundleId="com.photoshop.variables.panel" ExtensionBundleVersion="2.7.0"
+<ExtensionManifest Version="7.0" ExtensionBundleId="com.photoshop.variables.panel" ExtensionBundleVersion="3.0.0"
     ExtensionBundleName="Variable Fonts &amp; Design Space Controller (Photoshop)"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <ExtensionList>
-        <Extension Id="com.photoshop.variables.panel" Version="2.7.0" />
+        <Extension Id="com.photoshop.variables.panel" Version="3.0.0" />
     </ExtensionList>
     <ExecutionEnvironment>
         <HostList>
