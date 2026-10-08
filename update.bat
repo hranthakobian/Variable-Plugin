@@ -1,7 +1,7 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0update.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0core\update.ps1"
 if %ERRORLEVEL% NEQ 0 (
     echo.
     echo Update failed or was cancelled.

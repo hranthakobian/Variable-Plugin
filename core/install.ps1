@@ -48,7 +48,7 @@ Write-Host ""
 
 # 3. Copy Extension Files
 Write-Host "[3/3] Deploying Extension Bundle..." -ForegroundColor Yellow
-$excludePatterns = @('.git', '.vscode', 'install.bat', 'uninstall.bat', 'install.ps1', 'uninstall.ps1', 'install.sh', 'uninstall.sh', 'plugins', 'figma')
+$excludePatterns = @('.git', '.vscode', 'install.bat', 'uninstall.bat', 'update.bat', 'install.ps1', 'uninstall.ps1', 'update.ps1', 'install.sh', 'uninstall.sh', 'plugins', 'figma')
 
 Get-ChildItem -Path $sourceDir | ForEach-Object {
     if ($excludePatterns -notcontains $_.Name) {

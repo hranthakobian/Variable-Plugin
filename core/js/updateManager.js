@@ -73,7 +73,10 @@ class UpdateManager {
 
             // 1. Fetch remote version.json
             try {
-                const verRes = await fetch(`https://raw.githubusercontent.com/${repo}/main/version.json?_t=${cacheBuster}`);
+                let verRes = await fetch(`https://raw.githubusercontent.com/${repo}/main/core/version.json?_t=${cacheBuster}`);
+                if (!verRes.ok) {
+                    verRes = await fetch(`https://raw.githubusercontent.com/${repo}/main/version.json?_t=${cacheBuster}`);
+                }
                 if (verRes.ok) {
                     const verData = await verRes.json();
                     if (verData && verData.version) {
@@ -371,8 +374,16 @@ class UpdateManager {
             if (treeRes.ok) {
                 const treeData = await treeRes.json();
                 if (treeData && Array.isArray(treeData.tree)) {
-                    const ilstPrefix = 'plugins/Illustrator/';
-                    const ilstBlobs = treeData.tree.filter((item) => item.type === 'blob' && item.path.indexOf(ilstPrefix) === 0);
+                    let ilstPrefix = 'core/plugins/Illustrator/';
+                    let ilstBlobs = treeData.tree.filter((item) => item.type === 'blob' && item.path.indexOf(ilstPrefix) === 0);
+                    if (ilstBlobs.length === 0) {
+                        ilstPrefix = 'plugins/Illustrator/';
+                        ilstBlobs = treeData.tree.filter((item) => item.type === 'blob' && item.path.indexOf(ilstPrefix) === 0);
+                    }
+                    if (ilstBlobs.length === 0) {
+                        ilstPrefix = 'core/';
+                        ilstBlobs = treeData.tree.filter((item) => item.type === 'blob' && item.path.indexOf(ilstPrefix) === 0 && !item.path.startsWith('core/plugins/') && !item.path.startsWith('core/.'));
+                    }
                     if (ilstBlobs.length > 0) {
                         filesToDownload = ilstBlobs.map((item) => ({
                             remotePath: item.path,
@@ -389,9 +400,9 @@ class UpdateManager {
 
         if (!filesToDownload.length) {
             filesToDownload = fallbackFiles.map((f) => ({
-                remotePath: `plugins/Illustrator/${f}`,
+                remotePath: `core/${f}`,
                 localPath: f,
-                fallbackRemote: f
+                fallbackRemote: `core/plugins/Illustrator/${f}`
             }));
         }
 

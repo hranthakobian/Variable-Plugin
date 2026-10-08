@@ -35,7 +35,10 @@ if (Test-Path $tempZip) {
 }
 
 Write-Host "[3/3] Deploying updated plugin to Adobe CC..." -ForegroundColor Yellow
-$installScript = Join-Path $sourceDir "install.ps1"
+$installScript = Join-Path $sourceDir "core\install.ps1"
+if (!(Test-Path $installScript)) {
+    $installScript = Join-Path $sourceDir "install.ps1"
+}
 if (Test-Path $installScript) {
     & $installScript
 } else {

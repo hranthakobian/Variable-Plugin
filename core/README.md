@@ -27,21 +27,31 @@ Variables Plugin/
 │   └── Photoshop/               # Standalone Adobe Photoshop plugin package
 ├── css/
 │   ├── components.css           # UI components & spectrum controls
-│   └── styles.css               # Dark theme responsive layouts
-├── js/
-│   ├── lib/
-│   │   └── CSInterface.js       # Standard CEP interface layer
-│   ├── bridge.js                # Multi-host promisified bridge & browser mock simulation
-│   ├── modes/
-│   │   ├── sliderMode.js        # 1D Slider Mode logic & bidirectional sync
-│   │   ├── graphMode.js         # Bézier canvas math & distribution engine
-│   │   └── designSpaceMode.js   # 2D Cartesian grid canvas & projection math
-│   └── app.js                   # Main application coordinator
-├── index.html                   # Semantic HTML5 panel structure
-├── install.ps1                  # One-Click PowerShell Multi-App Installer
-├── install.bat                  # Windows batch installer wrapper
-├── uninstall.ps1                # Multi-App Uninstaller script
-└── HELP.md                      # Detailed Armenian & English User Manual
+Variable-Plugin/
+├── install.bat                  # One-Click Windows batch installer wrapper
+├── uninstall.bat                # Windows batch uninstaller wrapper
+├── update.bat                   # GitHub Auto-Updater batch wrapper
+└── core/                        # Plugin core assets & scripts
+    ├── CSXS/
+    │   └── manifest.xml         # Multi-host extension manifest (ILST, IDSN, PHXS)
+    ├── css/
+    │   └── styles.css           # Dark theme responsive layouts
+    ├── js/
+    │   ├── lib/
+    │   │   └── CSInterface.js   # Standard CEP interface layer
+    │   ├── bridge.js            # Multi-host promisified bridge & browser mock simulation
+    │   ├── modes/
+    │   │   ├── sliderMode.js    # 1D Slider Mode logic & bidirectional sync
+    │   │   ├── graphMode.js     # Bézier canvas math & distribution engine
+    │   │   └── designSpaceMode.js # 2D Cartesian grid canvas & projection math
+    │   ├── updateManager.js     # Live in-app GitHub updater & notifications
+    │   └── app.js               # Main application coordinator
+    ├── index.html               # Semantic HTML5 panel structure
+    ├── install.ps1              # One-Click PowerShell Multi-App Installer
+    ├── uninstall.ps1            # Multi-App Uninstaller script
+    ├── update.ps1               # GitHub Auto-Updater PowerShell script
+    ├── version.json             # Current version & release notes
+    └── HELP.md                  # Detailed Armenian & English User Manual
 ```
 
 ---
